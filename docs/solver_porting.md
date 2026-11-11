@@ -30,3 +30,13 @@ The migration rule is parity before replacement:
 This avoids creating a superficially standalone repository whose solver behavior differs from the reported experiments.
 
 `notreks.parity.compare` implements the reference-versus-candidate check. It compares the returned adjacency exactly, records diagnostic-key changes, and reports runtimes without using them as a correctness criterion.
+
+## Current migration status
+
+| Layer | New implementation | Validation | Remaining work |
+|---|---|---|---|
+| PSTrek value and gradient | `notreks.pstrek` | finite differences and four-function legacy parity | connect to continuation |
+| DAGMA acyclicity and profile score | `notreks.dagma_math` | finite differences and legacy parity | use in continuation |
+| TCC value and gradient | `notreks.tcc` | deterministic checks and legacy parity | connect to continuation |
+| Objective composition | `notreks.objectives` | component and weight checks | add optimizer loop |
+| DAGMA continuation | legacy adapter | end-to-end solver parity harness | port in small stages |
