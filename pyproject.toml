@@ -9,6 +9,10 @@ description = "Reproducible causal discovery experiments with NOTREKS informatio
 requires-python = ">=3.11"
 dependencies = []
 
+[project.scripts]
+notreks = "notreks.cli:main"
+notreks-aggregate = "notreks.aggregate:main"
+
 [project.optional-dependencies]
 test = ["pytest>=8"]
 analysis = ["numpy", "pandas", "scipy", "matplotlib"]

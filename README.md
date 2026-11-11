@@ -18,7 +18,12 @@ The first implementation stage contains only the protocol and provenance contrac
 ```bash
 python -m pytest -q
 python examples/smoke.py
+python -m notreks.cli smoke
 ```
+
+After installation, the same entry points are available as `notreks` and
+`notreks-aggregate`. A plan is always generated before execution, so a local
+smoke, a selected slice, and a cluster job all consume the same run manifest.
 
 The current Benchpress repository remains the reference archive while this standalone implementation is built incrementally.
 
