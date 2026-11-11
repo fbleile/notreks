@@ -6,6 +6,7 @@ import argparse
 import json
 from pathlib import Path
 
+from .aggregate import collect, write_tables
 from .integrations import register_benchpress
 from .planning import PlanSelection, expand_protocol, write_plan
 from .protocol import ProtocolSpec, RunSpec
@@ -38,6 +39,8 @@ def main(argv: list[str] | None = None) -> int:
     run_parser.add_argument("--benchpress-root", type=Path, required=True)
     run_parser.add_argument("--attempts", type=int, default=1)
     _slice_arguments(run_parser)
+    aggregate_parser = commands.add_parser("aggregate", help="evaluate completed runs")
+    aggregate_parser.add_argument("output_root", type=Path)
     commands.add_parser("smoke", help="run the dependency-light local smoke")
     args = parser.parse_args(argv)
     if args.command == "plan":
@@ -46,6 +49,11 @@ def main(argv: list[str] | None = None) -> int:
         return _execute(args, solve=False)
     if args.command in {"solve", "run"}:
         return _execute(args, solve=args.command == "solve" or args.command == "run")
+    if args.command == "aggregate":
+        results, issues = collect(args.output_root)
+        write_tables(args.output_root, results, issues)
+        print(f"results={len(results)} issues={len(issues)}")
+        return 0 if not issues else 2
     _smoke()
     return 0
 
