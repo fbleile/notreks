@@ -9,22 +9,25 @@ import shlex
 
 
 def write_commands(plan: Path, output: Path, output_root: Path,
-                   benchpress_root: Path, python: Path, project_root: Path, *, attempts: int = 1,
+                   benchpress_root: Path, python: Path, project_root: Path, *, attempts: int | None = None,
                    start: int = 0, limit: int | None = None) -> int:
     """Write commands for a contiguous plan slice and return task count."""
     payload = json.loads(plan.read_text())
     total = len(payload["runs"])
+    plan_attempts = payload.get("attempts_by_method", {})
     stop = total if limit is None else min(total, start + limit)
     if start < 0 or start > total or stop < start:
         raise ValueError("invalid task slice")
     output.parent.mkdir(parents=True, exist_ok=True)
     commands = []
     for index in range(start, stop):
+        method = payload["runs"][index].get("method")
+        run_attempts = attempts if attempts is not None else plan_attempts.get(method, 1)
         command = [
             "env", "PYTHONPATH=" + str(project_root / "src"),
             "OMP_NUM_THREADS=1", "MKL_NUM_THREADS=1", "OPENBLAS_NUM_THREADS=1",
             str(python), "-m", "notreks.cli", "run", str(plan), str(output_root),
-            "--benchpress-root", str(benchpress_root), "--attempts", str(attempts),
+            "--benchpress-root", str(benchpress_root), "--attempts", str(run_attempts),
             "--start", str(index), "--limit", "1",
         ]
         commands.append(" ".join(shlex.quote(part) for part in command))
@@ -40,7 +43,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("benchpress_root", type=Path)
     parser.add_argument("python", type=Path)
     parser.add_argument("project_root", type=Path)
-    parser.add_argument("--attempts", type=int, default=1)
+    parser.add_argument("--attempts", type=int)
     parser.add_argument("--start", type=int, default=0)
     parser.add_argument("--limit", type=int)
     args = parser.parse_args(argv)

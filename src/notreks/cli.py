@@ -36,13 +36,13 @@ def main(argv: list[str] | None = None) -> int:
     solve_parser.add_argument("plan", type=Path)
     solve_parser.add_argument("output_root", type=Path)
     solve_parser.add_argument("--benchpress-root", type=Path, required=True)
-    solve_parser.add_argument("--attempts", type=int, default=1)
+    solve_parser.add_argument("--attempts", type=int)
     _slice_arguments(solve_parser)
     run_parser = commands.add_parser("run", help="prepare and solve planned runs")
     run_parser.add_argument("plan", type=Path)
     run_parser.add_argument("output_root", type=Path)
     run_parser.add_argument("--benchpress-root", type=Path, required=True)
-    run_parser.add_argument("--attempts", type=int, default=1)
+    run_parser.add_argument("--attempts", type=int)
     _slice_arguments(run_parser)
     aggregate_parser = commands.add_parser("aggregate", help="evaluate completed runs")
     aggregate_parser.add_argument("output_root", type=Path)
@@ -137,11 +137,12 @@ def _execute(args: argparse.Namespace, *, solve: bool) -> int:
     registry = SolverRegistry()
     if solve:
         register_benchpress(registry, args.benchpress_root)
-    config = SolverConfig(attempts=getattr(args, "attempts", 1))
+    plan_attempts = payload.get("attempts_by_method", {})
     for run in selected:
         artifacts = prepare_run(run, args.output_root)
         if solve:
-            solve_prepared(artifacts, run, registry, config)
+            attempts = getattr(args, "attempts", None) or plan_attempts.get(run.method, 1)
+            solve_prepared(artifacts, run, registry, SolverConfig(attempts=attempts))
         print(f"completed {run.key()} method={run.method}", flush=True)
     return 0
 
