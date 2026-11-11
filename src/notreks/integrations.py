@@ -49,6 +49,28 @@ def register_benchpress(registry: SolverRegistry, repository: Path) -> dict[str,
     }
 
 
+def register_flopsearch(registry: SolverRegistry) -> dict[str, Any]:
+    """Register FLOP directly from the independently installable package."""
+    try:
+        import flopsearch
+    except ImportError as error:
+        raise SolverError("direct FLOP integration requires the flopsearch package") from error
+
+    def solve_flop(observations, pairs, seed, config, method):
+        candidate, diagnostics = flopsearch.flop_notreks(
+            observations, 2.0, pairs, restarts=max(0, config.attempts - 1),
+            seed=seed, max_signature_rounds=config.flop_sweeps,
+            search_version="local_greedy_rust", local_greedy_passes=8,
+            return_diagnostics=True)
+        return SolverResult(method, _binary(candidate), diagnostics)
+
+    registry.register("flop_notreks", lambda observations, pairs, seed, config:
+                      solve_flop(observations, pairs, seed, config, "flop_notreks"))
+    registry.register("flop", lambda observations, pairs, seed, config:
+                      solve_flop(observations, pairs, seed, config, "flop"))
+    return {"backend": "flopsearch", "version": getattr(flopsearch, "__version__", None)}
+
+
 def _flop_adapter(function: Callable[..., tuple[np.ndarray, dict[str, Any]]], name: str):
     def solve(observations, pairs, seed, config):
         del pairs
