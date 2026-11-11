@@ -13,6 +13,7 @@ from .figures import load_rows, plot_mean_sd
 from .jobfarm import write_commands
 from .manifest import write_manifest
 from .provenance import write as write_provenance
+from .solver_audit import write as write_solver_audit
 from .planning import PlanSelection, expand_protocol, write_plan
 from .protocol import ProtocolSpec, RunSpec
 from .runner import prepare_run, solve_prepared
@@ -75,6 +76,9 @@ def main(argv: list[str] | None = None) -> int:
     catalog_parser.add_argument("--master-seed", type=int, default=20260917)
     catalog_parser.add_argument("--graph-start", type=int, default=0)
     catalog_parser.add_argument("--graph-limit", type=int)
+    audit_parser = commands.add_parser("solver-audit", help="hash the external solver closure")
+    audit_parser.add_argument("repository", type=Path)
+    audit_parser.add_argument("output", type=Path)
     commands.add_parser("smoke", help="run the dependency-light local smoke")
     args = parser.parse_args(argv)
     if args.command == "plan":
@@ -115,6 +119,10 @@ def main(argv: list[str] | None = None) -> int:
             selection=CatalogSelection(args.graph_start, args.graph_limit))
         write_catalog_plan(args.output, definition, runs, master_seed=args.master_seed)
         print(f"planned {len(runs)} runs -> {args.output}")
+        return 0
+    if args.command == "solver-audit":
+        write_solver_audit(args.output, args.repository)
+        print(f"wrote {args.output}")
         return 0
     _smoke()
     return 0
