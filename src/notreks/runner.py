@@ -14,11 +14,13 @@ import numpy as np
 from .experiment import RunDirectory, RunRecorder, atomic_json, utc_now
 from .graphs import generate
 from .protocol import RunSpec
+from .solvers import SolverConfig, SolverRegistry, SolverResult
 from .synthetic import no_trek_pairs, select_pairs, simulate_sem
 
 
 @dataclass(frozen=True)
 class PreparedArtifacts:
+    run_root: Path
     graph_path: Path
     data_path: Path
     weights_path: Path
@@ -61,7 +63,26 @@ def prepare_run(run: RunSpec, output_root: Path, *, rscript: str | None = None) 
             graph_path, data_path, weights_path = _prepare_data(run, shared, rscript=rscript)
         with stage(run_dir.root, "knowledge"):
             knowledge_path = _prepare_knowledge(run, shared)
-    return PreparedArtifacts(graph_path, data_path, weights_path, knowledge_path)
+    return PreparedArtifacts(run_dir.root, graph_path, data_path, weights_path, knowledge_path)
+
+
+def solve_prepared(artifacts: PreparedArtifacts, run: RunSpec,
+                   registry: SolverRegistry, config: SolverConfig) -> SolverResult:
+    """Run one registered solver and persist its complete machine output."""
+    with stage(artifacts.run_root, "solve"):
+        observations = np.load(artifacts.data_path)
+        knowledge = json.loads(artifacts.knowledge_path.read_text())
+        pairs = [tuple(pair) for pair in knowledge["pairs"]]
+        result = registry.run(run.method, observations, pairs, run.knowledge_seed, config)
+        solve_dir = artifacts.run_root / "solve"
+        np.save(solve_dir / "adjacency.npy", result.adjacency)
+        atomic_json(solve_dir / "result.json", {
+            "method": result.method,
+            "runtime_seconds": result.runtime_seconds,
+            "diagnostics": _json_safe(result.diagnostics),
+            "solver_config": _json_safe(config.__dict__),
+        })
+    return result
 
 
 def _prepare_data(run: RunSpec, shared: Path, *, rscript: str | None) -> tuple[Path, Path, Path]:
@@ -104,6 +125,18 @@ def _prepare_knowledge(run: RunSpec, shared: Path) -> Path:
         raise RuntimeError(f"shared knowledge manifest mismatch: {path}")
     atomic_json(path, expected)
     return path
+
+
+def _json_safe(value):
+    if isinstance(value, np.ndarray):
+        return value.tolist()
+    if isinstance(value, np.generic):
+        return value.item()
+    if isinstance(value, dict):
+        return {str(key): _json_safe(item) for key, item in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [_json_safe(item) for item in value]
+    return value
 
 def main() -> None:
     """Run a tiny preparation smoke test under a temporary-looking directory."""
