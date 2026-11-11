@@ -8,6 +8,7 @@ from pathlib import Path
 
 from .aggregate import collect, write_tables
 from .integrations import register_benchpress
+from .figures import load_rows, plot_mean_sd
 from .jobfarm import write_commands
 from .manifest import write_manifest
 from .planning import PlanSelection, expand_protocol, write_plan
@@ -55,6 +56,14 @@ def main(argv: list[str] | None = None) -> int:
     jobfarm_parser.add_argument("--attempts", type=int, default=1)
     jobfarm_parser.add_argument("--start", type=int, default=0)
     jobfarm_parser.add_argument("--limit", type=int)
+    figure_parser = commands.add_parser("figure", help="plot grouped means and standard deviations")
+    figure_parser.add_argument("input", type=Path)
+    figure_parser.add_argument("output", type=Path)
+    figure_parser.add_argument("--x", required=True)
+    figure_parser.add_argument("--y", required=True)
+    figure_parser.add_argument("--group", default="method")
+    figure_parser.add_argument("--data-label", default="")
+    figure_parser.add_argument("--title")
     commands.add_parser("smoke", help="run the dependency-light local smoke")
     args = parser.parse_args(argv)
     if args.command == "plan":
@@ -79,6 +88,11 @@ def main(argv: list[str] | None = None) -> int:
                                attempts=args.attempts, start=args.start,
                                limit=args.limit)
         print(f"wrote {count} JobFarm commands -> {args.output}")
+        return 0
+    if args.command == "figure":
+        plot_mean_sd(load_rows(args.input), args.output, x=args.x, y=args.y,
+                     group=args.group, data_label=args.data_label, title=args.title)
+        print(f"wrote {args.output}")
         return 0
     _smoke()
     return 0
