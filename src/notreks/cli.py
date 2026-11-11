@@ -11,6 +11,7 @@ from .integrations import register_benchpress
 from .figures import load_rows, plot_mean_sd
 from .jobfarm import write_commands
 from .manifest import write_manifest
+from .provenance import write as write_provenance
 from .planning import PlanSelection, expand_protocol, write_plan
 from .protocol import ProtocolSpec, RunSpec
 from .runner import prepare_run, solve_prepared
@@ -64,6 +65,9 @@ def main(argv: list[str] | None = None) -> int:
     figure_parser.add_argument("--group", default="method")
     figure_parser.add_argument("--data-label", default="")
     figure_parser.add_argument("--title")
+    provenance_parser = commands.add_parser("provenance", help="record environment provenance")
+    provenance_parser.add_argument("output", type=Path)
+    provenance_parser.add_argument("--project-root", type=Path)
     commands.add_parser("smoke", help="run the dependency-light local smoke")
     args = parser.parse_args(argv)
     if args.command == "plan":
@@ -92,6 +96,10 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "figure":
         plot_mean_sd(load_rows(args.input), args.output, x=args.x, y=args.y,
                      group=args.group, data_label=args.data_label, title=args.title)
+        print(f"wrote {args.output}")
+        return 0
+    if args.command == "provenance":
+        write_provenance(args.output, args.project_root)
         print(f"wrote {args.output}")
         return 0
     _smoke()
