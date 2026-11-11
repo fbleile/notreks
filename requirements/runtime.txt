@@ -1,0 +1,4 @@
+# The dependency-free protocol core intentionally has no runtime dependency.
+# Numerical and method-specific dependencies will be added with their own
+# tested integration groups, not forced on users of the core.
+
