@@ -27,3 +27,16 @@ smoke, a selected slice, and a cluster job all consume the same run manifest.
 
 The current Benchpress repository remains the reference archive while this standalone implementation is built incrementally.
 
+## Repository layout
+
+```text
+src/notreks/       contracts, generation, execution, evaluation, analysis
+examples/           dependency-light smoke and lifecycle examples
+tests/              fast unit and integration checks
+docs/               architecture and protocol documentation
+cluster/            JobFarm conventions and cluster notes
+requirements/       dependency groups
+```
+
+The catalog and generated plans are authoritative; shell command files are derived artifacts. Large datasets, solver caches, and result directories do not belong in Git.
+
