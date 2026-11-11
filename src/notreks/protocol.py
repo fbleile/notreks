@@ -78,6 +78,8 @@ class RunSpec:
     knowledge_seed: int
     knowledge_fraction: float
     knowledge_round: int
+    data_model: str = "linear_gaussian"
+    knowledge_strategy: str = "random"
 
     def key(self) -> str:
         """Return the stable key used for checkpointing and deduplication."""
