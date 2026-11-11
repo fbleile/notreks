@@ -8,6 +8,7 @@ from pathlib import Path
 
 from .aggregate import collect, write_tables
 from .integrations import register_benchpress
+from .jobfarm import write_commands
 from .manifest import write_manifest
 from .planning import PlanSelection, expand_protocol, write_plan
 from .protocol import ProtocolSpec, RunSpec
@@ -44,6 +45,16 @@ def main(argv: list[str] | None = None) -> int:
     aggregate_parser.add_argument("output_root", type=Path)
     manifest_parser = commands.add_parser("manifest", help="write the protocol manifest")
     manifest_parser.add_argument("output", type=Path)
+    jobfarm_parser = commands.add_parser("jobfarm", help="generate JobFarm commands")
+    jobfarm_parser.add_argument("plan", type=Path)
+    jobfarm_parser.add_argument("output", type=Path)
+    jobfarm_parser.add_argument("output_root", type=Path)
+    jobfarm_parser.add_argument("benchpress_root", type=Path)
+    jobfarm_parser.add_argument("python", type=Path)
+    jobfarm_parser.add_argument("project_root", type=Path)
+    jobfarm_parser.add_argument("--attempts", type=int, default=1)
+    jobfarm_parser.add_argument("--start", type=int, default=0)
+    jobfarm_parser.add_argument("--limit", type=int)
     commands.add_parser("smoke", help="run the dependency-light local smoke")
     args = parser.parse_args(argv)
     if args.command == "plan":
@@ -60,6 +71,14 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "manifest":
         write_manifest(args.output)
         print(f"wrote {args.output}")
+        return 0
+    if args.command == "jobfarm":
+        count = write_commands(args.plan, args.output, args.output_root,
+                               args.benchpress_root, args.python,
+                               args.project_root,
+                               attempts=args.attempts, start=args.start,
+                               limit=args.limit)
+        print(f"wrote {count} JobFarm commands -> {args.output}")
         return 0
     _smoke()
     return 0
