@@ -9,7 +9,15 @@ The validated solver implementation is not a single-file dependency. FLOP is now
 - graph postprocessing and CPDAG conversion;
 - causal-distance diagnostics.
 
-The current closure is kept behind `notreks.integrations.register_benchpress`. The `notreks solver-audit` command records the source file and SHA-256 hash for the required solver symbols and the installed numerical package versions.
+The PSTrek value/gradient contract is now implemented independently in
+`notreks.pstrek`. It is tested against finite differences and against the
+legacy NumPy/SciPy kernel for all four supported matrix functions. The DAGMA
+continuation still uses the legacy optimizer through
+`notreks.integrations.register_benchpress`; replacing that continuation is the
+next migration boundary. The current closure is therefore explicit rather
+than pretending that a standalone kernel is already a standalone optimizer.
+The `notreks solver-audit` command records the source file and SHA-256 hash for
+the required solver symbols and the installed numerical package versions.
 
 The migration rule is parity before replacement:
 
