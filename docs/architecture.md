@@ -23,7 +23,7 @@ figures and statistical analysis
 - `src/notreks/protocol.py` defines serializable protocol and run contracts.
 - `src/notreks/graphs.py` and `src/notreks/synthetic.py` generate graph/data/knowledge inputs from explicit seeds.
 - `src/notreks/runner.py` owns artifact creation, checkpointing, and stage errors.
-- `src/notreks/solvers.py` defines the solver contract; `src/notreks/integrations.py` is currently the compatibility boundary to the validated Benchpress implementation.
+- `src/notreks/solvers.py` defines the solver contract; `src/notreks/integrations.py` provides the direct `flopsearch` backend and the compatibility boundary for the remaining validated Benchpress implementation.
 - `src/notreks/cpdag.py` and `src/notreks/evaluation.py` own evaluation targets and metric names.
 - `src/notreks/aggregate.py` consumes run artifacts and never changes them.
 - `src/notreks/figures.py` consumes tables and applies the shared figure style.
