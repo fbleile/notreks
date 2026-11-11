@@ -13,6 +13,8 @@ from typing import Any, Iterable
 
 import numpy as np
 
+from .cpdag import ancestor_aid, cpdag_shd
+
 
 class EvaluationError(ValueError):
     """Raised when truth and estimate do not describe the same variables."""
@@ -46,6 +48,19 @@ def dag_skeleton_shd(truth: np.ndarray, estimate: np.ndarray) -> int:
     estimate = _validate_candidate(estimate, truth.shape[0])
     tri = np.triu(np.ones_like(truth, dtype=bool), 1)
     return int(np.count_nonzero(_skeleton(truth)[tri] != _skeleton(estimate)[tri]))
+
+
+def synthetic_metrics(truth_dag: np.ndarray, estimate_cpdag: np.ndarray,
+                      *, include_ancestor_aid: bool = True) -> MetricRecord:
+    """Evaluate an ordinary DAG benchmark against a CPDAG estimate."""
+    metrics: dict[str, float | int] = {
+        "SHD_cpdag": cpdag_shd(truth_dag, estimate_cpdag),
+    }
+    if include_ancestor_aid:
+        normalized, count = ancestor_aid(truth_dag, estimate_cpdag)
+        metrics["Ancestor_AID_cpdag"] = count
+        metrics["Ancestor_AID_cpdag_normalized"] = normalized
+    return MetricRecord(metrics, "synthetic_cpdag")
 
 
 def _projected_directed_adjacency(graph: dict[str, Any], nodes: list[str]) -> np.ndarray:
