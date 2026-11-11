@@ -37,6 +37,12 @@ The new repository is the authority for protocol definitions, seeds, artifacts, 
 
 Solver kernels should be ported only after parity tests exist against the adapter. The protocol and artifact layers must not be changed to accommodate a solver's internal data structures.
 
+The current adapter can be checked directly on a tiny real solve:
+
+```bash
+python examples/benchpress_adapter_smoke.py /path/to/benchpress
+```
+
 ## Running a bounded experiment
 
 ```bash
