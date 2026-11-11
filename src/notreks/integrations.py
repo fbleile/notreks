@@ -71,6 +71,36 @@ def register_flopsearch(registry: SolverRegistry) -> dict[str, Any]:
     return {"backend": "flopsearch", "version": getattr(flopsearch, "__version__", None)}
 
 
+def register_dagma(registry: SolverRegistry) -> dict[str, Any]:
+    """Register upstream vanilla DAGMA; PSTrek remains a separate adapter."""
+    try:
+        from dagma.linear import DagmaLinear
+    except ImportError as error:
+        raise SolverError("direct DAGMA integration requires the dagma package") from error
+
+    def solve(observations, pairs, seed, config):
+        del pairs
+        try:
+            import torch
+            torch.manual_seed(int(seed))
+        except ImportError:
+            pass
+        model = DagmaLinear("l2", verbose=False)
+        weights = model.fit(
+            observations, lambda1=0.03, w_threshold=0.3,
+            T=config.dagma_stages, warm_iter=config.dagma_warm_iter,
+            max_iter=config.dagma_max_iter,
+        )
+        adjacency = (np.abs(np.asarray(weights)) > 0.3).astype(np.uint8)
+        return SolverResult("dagma", adjacency, {
+            "backend": "dagma", "threshold": 0.3,
+            "iterations_T": config.dagma_stages,
+        })
+
+    registry.register("dagma", solve)
+    return {"backend": "dagma", "loss": "l2", "threshold": 0.3}
+
+
 def _flop_adapter(function: Callable[..., tuple[np.ndarray, dict[str, Any]]], name: str):
     def solve(observations, pairs, seed, config):
         del pairs
