@@ -7,10 +7,11 @@ be regenerated independently and shared across methods and knowledge levels.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from itertools import combinations
 from typing import Iterable
 
 import numpy as np
+
+from .graphs import er_dag as _er_dag
 
 
 @dataclass(frozen=True)
@@ -40,18 +41,7 @@ def topological_order(graph: np.ndarray) -> tuple[int, ...]:
 
 def er_dag(dimension: int, average_degree: int, seed: int) -> np.ndarray:
     """Generate an ER DAG with expected undirected degree ``average_degree``."""
-    if dimension < 2:
-        raise ValueError("dimension must be at least two")
-    if average_degree < 1:
-        raise ValueError("average_degree must be positive")
-    rng = np.random.default_rng(seed)
-    order = rng.permutation(dimension)
-    probability = min(1.0, average_degree / (dimension - 1))
-    graph = np.zeros((dimension, dimension), dtype=np.uint8)
-    for left, right in combinations(range(dimension), 2):
-        if rng.random() < probability:
-            graph[order[left], order[right]] = 1
-    return graph
+    return _er_dag(dimension, average_degree, seed)
 
 
 def no_trek_pairs(graph: np.ndarray) -> list[tuple[int, int]]:
