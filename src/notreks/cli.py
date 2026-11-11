@@ -7,6 +7,7 @@ import json
 from pathlib import Path
 
 from .aggregate import collect, write_tables
+from .catalog_planning import CatalogSelection, expand_catalog, write_catalog_plan
 from .integrations import register_benchpress
 from .figures import load_rows, plot_mean_sd
 from .jobfarm import write_commands
@@ -68,6 +69,12 @@ def main(argv: list[str] | None = None) -> int:
     provenance_parser = commands.add_parser("provenance", help="record environment provenance")
     provenance_parser.add_argument("output", type=Path)
     provenance_parser.add_argument("--project-root", type=Path)
+    catalog_parser = commands.add_parser("catalog-plan", help="expand a registered experiment")
+    catalog_parser.add_argument("experiment")
+    catalog_parser.add_argument("output", type=Path)
+    catalog_parser.add_argument("--master-seed", type=int, default=20260917)
+    catalog_parser.add_argument("--graph-start", type=int, default=0)
+    catalog_parser.add_argument("--graph-limit", type=int)
     commands.add_parser("smoke", help="run the dependency-light local smoke")
     args = parser.parse_args(argv)
     if args.command == "plan":
@@ -101,6 +108,13 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "provenance":
         write_provenance(args.output, args.project_root)
         print(f"wrote {args.output}")
+        return 0
+    if args.command == "catalog-plan":
+        definition, runs = expand_catalog(
+            args.experiment, master_seed=args.master_seed,
+            selection=CatalogSelection(args.graph_start, args.graph_limit))
+        write_catalog_plan(args.output, definition, runs, master_seed=args.master_seed)
+        print(f"planned {len(runs)} runs -> {args.output}")
         return 0
     _smoke()
     return 0
