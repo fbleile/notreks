@@ -20,3 +20,5 @@ The migration rule is parity before replacement:
 5. only then remove the corresponding legacy import.
 
 This avoids creating a superficially standalone repository whose solver behavior differs from the reported experiments.
+
+`notreks.parity.compare` implements the reference-versus-candidate check. It compares the returned adjacency exactly, records diagnostic-key changes, and reports runtimes without using them as a correctness criterion.
