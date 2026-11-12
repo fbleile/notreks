@@ -12,6 +12,7 @@ import numpy as np
 
 from .cpdag import CPDAGError
 from .evaluation import causalman_metrics, synthetic_metrics
+from .runner import stage
 
 
 def collect(output_root: Path) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
@@ -31,7 +32,8 @@ def collect(output_root: Path) -> tuple[list[dict[str, Any]], list[dict[str, Any
                            "path": str(run_root)})
             continue
         try:
-            row = _evaluate_run(output_root, run_root, run)
+            with stage(run_root, "evaluate"):
+                row = _evaluate_run(output_root, run_root, run)
         except Exception as error:
             issues.append({"run_key": run["run_key"], "state": "evaluation_failed",
                            "error": f"{type(error).__name__}: {error}", "path": str(run_root)})

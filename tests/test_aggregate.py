@@ -25,6 +25,7 @@ def test_aggregate_keeps_results_and_issues_separate(tmp_path: Path):
     assert len(results) == 1
     assert len(issues) == 1
     assert results[0]["SHD_cpdag"] >= 0
+    assert json.loads((artifacts.run_root / "evaluate" / "status.json").read_text())["state"] == "succeeded"
     write_tables(tmp_path, results, issues)
     with (tmp_path / "aggregate_results.csv").open() as handle:
         assert len(list(csv.DictReader(handle))) == 1
