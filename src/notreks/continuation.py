@@ -94,13 +94,14 @@ def fit(
     if mask.shape != W.shape or not np.all(np.isin(mask, [0.0, 1.0])):
         raise ValueError("edge_mask must be a binary matrix matching dimension")
     np.fill_diagonal(mask, 0.0)
-    moment = np.zeros_like(W)
-    velocity = np.zeros_like(W)
     diagnostics: list[StageDiagnostic] = []
     mu = config.mu_init
     for stage in range(config.stages):
         s = config.s_schedule[stage]
         limit = config.max_iter if stage == config.stages - 1 else config.warm_iter
+        # Upstream DAGMA starts Adam afresh at each central-path stage.
+        moment = np.zeros_like(W)
+        velocity = np.zeros_like(W)
         previous = np.inf
         stage_converged = False
         for iteration in range(1, limit + 1):
