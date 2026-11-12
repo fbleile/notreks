@@ -11,7 +11,7 @@ shared graph + data + knowledge artifacts
       ↓
 method adapter → solve/adjacency.npy + diagnostics
       ↓
-evaluation → aggregate_results.csv
+evaluation stage → aggregate_results.csv
       ↓
 figures and statistical analysis
 ```
@@ -26,7 +26,9 @@ figures and statistical analysis
 - `src/notreks/runner.py` owns artifact creation, checkpointing, and stage errors.
 - `src/notreks/solvers.py` defines the solver contract; `src/notreks/integrations.py` provides the direct `flopsearch` backend and the compatibility boundary for the remaining validated Benchpress implementation.
 - `src/notreks/cpdag.py` and `src/notreks/evaluation.py` own evaluation targets and metric names.
-- `src/notreks/aggregate.py` consumes run artifacts and never changes them.
+- `src/notreks/aggregate.py` evaluates completed solves through the explicit
+  `evaluate` stage, then writes aggregate tables without changing solver
+  artifacts.
 - `src/notreks/figures.py` consumes tables and applies the shared figure style.
 - `src/notreks/jobfarm.py` projects a plan into one-command-per-task JobFarm input.
 
