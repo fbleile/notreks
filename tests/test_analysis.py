@@ -17,12 +17,13 @@ def test_graph_k_cells_gives_each_graph_k_one_observation():
 
 
 def test_clustered_fixed_effects_detects_negative_trend():
-    cells = [{"graph": graph, "K": target, "mean": 10 - target}
-             for graph in ("a", "b", "c", "d") for target in (2, 3, 4)]
+    cells = ([{"graph": graph, "K": target, "mean": 10 - target}
+              for graph in ("a", "b", "c") for target in (2, 3, 4)] +
+             [{"graph": "singleton", "K": 2, "mean": 8}])
     result = clustered_fixed_effects(cells)
     assert result.slope == pytest.approx(-1.0)
-    assert result.graphs == 4
-    assert result.cells == 12
+    assert result.graphs == 3
+    assert result.cells == 9
     assert result.p_one_sided < 0.05
 
 

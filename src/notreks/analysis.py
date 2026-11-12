@@ -61,12 +61,16 @@ def clustered_fixed_effects(cells: Iterable[Mapping[str, object]], *, critical: 
     fitted coefficients including graph effects and the slope.
     """
     records = [(str(row["graph"]), float(row["K"]), float(row["mean"])) for row in cells]
-    graphs = sorted({record[0] for record in records})
+    graph_targets: dict[str, set[float]] = {}
+    for graph, target, _ in records:
+        graph_targets.setdefault(graph, set()).add(target)
+    graphs = sorted(graph for graph, targets in graph_targets.items() if len(targets) >= 2)
     if len(graphs) < 2:
-        raise ValueError("at least two graphs are required for clustered inference")
+        raise ValueError("at least two graphs with at least two K values are required")
     by_graph = {graph: [] for graph in graphs}
     for graph, target, value in records:
-        by_graph[graph].append((target, value))
+        if graph in by_graph:
+            by_graph[graph].append((target, value))
     centered = [(target - np.mean([item[0] for item in by_graph[graph]]),
                  value - np.mean([item[1] for item in by_graph[graph]]), graph)
                 for graph in graphs for target, value in by_graph[graph]]
