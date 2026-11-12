@@ -76,7 +76,7 @@ at the data stage and leave a traceback in the run directory.
 Once the manifest is available, create a normal executable plan around it:
 
 ```bash
-notreks external-plan path/to/manifest.json plans/causalman.json \
+notreks-external-plan path/to/manifest.json plans/causalman.json \
   --name causalman-small --methods flop flop_notreks \
   --fractions 0 0.25 1 --attempts flop:20 --attempts flop_notreks:20
 ```
