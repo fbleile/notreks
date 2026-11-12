@@ -111,6 +111,8 @@ def main(argv: list[str] | None = None) -> int:
     external_plan_parser.add_argument("--fractions", nargs="+", type=float, default=[0.0, 0.25, 1.0])
     external_plan_parser.add_argument("--partial-rounds", type=int, default=5)
     external_plan_parser.add_argument("--master-seed", type=int, default=20260917)
+    external_plan_parser.add_argument("--attempts", action="append", default=[],
+                                      help="method:n; repeat for method-specific attempt budgets")
     inspect_parser = commands.add_parser("inspect", help="summarize run and stage states")
     inspect_parser.add_argument("root", type=Path)
     inspect_parser.add_argument("--json", action="store_true", dest="as_json")
@@ -181,10 +183,20 @@ def main(argv: list[str] | None = None) -> int:
         print(f"wrote {args.output}")
         return 0
     if args.command == "external-plan":
+        attempts = {}
+        for specification in args.attempts:
+            try:
+                method, count = specification.rsplit(":", 1)
+                if not method or method in attempts:
+                    raise ValueError
+                attempts[method] = int(count)
+            except ValueError as error:
+                raise SystemExit("--attempts must use unique method:n specifications") from error
         payload = external_plan(args.manifest, name=args.name,
                                 methods=tuple(args.methods),
                                 fractions=tuple(args.fractions),
                                 partial_rounds=args.partial_rounds,
+                                attempts=attempts or None,
                                 master_seed=args.master_seed)
         args.output.parent.mkdir(parents=True, exist_ok=True)
         args.output.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n")

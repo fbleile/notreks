@@ -69,7 +69,7 @@ Once the manifest is available, create a normal executable plan around it:
 ```bash
 notreks external-plan path/to/manifest.json plans/causalman.json \
   --name causalman-small --methods flop flop_notreks \
-  --fractions 0 0.25 1
+  --fractions 0 0.25 1 --attempts flop:20 --attempts flop_notreks:20
 ```
 
 The plan records the manifest path on every run and derives its dimension and

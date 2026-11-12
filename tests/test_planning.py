@@ -28,7 +28,8 @@ def test_external_plan_uses_manifest_shape_and_target(tmp_path):
                                     "nodes": ["a", "b", "c", "d"],
                                     "evaluation_target": "causalman_latent_projection"}))
     payload = external_plan(manifest, name="demo-external", methods=("flop",),
-                            fractions=(0.0, 0.25, 1.0))
+                            fractions=(0.0, 0.25, 1.0), attempts={"flop": 20})
     assert payload["run_count"] == 7
     assert all(run["external_manifest"] == str(manifest.resolve()) for run in payload["runs"])
     assert all(run["dimension"] == 4 for run in payload["runs"])
+    assert payload["attempts_by_method"] == {"flop": 20}

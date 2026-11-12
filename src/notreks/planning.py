@@ -108,6 +108,8 @@ def external_plan(manifest: Path, *, name: str, methods: tuple[str, ...],
     if any(q < 0.0 or q > 1.0 for q in fractions):
         raise ValueError("knowledge fractions must lie in [0, 1]")
     attempts = attempts or {method: 1 for method in methods}
+    if set(attempts) - set(methods):
+        raise ValueError(f"attempt budget provided for unknown methods: {sorted(set(attempts) - set(methods))}")
     if any(attempts.get(method, 1) < 1 for method in methods):
         raise ValueError("method attempt budgets must be positive")
     seeds = SeedBook(master_seed)
