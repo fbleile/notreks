@@ -1,0 +1,11 @@
+# Reference environment used for repository validation on 2026-11-12.
+# Production artifacts must still include `notreks provenance` because cluster
+# images and solver builds may differ from this reference environment.
+numpy==2.2.6
+scipy==1.16.3
+pandas==2.3.3
+matplotlib==3.10.6
+pytest==8.4.2
+flopsearch==0.3.0
+dagma==1.1.1
+torch==2.13.0

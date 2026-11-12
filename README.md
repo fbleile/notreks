@@ -16,6 +16,8 @@ This repository is intentionally small and inspectable. The experiment pipeline 
 For a development environment, use `conda env create -f environment.yml` and
 then activate the resulting `notreks` environment. A pip-only installation is
 also supported: `python -m pip install -e ".[test,analysis,solvers]"`.
+The checked-in reference versions are in `requirements/lock.txt`; production
+outputs should additionally include `notreks provenance`.
 
 The protocol, artifact lifecycle, evaluation, figure, cluster, FLOP, and
 vanilla DAGMA layers are available. The direct DAGMA+PSTrek path is also
