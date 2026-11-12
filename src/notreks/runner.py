@@ -118,6 +118,7 @@ def _prepare_data(run: RunSpec, shared: Path, *, rscript: str | None) -> tuple[P
             "dataset_id": dataset.dataset_id,
             "evaluation_target": dataset.evaluation_target,
             "projection": str(dataset.projection_path) if dataset.projection_path else None,
+            "knowledge_pairs": str(dataset.knowledge_pairs_path) if dataset.knowledge_pairs_path else None,
             "nodes": list(dataset.nodes),
             "metadata": dataset.metadata,
         })
@@ -134,7 +135,12 @@ def _prepare_data(run: RunSpec, shared: Path, *, rscript: str | None) -> tuple[P
 
 def _prepare_knowledge(run: RunSpec, shared: Path) -> Path:
     graph = np.load(shared / "graph.npy")
-    all_pairs = no_trek_pairs(graph)
+    if run.data_model.endswith("_observational"):
+        if not run.external_manifest:
+            raise ValueError("external run requires external_manifest for knowledge preparation")
+        all_pairs = ExternalDataset.from_manifest(Path(run.external_manifest)).available_pairs(run.dimension)
+    else:
+        all_pairs = no_trek_pairs(graph)
     if run.knowledge_strategy.startswith("target-k-"):
         try:
             target = int(run.knowledge_strategy.rsplit("-", 1)[1])

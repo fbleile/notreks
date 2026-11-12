@@ -36,6 +36,7 @@ def test_aggregate_uses_external_projection_target(tmp_path: Path):
     truth = np.zeros((3, 3), dtype=np.uint8)
     np.save(tmp_path / "observations.npy", observations)
     np.save(tmp_path / "truth.npy", truth)
+    (tmp_path / "pairs.json").write_text(json.dumps([[0, 2]]))
     (tmp_path / "projection.json").write_text(json.dumps({
         "projected": {"directed": [["a", "b"]], "bidirected": [["b", "c"]]}
     }))
@@ -43,6 +44,7 @@ def test_aggregate_uses_external_projection_target(tmp_path: Path):
     manifest.write_text(json.dumps({
         "dataset_id": "external-demo", "observations": "observations.npy",
         "truth_adjacency": "truth.npy", "projection": "projection.json",
+        "knowledge_pairs": "pairs.json",
         "nodes": ["a", "b", "c"], "evaluation_target": "causalman_latent_projection",
     }))
     from notreks.protocol import RunSpec

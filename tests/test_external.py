@@ -22,6 +22,17 @@ def test_external_manifest_validates_arrays(tmp_path):
     assert np.all(weights == 1)
 
 
+def test_external_pairs_are_explicit_and_validated(tmp_path):
+    np.save(tmp_path / "x.npy", np.zeros((4, 3)))
+    np.save(tmp_path / "truth.npy", np.zeros((3, 3)))
+    (tmp_path / "pairs.json").write_text(json.dumps([[2, 0], [0, 1], [0, 1]]))
+    path = tmp_path / "dataset.json"
+    path.write_text(json.dumps({"observations": "x.npy", "truth_adjacency": "truth.npy",
+                                "knowledge_pairs": "pairs.json", "nodes": ["a", "b", "c"]}))
+    dataset = ExternalDataset.from_manifest(path)
+    assert dataset.available_pairs(3) == [(0, 1), (0, 2)]
+
+
 def test_external_manifest_requires_files(tmp_path):
     path = tmp_path / "dataset.json"
     path.write_text(json.dumps({"observations": "missing.npy", "truth_adjacency": "truth.npy"}))

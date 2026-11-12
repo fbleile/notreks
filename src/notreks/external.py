@@ -14,6 +14,7 @@ The manifest is JSON and all paths are resolved relative to the manifest:
      "observations": "observations.npy",
      "truth_adjacency": "truth_adjacency.npy",
      "weights": "weights.npy",
+     "knowledge_pairs": "knowledge_pairs.json",
      "evaluation_target": "causalman_latent_projection",
      "projection": "projection.json",
      "nodes": ["x0", "x1"]
@@ -44,6 +45,7 @@ class ExternalDataset:
     dataset_id: str
     observations_path: Path
     truth_adjacency_path: Path
+    knowledge_pairs_path: Path | None
     weights_path: Path | None
     projection_path: Path | None
     evaluation_target: str
@@ -78,6 +80,10 @@ class ExternalDataset:
         weights = root / weights_value if isinstance(weights_value, str) else None
         if weights is not None and not weights.is_file():
             raise ExternalDataError(f"external weights file does not exist: {weights}")
+        knowledge_value = payload.get("knowledge_pairs")
+        knowledge = root / knowledge_value if isinstance(knowledge_value, str) else None
+        if knowledge is not None and not knowledge.is_file():
+            raise ExternalDataError(f"external knowledge-pairs file does not exist: {knowledge}")
         projection_value = payload.get("projection")
         projection = root / projection_value if isinstance(projection_value, str) else None
         if projection is not None and not projection.is_file():
@@ -94,7 +100,7 @@ class ExternalDataset:
         if not isinstance(dataset_id, str) or not dataset_id:
             raise ExternalDataError("dataset_id must be a non-empty string")
         metadata = dict(payload.get("metadata", {})) if isinstance(payload.get("metadata", {}), dict) else {}
-        return cls(path, dataset_id, observations, truth, weights, projection, target,
+        return cls(path, dataset_id, observations, truth, knowledge, weights, projection, target,
                    tuple(nodes_value), metadata)
 
     def validate_arrays(self) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
@@ -122,6 +128,29 @@ class ExternalDataset:
         if not np.isfinite(observations).all() or not np.isfinite(weights).all():
             raise ExternalDataError("observations and weights must be finite")
         return np.asarray(observations), np.asarray(truth), weights
+
+    def available_pairs(self, dimension: int) -> list[tuple[int, int]]:
+        """Load supplied prior pairs; never infer them from the truth graph."""
+        if self.knowledge_pairs_path is None:
+            raise ExternalDataError(
+                "external manifest must provide knowledge_pairs; "
+                "prior information is not inferred from the truth adjacency")
+        try:
+            payload = json.loads(self.knowledge_pairs_path.read_text())
+        except json.JSONDecodeError as error:
+            raise ExternalDataError(f"invalid knowledge-pairs JSON: {self.knowledge_pairs_path}") from error
+        if not isinstance(payload, list):
+            raise ExternalDataError("knowledge_pairs must be a JSON list of pairs")
+        pairs = []
+        for pair in payload:
+            if (not isinstance(pair, list) or len(pair) != 2 or
+                    not all(isinstance(value, int) for value in pair)):
+                raise ExternalDataError("each knowledge pair must be a two-element integer list")
+            left, right = sorted(pair)
+            if left == right or left < 0 or right >= dimension:
+                raise ExternalDataError(f"knowledge pair {(left, right)} is outside dimension {dimension}")
+            pairs.append((left, right))
+        return sorted(set(pairs))
 
 
 def main() -> None:
