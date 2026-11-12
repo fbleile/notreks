@@ -15,3 +15,6 @@ scripts. The wrapper accepts `PROJECT_DIR`, `CMD_FILE`, and optionally
 The wrapper is a submission template, not a replacement for the site's current
 queue policy. If the queue limits change, update the SBATCH directives and the
 documented allocation together, then rerun the smoke job before production.
+
+For a legacy Benchpress backend, add `--benchpress-root /absolute/path/to/benchpress`
+to the command-generator invocation. Direct mode does not require that checkout.

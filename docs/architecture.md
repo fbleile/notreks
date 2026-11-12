@@ -54,7 +54,7 @@ python examples/benchpress_adapter_smoke.py /path/to/benchpress
 
 ```bash
 notreks catalog-plan prior-structure-chrom chrom-plan.json --graph-limit 1
-notreks jobfarm chrom-plan.json chrom.cmd results/ /path/to/benchpress /path/to/python /path/to/notreks
+notreks jobfarm chrom-plan.json chrom.cmd results/ /path/to/python /path/to/notreks --backend direct
 notreks aggregate results/
 ```
 
