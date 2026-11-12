@@ -7,6 +7,7 @@ import json
 from pathlib import Path
 
 from .aggregate import collect, write_tables
+from .catalog import CATALOG
 from .catalog_planning import (CatalogSelection, expand_all_catalog, expand_catalog,
                                write_catalog_plan, write_combined_catalog_plan)
 from .integrations import register_benchpress, register_direct
@@ -116,6 +117,8 @@ def main(argv: list[str] | None = None) -> int:
     inspect_parser = commands.add_parser("inspect", help="summarize run and stage states")
     inspect_parser.add_argument("root", type=Path)
     inspect_parser.add_argument("--json", action="store_true", dest="as_json")
+    catalog_list_parser = commands.add_parser("catalog", help="list registered experiment arms")
+    catalog_list_parser.add_argument("--json", action="store_true", dest="as_json")
     commands.add_parser("smoke", help="run the dependency-light local smoke")
     args = parser.parse_args(argv)
     if args.command == "plan":
@@ -211,6 +214,15 @@ def main(argv: list[str] | None = None) -> int:
             for stage, states in report["stage_states"].items():
                 print(f"stage={stage} states={states}")
             print(f"tracebacks={len(report['errors'])}")
+        return 0
+    if args.command == "catalog":
+        entries = {name: definition.to_dict() for name, definition in sorted(CATALOG.items())}
+        if args.as_json:
+            print(json.dumps(entries, indent=2, sort_keys=True))
+        else:
+            for name, definition in entries.items():
+                cells = len(definition["cells"])
+                print(f"{name}: arm={definition['arm']} cells={cells} methods={','.join(definition['methods'])}")
         return 0
     _smoke()
     return 0

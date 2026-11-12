@@ -12,3 +12,10 @@ def test_cli_plans_and_prepares_smoke_protocol(tmp_path: Path):
     assert json.loads(plan.read_text())["run_count"] == 4
     assert main(["prepare", str(plan), str(output)]) == 0
     assert len(list((output / "runs").glob("*/status.json"))) == 4
+
+
+def test_cli_catalog_lists_registered_experiments(capsys):
+    assert main(["catalog"]) == 0
+    output = capsys.readouterr().out
+    assert "main:" in output
+    assert "prior-structure-chrom:" in output

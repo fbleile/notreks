@@ -43,6 +43,8 @@ listed explicitly under `excluded_entries` rather than becoming empty jobs:
 notreks catalog-plan all plans/all.json --graph-limit 1
 ```
 
+Use `notreks catalog` to inspect the registered arms before planning.
+
 Before aggregation, inspect a result root without loading scientific table
 dependencies:
 
