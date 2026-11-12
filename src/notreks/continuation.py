@@ -29,6 +29,8 @@ class ContinuationConfig:
     learning_rate: float = 3e-4
     l1_weight: float = 0.03
     prior_weight: float = 200.0
+    variance_epsilon: float = 1e-8
+    inverse_epsilon: float = 1e-8
     checkpoint: int = 1_000
     relative_tolerance: float = 1e-6
     threshold: float = 0.3
@@ -44,7 +46,8 @@ class ContinuationConfig:
             raise ValueError("s_schedule must contain positive values for all stages")
         if (self.learning_rate <= 0 or self.checkpoint < 1 or self.threshold < 0
                 or not 0 < self.backtracking_factor < 1
-                or self.minimum_learning_rate <= 0):
+                or self.minimum_learning_rate <= 0
+                or self.variance_epsilon <= 0 or self.inverse_epsilon < 0):
             raise ValueError("invalid optimizer settings")
 
 
