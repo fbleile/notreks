@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Iterable
 
 from .experiment import SeedBook
+from .external import ExternalDataset
 from .protocol import ProtocolSpec, RunSpec
 
 
@@ -93,6 +94,46 @@ def write_plan(path: Path, spec: ProtocolSpec, runs: Iterable[RunSpec], *, maste
     }
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n")
+
+
+def external_plan(manifest: Path, *, name: str, methods: tuple[str, ...],
+                  fractions: tuple[float, ...], partial_rounds: int = 5,
+                  attempts: dict[str, int] | None = None,
+                  master_seed: int = 20260917) -> dict[str, object]:
+    """Build ordinary run identities around one validated external dataset."""
+    dataset = ExternalDataset.from_manifest(manifest)
+    observations, _truth, _weights = dataset.validate_arrays()
+    if not name.strip() or not methods:
+        raise ValueError("external plans require a name and at least one method")
+    if any(q < 0.0 or q > 1.0 for q in fractions):
+        raise ValueError("knowledge fractions must lie in [0, 1]")
+    attempts = attempts or {method: 1 for method in methods}
+    if any(attempts.get(method, 1) < 1 for method in methods):
+        raise ValueError("method attempt budgets must be positive")
+    seeds = SeedBook(master_seed)
+    graph_id = dataset.dataset_id
+    data_id = f"{dataset.dataset_id}_n{observations.shape[0]}"
+    graph_seed = seeds.derive("external-graph", graph_id)
+    data_seed = seeds.derive("external-data", data_id)
+    runs = []
+    for fraction in fractions:
+        rounds = partial_rounds if 0.0 < fraction < 1.0 else 1
+        for round_id in range(rounds):
+            knowledge_seed = seeds.derive("external-knowledge", data_id, fraction, round_id)
+            for method in methods:
+                runs.append(RunSpec(
+                    protocol=name, graph_id=graph_id, data_id=data_id, method=method,
+                    dimension=observations.shape[1], sample_size=observations.shape[0],
+                    graph_family="external", density=0, graph_seed=graph_seed,
+                    data_seed=data_seed, knowledge_seed=knowledge_seed,
+                    knowledge_fraction=fraction, knowledge_round=round_id,
+                    data_model=dataset.evaluation_target + "_observational",
+                    external_manifest=str(dataset.manifest_path),
+                ))
+    return {"protocol": name, "manifest": str(dataset.manifest_path),
+            "dataset_id": dataset.dataset_id, "master_seed": master_seed,
+            "run_count": len(runs), "runs": [run.to_dict() for run in runs],
+            "attempts_by_method": attempts}
 
 
 def main() -> None:

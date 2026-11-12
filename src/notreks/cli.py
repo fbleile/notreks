@@ -16,7 +16,7 @@ from .jobfarm import write_commands
 from .manifest import write_manifest
 from .provenance import write as write_provenance
 from .solver_audit import write as write_solver_audit
-from .planning import PlanSelection, expand_protocol, write_plan
+from .planning import PlanSelection, expand_protocol, external_plan, write_plan
 from .protocol import ProtocolSpec, RunSpec
 from .runner import prepare_run, solve_prepared
 from .solvers import SolverConfig, SolverRegistry
@@ -103,6 +103,14 @@ def main(argv: list[str] | None = None) -> int:
     audit_parser = commands.add_parser("solver-audit", help="hash the external solver closure")
     audit_parser.add_argument("repository", type=Path)
     audit_parser.add_argument("output", type=Path)
+    external_plan_parser = commands.add_parser("external-plan", help="plan runs for a manifest-backed dataset")
+    external_plan_parser.add_argument("manifest", type=Path)
+    external_plan_parser.add_argument("output", type=Path)
+    external_plan_parser.add_argument("--name", required=True)
+    external_plan_parser.add_argument("--methods", nargs="+", required=True)
+    external_plan_parser.add_argument("--fractions", nargs="+", type=float, default=[0.0, 0.25, 1.0])
+    external_plan_parser.add_argument("--partial-rounds", type=int, default=5)
+    external_plan_parser.add_argument("--master-seed", type=int, default=20260917)
     inspect_parser = commands.add_parser("inspect", help="summarize run and stage states")
     inspect_parser.add_argument("root", type=Path)
     inspect_parser.add_argument("--json", action="store_true", dest="as_json")
@@ -171,6 +179,16 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "solver-audit":
         write_solver_audit(args.output, args.repository)
         print(f"wrote {args.output}")
+        return 0
+    if args.command == "external-plan":
+        payload = external_plan(args.manifest, name=args.name,
+                                methods=tuple(args.methods),
+                                fractions=tuple(args.fractions),
+                                partial_rounds=args.partial_rounds,
+                                master_seed=args.master_seed)
+        args.output.parent.mkdir(parents=True, exist_ok=True)
+        args.output.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n")
+        print(f"planned {payload['run_count']} runs -> {args.output}")
         return 0
     if args.command == "inspect":
         report = inspect_output(args.root)

@@ -64,6 +64,17 @@ Use `python -m notreks.external path/to/dataset.json` to validate one before
 planning an external run. Missing files or ambiguous evaluation targets fail
 at the data stage and leave a traceback in the run directory.
 
+Once the manifest is available, create a normal executable plan around it:
+
+```bash
+notreks external-plan path/to/manifest.json plans/causalman.json \
+  --name causalman-small --methods flop flop_notreks \
+  --fractions 0 0.25 1
+```
+
+The plan records the manifest path on every run and derives its dimension and
+sample size from the validated arrays.
+
 ## Direct solver smoke tests
 
 ```bash
