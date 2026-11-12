@@ -19,9 +19,8 @@ reference until full end-to-end parity is complete.
 ## Development smoke test
 
 ```bash
-python -m pytest -q
+make check
 python examples/smoke.py
-python -m notreks.cli smoke
 ```
 
 After installation, the same entry points are available as `notreks` and
