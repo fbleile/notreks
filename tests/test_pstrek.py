@@ -1,6 +1,6 @@
 import numpy as np
 
-from notreks.pstrek import value_and_grad
+from notreks.pstrek import resolvent_value_and_grad, value_and_grad
 
 
 def _finite_difference(W, pairs, function):
@@ -51,3 +51,20 @@ def test_pstrek_rejects_duplicate_unordered_pairs():
         assert "duplicate" in str(error)
     else:
         raise AssertionError("duplicate pairs must be rejected")
+
+
+def test_resolvent_adjoint_matches_legacy_kernel():
+    rng = np.random.default_rng(13)
+    adjacency = rng.normal(scale=0.02, size=(4, 4))
+    resolvent = np.linalg.inv(np.eye(4) - adjacency)
+    value, gradient = resolvent_value_and_grad(
+        adjacency, resolvent, [(0, 1), (2, 3)], penalty_scale=0.5)
+    nodes = [0, 1, 2, 3]
+    pair_mask = np.zeros((4, 4))
+    pair_mask[0, 1] = pair_mask[1, 0] = 1.0
+    pair_mask[2, 3] = pair_mask[3, 2] = 1.0
+    Y = resolvent[:, nodes]
+    expected_value = 0.5 * (2.0 / 3.0) * 0.5 * np.sum(pair_mask * (Y.T @ Y))
+    expected_gradient = ((resolvent.T @ ((2.0 / 3.0) * 0.5 * Y @ pair_mask)) @ Y.T)
+    np.testing.assert_allclose(value, expected_value)
+    np.testing.assert_allclose(gradient, expected_gradient)

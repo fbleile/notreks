@@ -118,6 +118,51 @@ def value_and_grad(
     return PSTrekResult(value, 2.0 * W * Ga)
 
 
+def resolvent_value_and_grad(
+    adjacency: np.ndarray,
+    resolvent: np.ndarray,
+    pairs: Sequence[Pair],
+    *,
+    resolvent_scale: float = 1.0,
+    penalty_scale: float = 1.0,
+) -> tuple[float, np.ndarray]:
+    """Evaluate the selected-column adjoint using a caller's resolvent.
+
+    ``resolvent`` is the matrix supplied by a DAGMA stage.  The function
+    returns the penalty and the gradient with respect to ``adjacency``; the
+    caller is responsible for the final pullback through its adjacency map.
+    Keeping this boundary explicit allows one factorization to serve both the
+    log-det DAG term and PSTrek.
+    """
+    adjacency = np.asarray(adjacency, dtype=float)
+    resolvent = np.asarray(resolvent, dtype=float)
+    if adjacency.ndim != 2 or adjacency.shape[0] != adjacency.shape[1]:
+        raise ValueError("adjacency must be square")
+    if resolvent.shape != adjacency.shape or not np.all(np.isfinite(resolvent)):
+        raise ValueError("resolvent must be finite and match adjacency")
+    if resolvent_scale <= 0 or not np.isfinite(resolvent_scale):
+        raise ValueError("resolvent_scale must be finite and positive")
+    if penalty_scale < 0 or not np.isfinite(penalty_scale):
+        raise ValueError("penalty_scale must be finite and non-negative")
+    d = adjacency.shape[0]
+    canonical, _ = _pairs_and_mask(pairs, d)
+    if not len(canonical):
+        return 0.0, np.zeros_like(adjacency)
+    nodes = np.unique(canonical.reshape(-1))
+    positions = {int(node): index for index, node in enumerate(nodes)}
+    B = np.zeros((len(nodes), len(nodes)))
+    for i, j in canonical:
+        left, right = positions[int(i)], positions[int(j)]
+        B[left, right] += 1.0
+        B[right, left] += 1.0
+    Y = resolvent[:, nodes]
+    effective_scale = (2.0 / (d - 1)) * penalty_scale if d > 1 else 0.0
+    value = 0.5 * effective_scale * float(np.sum(B * (Y.T @ Y)))
+    gy = effective_scale * (Y @ B)
+    gradient = ((resolvent.T @ gy) @ Y.T) / float(resolvent_scale)
+    return value, gradient
+
+
 def main() -> None:
     """Small human-checkable smoke test for the kernel contract."""
     rng = np.random.default_rng(7)
