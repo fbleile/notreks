@@ -11,7 +11,10 @@ This repository is intentionally small and inspectable. The experiment pipeline 
 5. evaluate the result;
 6. aggregate, test, and plot.
 
-The first implementation stage contains only the protocol and provenance contracts. Solver integrations, cluster execution, and figure production will be added on top of these contracts and tested against the existing Benchpress-based implementation.
+The protocol, artifact lifecycle, evaluation, figure, cluster, FLOP, and
+vanilla DAGMA layers are available. The direct DAGMA+PSTrek path is also
+available as a checked migration backend; the legacy continuation remains the
+reference until full end-to-end parity is complete.
 
 ## Development smoke test
 
@@ -25,7 +28,20 @@ After installation, the same entry points are available as `notreks` and
 `notreks-aggregate`. A plan is always generated before execution, so a local
 smoke, a selected slice, and a cluster job all consume the same run manifest.
 
-The current Benchpress repository remains the reference archive while this standalone implementation is built incrementally.
+The current Benchpress repository remains the reference archive while the
+remaining optimizer details are migrated incrementally.
+
+## Direct solver smoke tests
+
+```bash
+python examples/benchpress_adapter_smoke.py /path/to/benchpress --method flop
+python -m notreks.dagma_backend
+```
+
+The second command exercises the standalone profile-Gaussian DAGMA+PSTrek
+path on a small generated data set. It is a smoke test, not a claim of parity;
+the parity boundary and remaining work are recorded in
+`docs/solver_porting.md`.
 
 ## Repository layout
 
