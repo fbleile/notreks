@@ -28,6 +28,7 @@ class ContinuationConfig:
     s_schedule: tuple[float, ...] = (1.0, 0.9, 0.8, 0.7, 0.6)
     learning_rate: float = 3e-4
     l1_weight: float = 0.03
+    structural_weight: float = 1.0
     prior_weight: float = 200.0
     variance_epsilon: float = 1e-8
     inverse_epsilon: float = 1e-8
@@ -45,6 +46,7 @@ class ContinuationConfig:
         if len(self.s_schedule) < self.stages or any(s <= 0 for s in self.s_schedule):
             raise ValueError("s_schedule must contain positive values for all stages")
         if (self.learning_rate <= 0 or self.checkpoint < 1 or self.threshold < 0
+                or self.structural_weight < 0
                 or not 0 < self.backtracking_factor < 1
                 or self.minimum_learning_rate <= 0
                 or self.variance_epsilon <= 0 or self.inverse_epsilon < 0):
@@ -109,9 +111,11 @@ def fit(
             structural_term = structural(W, s)
             prior_term = prior(W, s)
             objective = (mu * (score_term.value + config.l1_weight * np.abs(W).sum())
-                         + structural_term.value + config.prior_weight * prior_term.value)
+                         + config.structural_weight * structural_term.value
+                         + config.prior_weight * prior_term.value)
             gradient = (mu * (score_term.gradient + config.l1_weight * np.sign(W))
-                        + structural_term.gradient + config.prior_weight * prior_term.gradient)
+                        + config.structural_weight * structural_term.gradient
+                        + config.prior_weight * prior_term.gradient)
             moment = 0.99 * moment + 0.01 * gradient
             velocity = 0.999 * velocity + 0.001 * gradient * gradient
             corrected_moment = moment / (1.0 - 0.99 ** iteration)

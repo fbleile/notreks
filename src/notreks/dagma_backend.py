@@ -10,6 +10,7 @@ import scipy.linalg as sla
 from .continuation import ContinuationConfig, ContinuationResult, fit
 from .dagma_math import ValueGradient, l2_score, logdet_acyclicity, profile_gaussian_score
 from .pstrek import resolvent_value_and_grad
+from .tcc import value_and_grad as tcc_value_and_grad
 from .postselection import order_parent_postselection
 from .scores import is_dag
 
@@ -33,6 +34,7 @@ def fit_pstrek(
     config: ContinuationConfig | None = None,
     initial_weights: np.ndarray | None = None,
     score_type: str = "profile_gaussian",
+    constraint_type: str = "pstrek",
 ) -> ContinuationResult:
     """Fit profile-Gaussian DAGMA with the shifted PSTrek resolvent."""
     observations = np.asarray(observations, dtype=float)
@@ -46,6 +48,8 @@ def fit_pstrek(
     config = ContinuationConfig() if config is None else config
     if score_type not in {"l2", "profile_gaussian"}:
         raise ValueError("score_type must be l2 or profile_gaussian")
+    if constraint_type not in {"pstrek", "tcc"}:
+        raise ValueError("constraint_type must be pstrek or tcc")
 
     def score(W: np.ndarray) -> ValueGradient:
         return (l2_score(W, covariance) if score_type == "l2"
@@ -57,6 +61,9 @@ def fit_pstrek(
     def prior(W: np.ndarray, s: float) -> ValueGradient:
         if not pairs or config.prior_weight == 0.0:
             return ValueGradient(0.0, np.zeros_like(W))
+        if constraint_type == "tcc":
+            value, gradient = tcc_value_and_grad(W, pairs)
+            return ValueGradient(value, gradient)
         adjacency = W * W
         matrix = s * np.eye(d) - adjacency
         resolvent = sla.solve(matrix, np.eye(d), check_finite=False)
@@ -76,8 +83,11 @@ def fit_pstrek(
     current = config
     for retry in range(8):
         try:
-            result = fit(score, structural, prior, d, config=current,
-                         domain=domain, initial_weights=initial_weights)
+            effective_config = (replace(current, structural_weight=0.0)
+                                if constraint_type == "tcc" else current)
+            result = fit(score, structural, prior, d, config=effective_config,
+                         domain=None if constraint_type == "tcc" else domain,
+                         initial_weights=initial_weights)
             return replace(result, domain_retries=retry)
         except RuntimeError as error:
             if "domain backtracking" not in str(error) or retry == 7:
@@ -89,6 +99,12 @@ def fit_pstrek(
 def fit_profile_pstrek(*args, **kwargs) -> ContinuationResult:
     """Backward-compatible explicit profile-Gaussian entry point."""
     kwargs["score_type"] = "profile_gaussian"
+    return fit_pstrek(*args, **kwargs)
+
+
+def fit_tcc(*args, **kwargs) -> ContinuationResult:
+    """Fit the profile-Gaussian continuation with TCC instead of PSTrek."""
+    kwargs["constraint_type"] = "tcc"
     return fit_pstrek(*args, **kwargs)
 
 

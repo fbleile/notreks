@@ -47,6 +47,7 @@ This avoids creating a superficially standalone repository whose solver behavior
 
 The direct solver names are intentionally explicit: `dagma` is the upstream
 DAGMA L2 implementation, `dagma_profile` is the standalone continuation with
-the profiled Gaussian score, and `dagma_notreks` adds PSTrek to that profiled
-path. The legacy production adapter remains available for exact reported-run
-reproduction.
+the profiled Gaussian score, `dagma_notreks` adds PSTrek to that profiled path,
+and `dagma_tcc` replaces PSTrek with the TCC constraint and disables the
+ordinary log-det DAG penalty, as in the legacy TCC regime. The legacy
+production adapter remains available for exact reported-run reproduction.

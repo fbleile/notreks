@@ -111,7 +111,8 @@ def register_dagma(registry: SolverRegistry) -> dict[str, Any]:
 
     from .dagma_backend import fit_pstrek
 
-    def solve_custom(observations, pairs, seed, config, method, score_type):
+    def solve_custom(observations, pairs, seed, config, method, score_type,
+                     constraint_type="pstrek"):
         from .continuation import ContinuationConfig
         from .dagma_backend import finalize_profile_pstrek
         from .scores import gaussian_bic, is_dag
@@ -137,6 +138,7 @@ def register_dagma(registry: SolverRegistry) -> dict[str, Any]:
                 ),
                 initial_weights=initial,
                 score_type=score_type,
+                constraint_type=constraint_type,
             )
             adjacency, final_diagnostics = finalize_profile_pstrek(observations, pairs, result)
             bic = (gaussian_bic(observations, adjacency, lambda_bic=2.0)[0]
@@ -151,6 +153,7 @@ def register_dagma(registry: SolverRegistry) -> dict[str, Any]:
         return SolverResult(method, adjacency, {
             "backend": "notreks.continuation",
             "loss": score_type,
+            "constraint": constraint_type,
             "threshold": 0.3,
             "stages": len(result.stages),
             "converged": result.converged,
@@ -166,6 +169,10 @@ def register_dagma(registry: SolverRegistry) -> dict[str, Any]:
         return solve_custom(observations, pairs, seed, config,
                             "dagma_notreks", "profile_gaussian")
 
+    def solve_tcc(observations, pairs, seed, config):
+        return solve_custom(observations, pairs, seed, config,
+                            "dagma_tcc", "profile_gaussian", "tcc")
+
     def solve_profile(observations, pairs, seed, config):
         del pairs
         return solve_custom(observations, [], seed, config,
@@ -173,6 +180,7 @@ def register_dagma(registry: SolverRegistry) -> dict[str, Any]:
 
     registry.register("dagma_notreks", solve_notreks)
     registry.register("dagma_profile", solve_profile)
+    registry.register("dagma_tcc", solve_tcc)
     return {"backend": "dagma+notreks", "loss": "l2/profile_gaussian", "threshold": 0.3,
             "profile_baseline": "dagma_profile"}
 
