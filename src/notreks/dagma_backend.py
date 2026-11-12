@@ -18,6 +18,7 @@ def fit_profile_pstrek(
     pairs: Sequence[tuple[int, int]],
     *,
     config: ContinuationConfig | None = None,
+    initial_weights: np.ndarray | None = None,
 ) -> ContinuationResult:
     """Fit profile-Gaussian DAGMA with the shifted PSTrek resolvent."""
     observations = np.asarray(observations, dtype=float)
@@ -55,7 +56,8 @@ def fit_profile_pstrek(
             return False
         return bool(np.all(np.isfinite(inverse)) and np.all(inverse >= -1e-12))
 
-    return fit(score, structural, prior, d, config=config, domain=domain)
+    return fit(score, structural, prior, d, config=config,
+               domain=domain, initial_weights=initial_weights)
 
 
 def finalize_profile_pstrek(

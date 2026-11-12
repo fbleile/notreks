@@ -102,27 +102,47 @@ def register_dagma(registry: SolverRegistry) -> dict[str, Any]:
     from .dagma_backend import fit_profile_pstrek
 
     def solve_notreks(observations, pairs, seed, config):
-        del seed
         from .continuation import ContinuationConfig
-        result = fit_profile_pstrek(
-            observations, pairs,
-            config=ContinuationConfig(
-                stages=config.dagma_stages,
-                warm_iter=config.dagma_warm_iter,
-                max_iter=config.dagma_max_iter,
-                prior_weight=config.trek_weight,
-                threshold=0.3,
-            ),
-        )
         from .dagma_backend import finalize_profile_pstrek
-        adjacency, final_diagnostics = finalize_profile_pstrek(
-            observations, pairs, result)
+        from .scores import gaussian_bic, is_dag
+        best = None
+        best_bic = np.inf
+        restart_diagnostics = []
+        for restart in range(config.attempts):
+            rng = np.random.default_rng(int(seed) + restart)
+            initial = rng.normal(scale=0.05, size=(observations.shape[1],) * 2)
+            np.fill_diagonal(initial, 0.0)
+            result = fit_profile_pstrek(
+                observations, pairs,
+                config=ContinuationConfig(
+                    stages=config.dagma_stages,
+                    warm_iter=config.dagma_warm_iter,
+                    max_iter=config.dagma_max_iter,
+                    prior_weight=config.trek_weight,
+                    threshold=0.3,
+                ),
+                initial_weights=initial,
+            )
+            adjacency, final_diagnostics = finalize_profile_pstrek(observations, pairs, result)
+            bic = (gaussian_bic(observations, adjacency, lambda_bic=2.0)[0]
+                   if is_dag(adjacency) else np.inf)
+            restart_diagnostics.append({"restart": restart, "bic": float(bic), **final_diagnostics})
+            if bic < best_bic:
+                best_bic = bic
+                best = (result, adjacency, final_diagnostics)
+        if best is None:
+            raise SolverError("DAGMA+PSTrek produced no restart result")
+        result, adjacency, final_diagnostics = best
         return SolverResult("dagma_notreks", adjacency, {
             "backend": "notreks.continuation",
             "loss": "profile_gaussian",
             "threshold": 0.3,
             "stages": len(result.stages),
             "converged": result.converged,
+            "attempts_requested": config.attempts,
+            "attempts_completed": len(restart_diagnostics),
+            "selected_bic": float(best_bic),
+            "restart_diagnostics": restart_diagnostics,
             **final_diagnostics,
         })
 
