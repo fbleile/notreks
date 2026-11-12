@@ -154,6 +154,7 @@ def register_dagma(registry: SolverRegistry) -> dict[str, Any]:
             "threshold": 0.3,
             "stages": len(result.stages),
             "converged": result.converged,
+            "domain_retries": result.domain_retries,
             "attempts_requested": config.attempts,
             "attempts_completed": len(restart_diagnostics),
             "selected_bic": float(best_bic),

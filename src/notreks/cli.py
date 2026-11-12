@@ -39,6 +39,7 @@ def main(argv: list[str] | None = None) -> int:
     solve_parser.add_argument("--benchpress-root", type=Path)
     solve_parser.add_argument("--backend", choices=("benchpress", "direct"), default="benchpress")
     solve_parser.add_argument("--attempts", type=int)
+    _solver_arguments(solve_parser)
     _slice_arguments(solve_parser)
     run_parser = commands.add_parser("run", help="prepare and solve planned runs")
     run_parser.add_argument("plan", type=Path)
@@ -46,6 +47,7 @@ def main(argv: list[str] | None = None) -> int:
     run_parser.add_argument("--benchpress-root", type=Path)
     run_parser.add_argument("--backend", choices=("benchpress", "direct"), default="benchpress")
     run_parser.add_argument("--attempts", type=int)
+    _solver_arguments(run_parser)
     _slice_arguments(run_parser)
     aggregate_parser = commands.add_parser("aggregate", help="evaluate completed runs")
     aggregate_parser.add_argument("output_root", type=Path)
@@ -157,7 +159,7 @@ def _execute(args: argparse.Namespace, *, solve: bool) -> int:
         artifacts = prepare_run(run, args.output_root)
         if solve:
             attempts = getattr(args, "attempts", None) or plan_attempts.get(run.method, 1)
-            solve_prepared(artifacts, run, registry, SolverConfig(attempts=attempts))
+            solve_prepared(artifacts, run, registry, _solver_config(args, attempts))
         print(f"completed {run.key()} method={run.method}", flush=True)
     return 0
 
@@ -172,6 +174,25 @@ def _load_protocol(path: Path) -> ProtocolSpec:
 def _slice_arguments(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--start", type=int, default=0)
     parser.add_argument("--limit", type=int)
+
+
+def _solver_arguments(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument("--flop-sweeps", type=int, default=16)
+    parser.add_argument("--dagma-stages", type=int, default=5)
+    parser.add_argument("--dagma-warm-iter", type=int, default=30_000)
+    parser.add_argument("--dagma-max-iter", type=int, default=60_000)
+    parser.add_argument("--trek-weight", type=float, default=1.0)
+
+
+def _solver_config(args: argparse.Namespace, attempts: int) -> SolverConfig:
+    return SolverConfig(
+        attempts=attempts,
+        flop_sweeps=args.flop_sweeps,
+        dagma_stages=args.dagma_stages,
+        dagma_warm_iter=args.dagma_warm_iter,
+        dagma_max_iter=args.dagma_max_iter,
+        trek_weight=args.trek_weight,
+    )
 
 
 def _smoke() -> None:

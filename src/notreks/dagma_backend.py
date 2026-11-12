@@ -1,6 +1,7 @@
 """Custom linear DAGMA path built from the checked NOTREKS components."""
 from __future__ import annotations
 
+from dataclasses import replace
 from typing import Sequence
 
 import numpy as np
@@ -72,8 +73,17 @@ def fit_pstrek(
             return False
         return bool(np.all(np.isfinite(inverse)) and np.all(inverse >= -1e-12))
 
-    return fit(score, structural, prior, d, config=config,
-               domain=domain, initial_weights=initial_weights)
+    current = config
+    for retry in range(8):
+        try:
+            result = fit(score, structural, prior, d, config=current,
+                         domain=domain, initial_weights=initial_weights)
+            return replace(result, domain_retries=retry)
+        except RuntimeError as error:
+            if "domain backtracking" not in str(error) or retry == 7:
+                raise
+            current = replace(current, learning_rate=current.learning_rate * 0.5)
+    raise RuntimeError("unreachable domain retry state")
 
 
 def fit_profile_pstrek(*args, **kwargs) -> ContinuationResult:

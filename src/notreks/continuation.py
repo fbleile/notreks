@@ -70,6 +70,7 @@ class ContinuationResult:
     adjacency: np.ndarray
     stages: tuple[StageDiagnostic, ...]
     converged: bool
+    domain_retries: int = 0
 
 
 def fit(
