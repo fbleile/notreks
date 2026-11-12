@@ -8,7 +8,7 @@ from pathlib import Path
 
 from .aggregate import collect, write_tables
 from .catalog_planning import CatalogSelection, expand_catalog, write_catalog_plan
-from .integrations import register_benchpress
+from .integrations import register_benchpress, register_direct
 from .figures import load_rows, plot_mean_sd
 from .jobfarm import write_commands
 from .manifest import write_manifest
@@ -36,13 +36,15 @@ def main(argv: list[str] | None = None) -> int:
     solve_parser = commands.add_parser("solve", help="run registered solvers for planned runs")
     solve_parser.add_argument("plan", type=Path)
     solve_parser.add_argument("output_root", type=Path)
-    solve_parser.add_argument("--benchpress-root", type=Path, required=True)
+    solve_parser.add_argument("--benchpress-root", type=Path)
+    solve_parser.add_argument("--backend", choices=("benchpress", "direct"), default="benchpress")
     solve_parser.add_argument("--attempts", type=int)
     _slice_arguments(solve_parser)
     run_parser = commands.add_parser("run", help="prepare and solve planned runs")
     run_parser.add_argument("plan", type=Path)
     run_parser.add_argument("output_root", type=Path)
-    run_parser.add_argument("--benchpress-root", type=Path, required=True)
+    run_parser.add_argument("--benchpress-root", type=Path)
+    run_parser.add_argument("--backend", choices=("benchpress", "direct"), default="benchpress")
     run_parser.add_argument("--attempts", type=int)
     _slice_arguments(run_parser)
     aggregate_parser = commands.add_parser("aggregate", help="evaluate completed runs")
@@ -144,7 +146,12 @@ def _execute(args: argparse.Namespace, *, solve: bool) -> int:
     selected = runs[args.start: args.start + args.limit if args.limit is not None else None]
     registry = SolverRegistry()
     if solve:
-        register_benchpress(registry, args.benchpress_root)
+        if args.backend == "benchpress":
+            if args.benchpress_root is None:
+                raise SystemExit("--benchpress-root is required with --backend benchpress")
+            register_benchpress(registry, args.benchpress_root)
+        else:
+            register_direct(registry, {run.method for run in selected})
     plan_attempts = payload.get("attempts_by_method", {})
     for run in selected:
         artifacts = prepare_run(run, args.output_root)

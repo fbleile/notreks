@@ -38,6 +38,14 @@ python examples/benchpress_adapter_smoke.py /path/to/benchpress --method flop
 python -m notreks.dagma_backend
 ```
 
+Planned runs can use the direct backends without a Benchpress checkout:
+
+```bash
+notreks run plan.json results --backend direct --start 0 --limit 1
+```
+
+JobFarm command generation accepts the same `--backend direct` choice.
+
 The second command exercises the standalone profile-Gaussian DAGMA+PSTrek
 path on a small generated data set. It is a smoke test, not a claim of parity;
 the parity boundary and remaining work are recorded in

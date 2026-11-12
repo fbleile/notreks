@@ -71,6 +71,16 @@ def register_flopsearch(registry: SolverRegistry) -> dict[str, Any]:
     return {"backend": "flopsearch", "version": getattr(flopsearch, "__version__", None)}
 
 
+def register_direct(registry: SolverRegistry, methods: set[str]) -> dict[str, Any]:
+    """Register only the installed direct backends needed by a run plan."""
+    provenance: dict[str, Any] = {"backend": "direct", "methods": sorted(methods)}
+    if any(method.startswith("flop") for method in methods):
+        provenance["flopsearch"] = register_flopsearch(registry)
+    if any(method.startswith("dagma") for method in methods):
+        provenance["dagma"] = register_dagma(registry)
+    return provenance
+
+
 def register_dagma(registry: SolverRegistry) -> dict[str, Any]:
     """Register upstream vanilla DAGMA and the standalone PSTrek path."""
     try:

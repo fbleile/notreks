@@ -19,3 +19,15 @@ def test_jobfarm_commands_are_one_per_run(tmp_path: Path):
     assert all("--limit 1" in line and "--start" in line for line in lines)
     assert "--attempts 2" in lines[0]
     assert "--attempts 20" in lines[1]
+
+
+def test_jobfarm_direct_commands_do_not_require_benchpress(tmp_path: Path):
+    plan = tmp_path / "plan.json"
+    plan.write_text(json.dumps({"runs": [{"run_key": "a", "method": "dagma"}],
+                                "attempts_by_method": {"dagma": 2}}))
+    commands = tmp_path / "direct.cmd"
+    write_commands(plan, commands, tmp_path / "results", tmp_path / "unused",
+                   tmp_path / "python", tmp_path / "project", backend="direct")
+    line = commands.read_text()
+    assert "--backend direct" in line
+    assert "--benchpress-root" not in line
