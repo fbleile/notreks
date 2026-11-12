@@ -18,6 +18,11 @@ notreks-trend = "notreks.analysis:main"
 notreks-exact = "notreks.exact:main"
 notreks-inspect = "notreks.inspect:main"
 notreks-preflight = "notreks.preflight:main"
+notreks-catalog-plan = "notreks.catalog_planning:main"
+notreks-jobfarm = "notreks.jobfarm:main"
+notreks-figure = "notreks.figures:main"
+notreks-manifest = "notreks.manifest:main"
+notreks-solver-audit = "notreks.solver_audit:main"
 
 [project.optional-dependencies]
 test = ["pytest>=8"]

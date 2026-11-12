@@ -31,8 +31,9 @@ make check
 python examples/smoke.py
 ```
 
-After installation, the same entry points are available as `notreks` and
-`notreks-aggregate`. A plan is always generated before execution, so a local
+After installation, the same entry points are available as `notreks` and the
+focused commands `notreks-catalog-plan`, `notreks-jobfarm`, `notreks-figure`,
+and `notreks-aggregate`. A plan is always generated before execution, so a local
 smoke, a selected slice, and a cluster job all consume the same run manifest.
 
 To materialize all runnable catalog entries in one plan, use `all`. External
