@@ -57,6 +57,15 @@ def _evaluate_run(output_root: Path, run_root: Path, run: dict[str, Any]) -> dic
         if not metadata_path.exists():
             raise RuntimeError(f"missing external dataset metadata: {metadata_path}")
         metadata = json.loads(metadata_path.read_text())
+        if metadata.get("evaluation_target") == "synthetic_cpdag":
+            truth = np.load(shared / "graph.npy")
+            record = synthetic_metrics(truth, estimate, include_ancestor_aid=True)
+            return {
+                **{key: value for key, value in run.items() if key != "run_key"},
+                "run_key": run["run_key"],
+                **record.metrics,
+                "evaluation_target": record.target,
+            }
         projection_path = metadata.get("projection")
         if not projection_path:
             raise RuntimeError(

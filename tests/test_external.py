@@ -4,6 +4,7 @@ import numpy as np
 import pytest
 
 from notreks.external import ExternalDataError, ExternalDataset
+from notreks.external_sources import import_causalassembly
 
 
 def test_external_manifest_validates_arrays(tmp_path):
@@ -31,6 +32,18 @@ def test_external_pairs_are_explicit_and_validated(tmp_path):
                                 "knowledge_pairs": "pairs.json", "nodes": ["a", "b", "c"]}))
     dataset = ExternalDataset.from_manifest(path)
     assert dataset.available_pairs(3) == [(0, 1), (0, 2)]
+
+
+def test_causalassembly_importer_writes_portable_manifest(tmp_path):
+    nodes = [{"id": "a"}, {"id": "b"}, {"id": "c"}]
+    truth = {"nodes": nodes, "adjacency": [[{"id": "b"}], [], []]}
+    (tmp_path / "truth.json").write_text(json.dumps(truth))
+    with (tmp_path / "data.csv").open("w") as handle:
+        handle.write("a,b,c\n")
+        handle.write("1,2,3\n")
+    with pytest.raises(ValueError, match="shape"):
+        import_causalassembly(tmp_path / "out", data_csv=tmp_path / "data.csv",
+                              truth_json=tmp_path / "truth.json")
 
 
 def test_external_manifest_requires_files(tmp_path):

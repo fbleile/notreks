@@ -75,6 +75,9 @@ notreks trend-figure aggregate_results.csv figures/chromatic.png \
   --data-label "ER4; n=500"
 ```
 
+PNG is the default output format. Pass `--format pdf` when a vector PDF is
+needed.
+
 ## Repository layout
 
 ```text

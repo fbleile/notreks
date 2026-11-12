@@ -71,6 +71,7 @@ def main(argv: list[str] | None = None) -> int:
     figure_parser.add_argument("--group", default="method")
     figure_parser.add_argument("--data-label", default="")
     figure_parser.add_argument("--title")
+    figure_parser.add_argument("--format", choices=("png", "pdf"), default="png")
     trend_figure_parser = commands.add_parser("trend-figure",
                                                help="plot graph-clustered chromatic means and standard deviations")
     trend_figure_parser.add_argument("input", type=Path)
@@ -81,6 +82,7 @@ def main(argv: list[str] | None = None) -> int:
     trend_figure_parser.add_argument("--group", default="method")
     trend_figure_parser.add_argument("--data-label", default="")
     trend_figure_parser.add_argument("--title")
+    trend_figure_parser.add_argument("--format", choices=("png", "pdf"), default="png")
     provenance_parser = commands.add_parser("provenance", help="record environment provenance")
     provenance_parser.add_argument("output", type=Path)
     provenance_parser.add_argument("--project-root", type=Path)
@@ -119,16 +121,18 @@ def main(argv: list[str] | None = None) -> int:
         print(f"wrote {count} JobFarm commands -> {args.output}")
         return 0
     if args.command == "figure":
-        plot_mean_sd(load_rows(args.input), args.output, x=args.x, y=args.y,
+        output = args.output.with_suffix(f".{args.format}")
+        plot_mean_sd(load_rows(args.input), output, x=args.x, y=args.y,
                      group=args.group, data_label=args.data_label, title=args.title)
-        print(f"wrote {args.output}")
+        print(f"wrote {output}")
         return 0
     if args.command == "trend-figure":
-        plot_graph_clustered_trend(load_rows(args.input), args.output,
+        output = args.output.with_suffix(f".{args.format}")
+        plot_graph_clustered_trend(load_rows(args.input), output,
                                    graph=args.graph, k=args.k, y=args.y,
                                    group=args.group, data_label=args.data_label,
                                    title=args.title)
-        print(f"wrote {args.output}")
+        print(f"wrote {output}")
         return 0
     if args.command == "provenance":
         write_provenance(args.output, args.project_root)

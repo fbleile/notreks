@@ -97,7 +97,9 @@ manifests have not been supplied.
 `exact-feasibility-pilot` is a bounded combinatorial study of the restricted
 DAG space. It is not a solver benchmark and has no sample size, method, or
 recovery metric. Its set enumeration and graph-property tables are retained
-separately from recovery results.
+separately from recovery results. The runnable entry point is
+`notreks-exact`; it is deliberately bounded to small dimensions and writes
+one JSON artifact per pair-set plus a summary.
 
 ## What is retained
 
