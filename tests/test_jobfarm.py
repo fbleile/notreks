@@ -19,6 +19,7 @@ def test_jobfarm_commands_are_one_per_run(tmp_path: Path):
     assert all("--limit 1" in line and "--start" in line for line in lines)
     assert "--attempts 2" in lines[0]
     assert "--attempts 20" in lines[1]
+    assert "--dagma-max-iter 60000" in lines[0]
 
 
 def test_jobfarm_direct_commands_do_not_require_benchpress(tmp_path: Path):
@@ -31,3 +32,4 @@ def test_jobfarm_direct_commands_do_not_require_benchpress(tmp_path: Path):
     line = commands.read_text()
     assert "--backend direct" in line
     assert "--benchpress-root" not in line
+    assert "--dagma-warm-iter 30000" in line

@@ -11,7 +11,9 @@ import shlex
 def write_commands(plan: Path, output: Path, output_root: Path,
                    benchpress_root: Path, python: Path, project_root: Path, *, attempts: int | None = None,
                    start: int = 0, limit: int | None = None,
-                   backend: str = "benchpress") -> int:
+                   backend: str = "benchpress", flop_sweeps: int = 16,
+                   dagma_stages: int = 5, dagma_warm_iter: int = 30_000,
+                   dagma_max_iter: int = 60_000, trek_weight: float = 1.0) -> int:
     """Write commands for a contiguous plan slice and return task count."""
     payload = json.loads(plan.read_text())
     total = len(payload["runs"])
@@ -32,7 +34,15 @@ def write_commands(plan: Path, output: Path, output_root: Path,
         ]
         if backend == "benchpress":
             command += ["--benchpress-root", str(benchpress_root)]
-        command += ["--attempts", str(run_attempts), "--start", str(index), "--limit", "1"]
+        command += [
+            "--attempts", str(run_attempts),
+            "--flop-sweeps", str(flop_sweeps),
+            "--dagma-stages", str(dagma_stages),
+            "--dagma-warm-iter", str(dagma_warm_iter),
+            "--dagma-max-iter", str(dagma_max_iter),
+            "--trek-weight", str(trek_weight),
+            "--start", str(index), "--limit", "1",
+        ]
         commands.append(" ".join(shlex.quote(part) for part in command))
     output.write_text("\n".join(commands) + ("\n" if commands else ""))
     return len(commands)
@@ -50,12 +60,21 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--start", type=int, default=0)
     parser.add_argument("--limit", type=int)
     parser.add_argument("--backend", choices=("benchpress", "direct"), default="benchpress")
+    parser.add_argument("--flop-sweeps", type=int, default=16)
+    parser.add_argument("--dagma-stages", type=int, default=5)
+    parser.add_argument("--dagma-warm-iter", type=int, default=30_000)
+    parser.add_argument("--dagma-max-iter", type=int, default=60_000)
+    parser.add_argument("--trek-weight", type=float, default=1.0)
     args = parser.parse_args(argv)
     count = write_commands(args.plan, args.output, args.output_root,
                            args.benchpress_root, args.python,
                            args.project_root,
                            attempts=args.attempts, start=args.start, limit=args.limit,
-                           backend=args.backend)
+                           backend=args.backend, flop_sweeps=args.flop_sweeps,
+                           dagma_stages=args.dagma_stages,
+                           dagma_warm_iter=args.dagma_warm_iter,
+                           dagma_max_iter=args.dagma_max_iter,
+                           trek_weight=args.trek_weight)
     print(f"wrote {count} JobFarm commands -> {args.output}")
     return 0
 
