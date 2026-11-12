@@ -35,6 +35,14 @@ After installation, the same entry points are available as `notreks` and
 `notreks-aggregate`. A plan is always generated before execution, so a local
 smoke, a selected slice, and a cluster job all consume the same run manifest.
 
+To materialize all runnable catalog entries in one plan, use `all`. External
+benchmarks without supplied manifests and the analysis-only exact pilot are
+listed explicitly under `excluded_entries` rather than becoming empty jobs:
+
+```bash
+notreks catalog-plan all plans/all.json --graph-limit 1
+```
+
 Before aggregation, inspect a result root without loading scientific table
 dependencies:
 

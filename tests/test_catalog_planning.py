@@ -1,6 +1,7 @@
 from pathlib import Path
 
-from notreks.catalog_planning import CatalogSelection, expand_catalog, methods_for_condition, write_catalog_plan
+from notreks.catalog_planning import (CatalogSelection, expand_all_catalog, expand_catalog,
+                                      methods_for_condition, write_catalog_plan)
 
 
 def test_catalog_plan_respects_baseline_and_prior_method_sets(tmp_path: Path):
@@ -34,3 +35,11 @@ def test_external_catalog_does_not_create_empty_plan():
     import pytest
     with pytest.raises(ValueError, match="external dataset manifests"):
         expand_catalog("causalman-small")
+
+
+def test_all_catalog_reports_nonrunnable_entries_explicitly():
+    definitions, runs, excluded = expand_all_catalog(selection=CatalogSelection(graph_limit=1))
+    assert {definition.name for definition in definitions} >= {"main", "causalman-small"}
+    assert runs
+    assert {item["experiment"] for item in excluded} == {
+        "causalman-small", "causalman-medium", "causalassembly", "exact-feasibility-pilot"}

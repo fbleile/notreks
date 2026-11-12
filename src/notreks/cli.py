@@ -7,7 +7,8 @@ import json
 from pathlib import Path
 
 from .aggregate import collect, write_tables
-from .catalog_planning import CatalogSelection, expand_catalog, write_catalog_plan
+from .catalog_planning import (CatalogSelection, expand_all_catalog, expand_catalog,
+                               write_catalog_plan, write_combined_catalog_plan)
 from .integrations import register_benchpress, register_direct
 from .inspect import inspect_output
 from .figures import load_rows, plot_graph_clustered_trend, plot_mean_sd
@@ -154,11 +155,18 @@ def main(argv: list[str] | None = None) -> int:
         print(f"wrote {args.output}")
         return 0
     if args.command == "catalog-plan":
-        definition, runs = expand_catalog(
-            args.experiment, master_seed=args.master_seed,
-            selection=CatalogSelection(args.graph_start, args.graph_limit))
-        write_catalog_plan(args.output, definition, runs, master_seed=args.master_seed)
-        print(f"planned {len(runs)} runs -> {args.output}")
+        selection = CatalogSelection(args.graph_start, args.graph_limit)
+        if args.experiment == "all":
+            definitions, runs, excluded = expand_all_catalog(
+                master_seed=args.master_seed, selection=selection)
+            write_combined_catalog_plan(args.output, definitions, runs, excluded,
+                                        master_seed=args.master_seed)
+            print(f"planned {len(runs)} runs; excluded={len(excluded)} -> {args.output}")
+        else:
+            definition, runs = expand_catalog(
+                args.experiment, master_seed=args.master_seed, selection=selection)
+            write_catalog_plan(args.output, definition, runs, master_seed=args.master_seed)
+            print(f"planned {len(runs)} runs -> {args.output}")
         return 0
     if args.command == "solver-audit":
         write_solver_audit(args.output, args.repository)

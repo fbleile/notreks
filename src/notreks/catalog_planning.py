@@ -7,7 +7,7 @@ import json
 from dataclasses import dataclass
 from pathlib import Path
 
-from .catalog import ExperimentDefinition, get
+from .catalog import CATALOG, ExperimentDefinition, get
 from .experiment import SeedBook
 from .protocol import RunSpec
 
@@ -85,6 +85,24 @@ def expand_catalog(name: str, *, master_seed: int = 20260917,
     return definition, runs
 
 
+def expand_all_catalog(*, master_seed: int = 20260917,
+                       selection: CatalogSelection = CatalogSelection()) -> tuple[list[ExperimentDefinition], list[RunSpec], list[dict[str, str]]]:
+    """Expand runnable entries and report deliberate non-runnable exclusions."""
+    definitions, runs, excluded = [], [], []
+    for name in CATALOG:
+        definition = get(name)
+        try:
+            current_definition, current_runs = expand_catalog(
+                name, master_seed=master_seed, selection=selection)
+        except ValueError as error:
+            definitions.append(definition)
+            excluded.append({"experiment": name, "reason": str(error)})
+            continue
+        definitions.append(current_definition)
+        runs.extend(current_runs)
+    return definitions, runs, excluded
+
+
 def write_catalog_plan(path: Path, definition: ExperimentDefinition, runs: list[RunSpec],
                        *, master_seed: int) -> None:
     payload = {
@@ -98,6 +116,23 @@ def write_catalog_plan(path: Path, definition: ExperimentDefinition, runs: list[
     path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n")
 
 
+def write_combined_catalog_plan(path: Path, definitions: list[ExperimentDefinition],
+                                runs: list[RunSpec], excluded: list[dict[str, str]],
+                                *, master_seed: int) -> None:
+    """Write one plan for all catalog entries and explicit exclusions."""
+    attempts: dict[str, int] = {}
+    for definition in definitions:
+        attempts.update(dict(definition.attempts_by_method))
+    payload = {
+        "catalog_entries": [definition.to_dict() for definition in definitions],
+        "master_seed": master_seed, "run_count": len(runs),
+        "runs": [run.to_dict() for run in runs],
+        "attempts_by_method": attempts, "excluded_entries": excluded,
+    }
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n")
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="notreks-catalog-plan")
     parser.add_argument("experiment")
@@ -106,10 +141,18 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--graph-start", type=int, default=0)
     parser.add_argument("--graph-limit", type=int)
     args = parser.parse_args(argv)
-    definition, runs = expand_catalog(args.experiment, master_seed=args.master_seed,
-                                      selection=CatalogSelection(args.graph_start, args.graph_limit))
-    write_catalog_plan(args.output, definition, runs, master_seed=args.master_seed)
-    print(f"planned {len(runs)} runs -> {args.output}")
+    selection = CatalogSelection(args.graph_start, args.graph_limit)
+    if args.experiment == "all":
+        definitions, runs, excluded = expand_all_catalog(
+            master_seed=args.master_seed, selection=selection)
+        write_combined_catalog_plan(args.output, definitions, runs, excluded,
+                                    master_seed=args.master_seed)
+        print(f"planned {len(runs)} runs; excluded={len(excluded)} -> {args.output}")
+    else:
+        definition, runs = expand_catalog(args.experiment, master_seed=args.master_seed,
+                                          selection=selection)
+        write_catalog_plan(args.output, definition, runs, master_seed=args.master_seed)
+        print(f"planned {len(runs)} runs -> {args.output}")
     return 0
 
 
