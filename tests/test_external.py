@@ -27,3 +27,12 @@ def test_external_manifest_requires_files(tmp_path):
     path.write_text(json.dumps({"observations": "missing.npy", "truth_adjacency": "truth.npy"}))
     with pytest.raises(ExternalDataError, match="does not exist"):
         ExternalDataset.from_manifest(path)
+
+
+def test_external_manifest_requires_node_names(tmp_path):
+    np.save(tmp_path / "x.npy", np.zeros((4, 2)))
+    np.save(tmp_path / "truth.npy", np.zeros((2, 2)))
+    path = tmp_path / "dataset.json"
+    path.write_text(json.dumps({"observations": "x.npy", "truth_adjacency": "truth.npy"}))
+    with pytest.raises(ExternalDataError, match="nodes"):
+        ExternalDataset.from_manifest(path)

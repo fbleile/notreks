@@ -83,9 +83,10 @@ class ExternalDataset:
         if projection is not None and not projection.is_file():
             raise ExternalDataError(f"external projection file does not exist: {projection}")
 
-        nodes_value = payload.get("nodes", [])
-        if not isinstance(nodes_value, list) or any(not isinstance(node, str) for node in nodes_value):
-            raise ExternalDataError("external manifest field 'nodes' must be a list of strings")
+        nodes_value = payload.get("nodes")
+        if (not isinstance(nodes_value, list) or not nodes_value or
+                any(not isinstance(node, str) or not node for node in nodes_value)):
+            raise ExternalDataError("external manifest field 'nodes' must be a non-empty list of strings")
         target = payload.get("evaluation_target", "synthetic_cpdag")
         if not isinstance(target, str) or not target:
             raise ExternalDataError("evaluation_target must be a non-empty string")
@@ -108,6 +109,8 @@ class ExternalDataset:
                 f"truth_adjacency must have shape {(dimension, dimension)}, got {truth.shape}")
         if np.any(np.diag(truth)):
             raise ExternalDataError("truth_adjacency must have a zero diagonal")
+        if np.any((truth != 0) & (truth != 1)):
+            raise ExternalDataError("truth_adjacency must be binary")
         if self.nodes and len(self.nodes) != dimension:
             raise ExternalDataError(f"nodes has length {len(self.nodes)}, expected {dimension}")
         if self.weights_path is None:
