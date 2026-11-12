@@ -39,5 +39,6 @@ This avoids creating a superficially standalone repository whose solver behavior
 | DAGMA acyclicity and profile score | `notreks.dagma_math` | finite differences and legacy parity | use in continuation |
 | TCC value and gradient | `notreks.tcc` | deterministic checks and legacy parity | connect to continuation |
 | Objective composition | `notreks.objectives` | component and weight checks | add optimizer loop |
-| Continuation loop | `notreks.continuation` | deterministic callback smoke | add M-matrix domain checks, backtracking, proximal L1, and legacy parity |
-| Production DAGMA continuation | legacy adapter | end-to-end solver parity harness | replace only after the preceding checks |
+| Continuation loop | `notreks.continuation` | deterministic callback smoke and domain backtracking | compare every update detail with legacy |
+| Direct DAGMA+PSTrek smoke path | `notreks.dagma_backend` | direct solver adapter smoke | end-to-end legacy parity and proximal-L1 parity |
+| Production DAGMA continuation | legacy adapter | end-to-end solver parity harness | remove only after the preceding checks |

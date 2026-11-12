@@ -72,7 +72,7 @@ def register_flopsearch(registry: SolverRegistry) -> dict[str, Any]:
 
 
 def register_dagma(registry: SolverRegistry) -> dict[str, Any]:
-    """Register upstream vanilla DAGMA; PSTrek remains a separate adapter."""
+    """Register upstream vanilla DAGMA and the standalone PSTrek path."""
     try:
         from dagma.linear import DagmaLinear
     except ImportError as error:
@@ -98,7 +98,32 @@ def register_dagma(registry: SolverRegistry) -> dict[str, Any]:
         })
 
     registry.register("dagma", solve)
-    return {"backend": "dagma", "loss": "l2", "threshold": 0.3}
+
+    from .dagma_backend import fit_profile_pstrek
+
+    def solve_notreks(observations, pairs, seed, config):
+        del seed
+        from .continuation import ContinuationConfig
+        result = fit_profile_pstrek(
+            observations, pairs,
+            config=ContinuationConfig(
+                stages=config.dagma_stages,
+                warm_iter=config.dagma_warm_iter,
+                max_iter=config.dagma_max_iter,
+                prior_weight=config.trek_weight,
+                threshold=0.3,
+            ),
+        )
+        return SolverResult("dagma_notreks", result.adjacency, {
+            "backend": "notreks.continuation",
+            "loss": "profile_gaussian",
+            "threshold": 0.3,
+            "stages": len(result.stages),
+            "converged": result.converged,
+        })
+
+    registry.register("dagma_notreks", solve_notreks)
+    return {"backend": "dagma+notreks", "loss": "l2/profile_gaussian", "threshold": 0.3}
 
 
 def _flop_adapter(function: Callable[..., tuple[np.ndarray, dict[str, Any]]], name: str):
