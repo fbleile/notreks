@@ -22,6 +22,7 @@ figures and statistical analysis
 - `src/notreks/catalog_planning.py` expands one catalog entry into run identities and applies condition-specific method policies.
 - `src/notreks/protocol.py` defines serializable protocol and run contracts.
 - `src/notreks/graphs.py` and `src/notreks/synthetic.py` generate graph/data/knowledge inputs from explicit seeds.
+- `src/notreks/external.py` validates manifest-backed observational datasets. CausalMan and CausalAssembly are not silently treated as synthetic DAGs; their observations, truth adjacency, projection metadata, and node names must be supplied explicitly.
 - `src/notreks/runner.py` owns artifact creation, checkpointing, and stage errors.
 - `src/notreks/solvers.py` defines the solver contract; `src/notreks/integrations.py` provides the direct `flopsearch` backend and the compatibility boundary for the remaining validated Benchpress implementation.
 - `src/notreks/cpdag.py` and `src/notreks/evaluation.py` own evaluation targets and metric names.
@@ -30,6 +31,10 @@ figures and statistical analysis
 - `src/notreks/jobfarm.py` projects a plan into one-command-per-task JobFarm input.
 
 Shared inputs are keyed by `data_id`; method-specific outputs are keyed by `run_key`. A failed stage leaves `status.json` and `error.txt`, and is reported in `aggregate_issues.csv` rather than being silently omitted.
+
+External datasets use the same shared artifact layout after validation. Their
+evaluation target is read from the manifest and projection diagnostics are
+kept separate from ordinary CPDAG metrics.
 
 ## Migration boundary
 

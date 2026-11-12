@@ -31,6 +31,15 @@ smoke, a selected slice, and a cluster job all consume the same run manifest.
 The current Benchpress repository remains the reference archive while the
 remaining optimizer details are migrated incrementally.
 
+## External observational data
+
+CausalMan and CausalAssembly are registered as external-data experiment arms,
+not as synthetic graph families. A manifest must name the observation array,
+truth adjacency, and (for latent-projection evaluation) projection metadata.
+Use `python -m notreks.external path/to/dataset.json` to validate one before
+planning an external run. Missing files or ambiguous evaluation targets fail
+at the data stage and leave a traceback in the run directory.
+
 ## Direct solver smoke tests
 
 ```bash

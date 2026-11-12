@@ -12,6 +12,7 @@ from typing import Iterator
 import numpy as np
 
 from .experiment import RunDirectory, RunRecorder, atomic_json, utc_now
+from .external import ExternalDataset
 from .graphs import generate
 from .protocol import RunSpec
 from .solvers import SolverConfig, SolverRegistry, SolverResult
@@ -93,17 +94,39 @@ def _prepare_data(run: RunSpec, shared: Path, *, rscript: str | None) -> tuple[P
         "sample_size": run.sample_size, "family": run.graph_family,
         "density": run.density, "graph_seed": run.graph_seed,
         "data_seed": run.data_seed, "data_model": run.data_model,
+        "external_manifest": run.external_manifest,
     }
     if manifest_path.exists() and graph_path.exists() and data_path.exists() and weights_path.exists():
         if json.loads(manifest_path.read_text()) != expected:
             raise RuntimeError(f"shared data manifest mismatch: {manifest_path}")
         return graph_path, data_path, weights_path
     shared.mkdir(parents=True, exist_ok=True)
-    graph = generate(run.graph_family, run.dimension, run.density, run.graph_seed, rscript=rscript)
-    simulated = simulate_sem(graph, run.sample_size, run.graph_seed, run.data_seed, run.data_model)
+    if run.data_model.endswith("_observational"):
+        if not run.external_manifest:
+            raise ValueError(
+                f"{run.data_model} requires RunSpec.external_manifest; "
+                "external datasets are never inferred from synthetic settings")
+        dataset = ExternalDataset.from_manifest(Path(run.external_manifest))
+        observations, graph, weights = dataset.validate_arrays()
+        if observations.shape[0] != run.sample_size or observations.shape[1] != run.dimension:
+            raise ValueError(
+                f"external dataset shape {observations.shape} does not match "
+                f"run (n={run.sample_size}, d={run.dimension})")
+        atomic_json(shared / "external.json", {
+            "manifest": str(dataset.manifest_path),
+            "dataset_id": dataset.dataset_id,
+            "evaluation_target": dataset.evaluation_target,
+            "projection": str(dataset.projection_path) if dataset.projection_path else None,
+            "nodes": list(dataset.nodes),
+            "metadata": dataset.metadata,
+        })
+    else:
+        graph = generate(run.graph_family, run.dimension, run.density, run.graph_seed, rscript=rscript)
+        simulated = simulate_sem(graph, run.sample_size, run.graph_seed, run.data_seed, run.data_model)
+        observations, weights = simulated.observations, simulated.weights
     np.save(graph_path, graph)
-    np.save(data_path, simulated.observations)
-    np.save(weights_path, simulated.weights)
+    np.save(data_path, observations)
+    np.save(weights_path, weights)
     atomic_json(manifest_path, expected)
     return graph_path, data_path, weights_path
 

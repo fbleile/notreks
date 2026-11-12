@@ -80,6 +80,7 @@ class RunSpec:
     knowledge_round: int
     data_model: str = "linear_gaussian"
     knowledge_strategy: str = "random"
+    external_manifest: str | None = None
 
     def key(self) -> str:
         """Return the stable key used for checkpointing and deduplication."""

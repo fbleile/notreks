@@ -11,7 +11,7 @@ from typing import Any
 import numpy as np
 
 from .cpdag import CPDAGError
-from .evaluation import synthetic_metrics
+from .evaluation import causalman_metrics, synthetic_metrics
 
 
 def collect(output_root: Path) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
@@ -49,8 +49,26 @@ def write_tables(output_root: Path, results: list[dict[str, Any]], issues: list[
 
 def _evaluate_run(output_root: Path, run_root: Path, run: dict[str, Any]) -> dict[str, Any]:
     shared = output_root / "shared" / run["data_id"]
-    truth = np.load(shared / "graph.npy")
     estimate = np.load(run_root / "solve" / "adjacency.npy")
+    if run["data_model"].endswith("_observational"):
+        metadata_path = shared / "external.json"
+        if not metadata_path.exists():
+            raise RuntimeError(f"missing external dataset metadata: {metadata_path}")
+        metadata = json.loads(metadata_path.read_text())
+        projection_path = metadata.get("projection")
+        if not projection_path:
+            raise RuntimeError(
+                "external run has no projection metadata; refusing to label it as CPDAG metrics")
+        projection = json.loads(Path(projection_path).read_text())
+        nodes = metadata.get("nodes", [])
+        record = causalman_metrics(estimate, projection, nodes)
+        return {
+            **{key: value for key, value in run.items() if key != "run_key"},
+            "run_key": run["run_key"],
+            **record.metrics,
+            "evaluation_target": record.target,
+        }
+    truth = np.load(shared / "graph.npy")
     record = synthetic_metrics(truth, estimate, include_ancestor_aid=False)
     row = {
         **{key: value for key, value in run.items() if key != "run_key"},
