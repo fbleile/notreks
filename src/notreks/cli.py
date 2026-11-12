@@ -9,7 +9,7 @@ from pathlib import Path
 from .aggregate import collect, write_tables
 from .catalog_planning import CatalogSelection, expand_catalog, write_catalog_plan
 from .integrations import register_benchpress, register_direct
-from .figures import load_rows, plot_mean_sd
+from .figures import load_rows, plot_graph_clustered_trend, plot_mean_sd
 from .jobfarm import write_commands
 from .manifest import write_manifest
 from .provenance import write as write_provenance
@@ -71,6 +71,16 @@ def main(argv: list[str] | None = None) -> int:
     figure_parser.add_argument("--group", default="method")
     figure_parser.add_argument("--data-label", default="")
     figure_parser.add_argument("--title")
+    trend_figure_parser = commands.add_parser("trend-figure",
+                                               help="plot graph-clustered chromatic means and standard deviations")
+    trend_figure_parser.add_argument("input", type=Path)
+    trend_figure_parser.add_argument("output", type=Path)
+    trend_figure_parser.add_argument("--graph", default="graph_id")
+    trend_figure_parser.add_argument("--k", default="target_chromatic_number")
+    trend_figure_parser.add_argument("--y", default="SHD_cpdag")
+    trend_figure_parser.add_argument("--group", default="method")
+    trend_figure_parser.add_argument("--data-label", default="")
+    trend_figure_parser.add_argument("--title")
     provenance_parser = commands.add_parser("provenance", help="record environment provenance")
     provenance_parser.add_argument("output", type=Path)
     provenance_parser.add_argument("--project-root", type=Path)
@@ -111,6 +121,13 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "figure":
         plot_mean_sd(load_rows(args.input), args.output, x=args.x, y=args.y,
                      group=args.group, data_label=args.data_label, title=args.title)
+        print(f"wrote {args.output}")
+        return 0
+    if args.command == "trend-figure":
+        plot_graph_clustered_trend(load_rows(args.input), args.output,
+                                   graph=args.graph, k=args.k, y=args.y,
+                                   group=args.group, data_label=args.data_label,
+                                   title=args.title)
         print(f"wrote {args.output}")
         return 0
     if args.command == "provenance":

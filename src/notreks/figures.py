@@ -10,6 +10,8 @@ from typing import Iterable
 
 import numpy as np
 
+from .analysis import k_summaries, graph_k_cells
+
 
 COLORS = {
     "flop": "#0072B2",
@@ -59,6 +61,53 @@ def plot_mean_sd(rows: Iterable[dict[str, str]], output: Path, *, x: str, y: str
                   alpha=0.72, linewidth=1.8, label=name, zorder=3)
     axis.set_xlabel(xlabel or x)
     axis.set_ylabel(ylabel or y)
+    if title:
+        axis.set_title(title)
+    axis.grid(axis="y", color="#dddddd", linewidth=0.7, alpha=0.7)
+    axis.set_axisbelow(True)
+    axis.spines["top"].set_visible(False)
+    axis.spines["right"].set_visible(False)
+    if len(grouped) > 1:
+        axis.legend(frameon=False)
+    if data_label:
+        axis.text(0.01, 0.01, data_label, transform=axis.transAxes,
+                  ha="left", va="bottom", fontsize=8, color="#444444")
+    figure.tight_layout()
+    output.parent.mkdir(parents=True, exist_ok=True)
+    figure.savefig(output, dpi=300, bbox_inches="tight")
+    plt.close(figure)
+
+
+def plot_graph_clustered_trend(rows: Iterable[dict[str, str]], output: Path, *,
+                               graph: str = "graph_id", k: str = "target_chromatic_number",
+                               y: str = "SHD_cpdag", group: str = "method",
+                               data_label: str = "", title: str | None = None) -> None:
+    """Plot graph-level K means and ±1 SD without weighting large cells more."""
+    try:
+        import matplotlib.pyplot as plt
+    except ImportError as error:
+        raise RuntimeError("figure generation requires matplotlib") from error
+    rows = list(rows)
+    grouped: dict[str, list[dict[str, float | str]]] = defaultdict(list)
+    for row in rows:
+        grouped[row.get(group, "all")].append(row)
+    figure, axis = plt.subplots(figsize=(6.6, 4.2))
+    for name, subset in sorted(grouped.items()):
+        cells = graph_k_cells(subset, graph=graph, k=k, metric=y)
+        summary = k_summaries(cells)
+        if not summary:
+            continue
+        positions = np.asarray([float(item["K"]) for item in summary])
+        means = np.asarray([float(item["mean"]) for item in summary])
+        deviations = np.asarray([float(item["std"]) for item in summary])
+        color = COLORS.get(name, "#333333")
+        axis.fill_between(positions, means - deviations, means + deviations,
+                          color=color, alpha=0.16, linewidth=0, zorder=1)
+        axis.plot(positions, means, color=color, marker=MARKER, markersize=5.5,
+                  markerfacecolor=color, markeredgecolor="white", markeredgewidth=0.7,
+                  alpha=0.72, linewidth=1.8, label=name, zorder=3)
+    axis.set_xlabel("Target chromatic number K")
+    axis.set_ylabel(y)
     if title:
         axis.set_title(title)
     axis.grid(axis="y", color="#dddddd", linewidth=0.7, alpha=0.7)

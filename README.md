@@ -65,6 +65,16 @@ path on a small generated data set. It is a smoke test, not a claim of parity;
 the parity boundary and remaining work are recorded in
 `docs/solver_porting.md`.
 
+For chromatic summaries, use `notreks trend-figure` rather than plotting raw
+rows directly. It first averages within graph and K, then displays the mean
+and one standard deviation across graphs:
+
+```bash
+notreks trend-figure aggregate_results.csv figures/chromatic.png \
+  --graph graph_id --k target_chromatic_number --y SHD_cpdag \
+  --data-label "ER4; n=500"
+```
+
 ## Repository layout
 
 ```text
