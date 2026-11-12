@@ -158,6 +158,16 @@ def _prepare_knowledge(run: RunSpec, shared: Path) -> Path:
         "pair_set_hash": canonical_pair_set_hash(pairs),
         "pairs": [list(pair) for pair in pairs],
     }
+    if run.knowledge_strategy.startswith("target-k-"):
+        pair_hash = expected["pair_set_hash"]
+        for existing in path.parent.glob(f"{safe_strategy}_q{run.knowledge_fraction:g}_r*.json"):
+            if existing == path:
+                continue
+            existing_payload = json.loads(existing.read_text())
+            if existing_payload.get("pair_set_hash") == pair_hash:
+                raise ValueError(
+                    f"duplicate target-K prior set for {run.data_id} and "
+                    f"{run.knowledge_strategy}: {existing.name} and {path.name}")
     if path.exists() and json.loads(path.read_text()) != expected:
         raise RuntimeError(f"shared knowledge manifest mismatch: {path}")
     atomic_json(path, expected)

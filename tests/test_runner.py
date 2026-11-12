@@ -2,6 +2,7 @@ import json
 from pathlib import Path
 
 import numpy as np
+import pytest
 
 from notreks.planning import expand_protocol
 from notreks.protocol import ProtocolSpec
@@ -34,3 +35,15 @@ def test_solve_stage_persists_adjacency_and_diagnostics(tmp_path: Path):
     assert result.method == "toy"
     assert (artifacts.run_root / "solve" / "adjacency.npy").exists()
     assert json.loads((artifacts.run_root / "solve" / "result.json").read_text())["method"] == "toy"
+
+
+def test_target_k_knowledge_artifacts_reject_duplicate_sets(tmp_path: Path):
+    from notreks.protocol import RunSpec
+
+    first = RunSpec("chrom", "g", "g_n", "flop_notreks", 6, 32, "er", 2,
+                    1, 2, 3, 0.25, 0, knowledge_strategy="target-k-2")
+    second = RunSpec("chrom", "g", "g_n", "flop_notreks", 6, 32, "er", 2,
+                     1, 2, 3, 0.25, 1, knowledge_strategy="target-k-2")
+    prepare_run(first, tmp_path)
+    with pytest.raises(ValueError, match="duplicate target-K"):
+        prepare_run(second, tmp_path)
