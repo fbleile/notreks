@@ -56,8 +56,8 @@ def fit_profile_pstrek(
         matrix = (s + config.inverse_epsilon) * np.eye(d) - adjacency
         resolvent = sla.solve(matrix, np.eye(d), check_finite=False)
         value, gradient_adjacency = resolvent_value_and_grad(
-            adjacency, s * resolvent, pairs,
-            resolvent_scale=s, penalty_scale=s * s / 2.0)
+            adjacency, resolvent, pairs,
+            resolvent_scale=1.0, penalty_scale=s * s / 2.0)
         return ValueGradient(value, 2.0 * W * gradient_adjacency)
 
     def domain(W: np.ndarray, s: float) -> bool:
