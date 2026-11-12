@@ -12,6 +12,7 @@ dependencies = ["numpy>=1.26"]
 [project.scripts]
 notreks = "notreks.cli:main"
 notreks-aggregate = "notreks.aggregate:main"
+notreks-external-check = "notreks.external:main"
 
 [project.optional-dependencies]
 test = ["pytest>=8"]
