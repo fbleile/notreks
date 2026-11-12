@@ -14,6 +14,7 @@ def test_direct_dagma_smoke():
                                        dagma_warm_iter=5, dagma_max_iter=10))
     assert provenance["backend"] == "dagma+notreks"
     assert result.adjacency.shape == (4, 4)
+    assert result.diagnostics["score"] == "l2"
 
 
 def test_direct_dagma_notreks_smoke():

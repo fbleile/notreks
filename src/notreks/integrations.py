@@ -93,7 +93,7 @@ def register_dagma(registry: SolverRegistry) -> dict[str, Any]:
         )
         adjacency = (np.abs(np.asarray(weights)) > 0.3).astype(np.uint8)
         return SolverResult("dagma", adjacency, {
-            "backend": "dagma", "threshold": 0.3,
+            "backend": "dagma", "score": "l2", "threshold": 0.3,
             "iterations_T": config.dagma_stages,
         })
 
