@@ -1,7 +1,7 @@
 import numpy as np
 
 from notreks.continuation import ContinuationResult
-from notreks.dagma_backend import finalize_profile_pstrek
+from notreks.dagma_backend import deterministic_initial_weights, finalize_profile_pstrek
 
 
 def test_finalize_records_candidate_and_final_graph():
@@ -16,3 +16,11 @@ def test_finalize_records_candidate_and_final_graph():
     assert diagnostics["candidate_edges"] == 2
     assert diagnostics["postselection_status"] == "applied"
     assert diagnostics["final_edges"] == int(final.sum())
+
+
+def test_deterministic_initial_weights_are_reproducible_and_domain_scaled():
+    first = deterministic_initial_weights(5, 17)
+    second = deterministic_initial_weights(5, 17)
+    np.testing.assert_array_equal(first, second)
+    assert np.all(np.diag(first) == 0.0)
+    assert max(abs(np.linalg.eigvals(first * first))) <= 0.25 + 1e-12

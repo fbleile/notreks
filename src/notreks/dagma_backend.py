@@ -13,6 +13,18 @@ from .postselection import order_parent_postselection
 from .scores import is_dag
 
 
+def deterministic_initial_weights(dimension: int, seed: int, scale: float = 0.05, s0: float = 1.0) -> np.ndarray:
+    """Create the legacy-compatible conservative restart initialization."""
+    rng = np.random.default_rng(int(seed))
+    weights = rng.normal(scale=scale, size=(dimension, dimension))
+    np.fill_diagonal(weights, 0.0)
+    spectral_radius = max(abs(np.linalg.eigvals(weights * weights)), default=0.0)
+    limit = 0.25 * s0
+    if spectral_radius > limit:
+        weights *= np.sqrt(limit / float(spectral_radius))
+    return weights
+
+
 def fit_profile_pstrek(
     observations: np.ndarray,
     pairs: Sequence[tuple[int, int]],

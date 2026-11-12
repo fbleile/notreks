@@ -108,10 +108,13 @@ def register_dagma(registry: SolverRegistry) -> dict[str, Any]:
         best = None
         best_bic = np.inf
         restart_diagnostics = []
+        from .dagma_backend import deterministic_initial_weights
         for restart in range(config.attempts):
-            rng = np.random.default_rng(int(seed) + restart)
-            initial = rng.normal(scale=0.05, size=(observations.shape[1],) * 2)
-            np.fill_diagonal(initial, 0.0)
+            initial = (np.zeros((observations.shape[1],) * 2)
+                       if restart == 0 else deterministic_initial_weights(
+                           observations.shape[1], int(seed) + restart))
+            default_s = (1.0, 0.9, 0.8, 0.7, 0.6)
+            s_schedule = default_s + (default_s[-1],) * max(0, config.dagma_stages - len(default_s))
             result = fit_profile_pstrek(
                 observations, pairs,
                 config=ContinuationConfig(
@@ -119,6 +122,7 @@ def register_dagma(registry: SolverRegistry) -> dict[str, Any]:
                     warm_iter=config.dagma_warm_iter,
                     max_iter=config.dagma_max_iter,
                     prior_weight=config.trek_weight,
+                    s_schedule=s_schedule,
                     threshold=0.3,
                 ),
                 initial_weights=initial,
