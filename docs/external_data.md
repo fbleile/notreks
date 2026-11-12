@@ -1,9 +1,10 @@
 # External benchmark data
 
-External benchmark inputs are deliberately not committed to this repository.
-The repository stores importers, URLs, validation rules, and manifest schemas;
-the generated arrays and upstream caches belong in an experiment output
-directory or an approved shared data location.
+The repository includes the prepared CausalMan and CausalAssembly caches used
+by the paper experiments under `data/external/`. Their manifests, checksums,
+and preparation metadata are part of the reproducibility record. The importers
+remain available for rebuilding an equivalent cache from the official upstream
+sources when required.
 
 ## CausalAssembly
 
@@ -21,6 +22,11 @@ notreks external-plan data/causalassembly/manifest.json \
 The importer verifies the official node order, the fixed sample shape, finite
 values, and the generated-artifact checksums. The manifest records the upstream
 source and input-file checksums.
+
+The checked-in `data/external/causalassembly/` bundle contains the prepared
+`n=500` arrays for seeds 1001--1010 and the common ground truth. It is a fixed
+dataset with repeated sampling seeds, not ten independent data-generating
+processes.
 
 ## CausalMan
 
@@ -43,13 +49,19 @@ a local generator. It removes intervention rows, selects observed continuous
 variables, preserves projected directed and bidirected edges, and marks the
 evaluation target as a latent-projection diagnostic rather than CPDAG SHD.
 
+The checked-in `data/external/causalman/` bundle contains the prepared Small and
+Medium caches for seeds 1001--1010, including observations, graph metadata,
+paths, per-seed manifests, and preflight records.
+
 ## Provenance rule
 
 Keep the resulting `manifest.json`, upstream revision, package environment,
 and command line with the experiment outputs. Do not copy large raw datasets
 into the Git repository merely to make a plan syntactically complete.
 
-If an approved prepared cache already exists on a cluster, package it with
-`notreks-external-pack`. The command copies only the files named by the
-manifest, rewrites their paths relative to the destination, preserves
-provenance, and validates the resulting bundle.
+If an approved prepared cache already exists on a cluster, package a canonical
+manifest-backed cache with `notreks-external-pack`. The command copies only the
+files named by the manifest, rewrites their paths relative to the destination,
+preserves provenance, and validates the resulting bundle. The checked-in
+legacy-style caches above are retained verbatim because they are the exact
+artifacts used by the historical benchmark protocol.

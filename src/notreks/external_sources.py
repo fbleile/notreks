@@ -217,6 +217,10 @@ def import_causalman(output: Path, *, variant: str, seed: int, sample_size: int 
         kind = data.get("edge_type", data.get("type", "directed"))
         (bidirected if kind == "bidirected" else directed).append([str(left), str(right)])
     node_index = {node: index for index, node in enumerate(nodes)}
+    # The ordinary DAG adjacency is retained for provenance; projection-aware
+    # evaluation uses ``projection.json`` below because CausalMan may contain
+    # latent variables and therefore bidirected projected edges.
+    selected_graph = graph.subgraph(nodes).copy()
     truth = nx.to_numpy_array(selected_graph, nodelist=nodes, dtype=np.uint8)
     reach = truth.astype(bool).copy()
     np.fill_diagonal(reach, True)
