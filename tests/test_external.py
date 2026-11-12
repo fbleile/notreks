@@ -60,3 +60,18 @@ def test_external_manifest_requires_node_names(tmp_path):
     path.write_text(json.dumps({"observations": "x.npy", "truth_adjacency": "truth.npy"}))
     with pytest.raises(ExternalDataError, match="nodes"):
         ExternalDataset.from_manifest(path)
+
+
+def test_external_manifest_checks_artifact_digests(tmp_path):
+    np.save(tmp_path / "x.npy", np.zeros((4, 2)))
+    np.save(tmp_path / "truth.npy", np.zeros((2, 2)))
+    import hashlib
+    digest = hashlib.sha256((tmp_path / "x.npy").read_bytes()).hexdigest()
+    path = tmp_path / "dataset.json"
+    path.write_text(json.dumps({"observations": "x.npy", "truth_adjacency": "truth.npy",
+                                "nodes": ["a", "b"],
+                                "metadata": {"artifact_sha256": {"observations": digest}}}))
+    ExternalDataset.from_manifest(path).validate_arrays()
+    (tmp_path / "x.npy").write_bytes(b"changed")
+    with pytest.raises(ExternalDataError, match="checksum mismatch"):
+        ExternalDataset.from_manifest(path).validate_arrays()

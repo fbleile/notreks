@@ -134,6 +134,8 @@ def import_causalassembly(output: Path, *, data_csv: Path | None = None,
     np.save(output / "observations.npy", observations)
     np.save(output / "truth_adjacency.npy", adjacency)
     (output / "knowledge_pairs.json").write_text(json.dumps(_oracle_no_treks(adjacency)) + "\n")
+    artifact_sha256 = {name: _sha256(output / name) for name in
+                       ("observations.npy", "truth_adjacency.npy", "knowledge_pairs.json")}
     manifest = {
         "dataset_id": "causalassembly_upstream_static_n500",
         "observations": "observations.npy", "truth_adjacency": "truth_adjacency.npy",
@@ -144,6 +146,7 @@ def import_causalassembly(output: Path, *, data_csv: Path | None = None,
                       "truth_url": CAUSALASSEMBLY_TRUTH_URL,
                       "data_sha256": _sha256(data_csv),
                       "truth_sha256": _sha256(truth_json),
+                      "artifact_sha256": artifact_sha256,
                       "fixed_dataset": True, "independent_seed_replicates": False},
     }
     manifest_path = output / "manifest.json"
@@ -229,6 +232,9 @@ def import_causalman(output: Path, *, variant: str, seed: int, sample_size: int 
     (output / "knowledge_pairs.json").write_text(json.dumps(pairs) + "\n")
     (output / "projection.json").write_text(json.dumps({
         "projected": {"directed": directed, "bidirected": bidirected}}, indent=2) + "\n")
+    artifact_sha256 = {name: _sha256(output / name) for name in
+                       ("observations.npy", "truth_adjacency.npy", "knowledge_pairs.json",
+                        "projection.json")}
     manifest = {
         "dataset_id": f"{variant}_seed{seed}_n{len(values)}",
         "observations": "observations.npy", "truth_adjacency": "truth_adjacency.npy",
@@ -239,7 +245,8 @@ def import_causalman(output: Path, *, variant: str, seed: int, sample_size: int 
                       "stored_sample_size": len(values), "full_nodes": graph.number_of_nodes(),
                       "full_edges": graph.number_of_edges(),
                       "observed_directed_edges": len(directed),
-                      "observed_bidirected_edges": len(bidirected)},
+                      "observed_bidirected_edges": len(bidirected),
+                      "artifact_sha256": artifact_sha256},
     }
     path = output / "manifest.json"
     path.write_text(json.dumps(manifest, indent=2) + "\n")

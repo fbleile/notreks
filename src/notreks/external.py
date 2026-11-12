@@ -28,6 +28,7 @@ benchmarks with latent variables or bidirected edges.
 from __future__ import annotations
 
 from dataclasses import dataclass
+import hashlib
 import json
 from pathlib import Path
 from typing import Any
@@ -105,6 +106,19 @@ class ExternalDataset:
 
     def validate_arrays(self) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
         """Validate dimensions and return observations, truth, and weights."""
+        expected_checksums = self.metadata.get("artifact_sha256", {})
+        if isinstance(expected_checksums, dict):
+            for label, candidate in (("observations", self.observations_path),
+                                     ("truth_adjacency", self.truth_adjacency_path),
+                                     ("weights", self.weights_path),
+                                     ("knowledge_pairs", self.knowledge_pairs_path),
+                                     ("projection", self.projection_path)):
+                expected = expected_checksums.get(label)
+                if expected is None or candidate is None:
+                    continue
+                digest = hashlib.sha256(candidate.read_bytes()).hexdigest()
+                if digest != expected:
+                    raise ExternalDataError(f"checksum mismatch for {label}: {candidate}")
         observations = np.load(self.observations_path)
         truth = np.load(self.truth_adjacency_path)
         if observations.ndim != 2:
