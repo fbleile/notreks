@@ -167,18 +167,21 @@ class ExternalDataset:
         return sorted(set(pairs))
 
 
-def main() -> None:
+def main(argv: list[str] | None = None) -> None:
     """Validate a manifest supplied on the command line."""
     import argparse
     parser = argparse.ArgumentParser(prog="notreks-external-check")
     parser.add_argument("manifest", type=Path)
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
     dataset = ExternalDataset.from_manifest(args.manifest)
     observations, truth, weights = dataset.validate_arrays()
+    pairs = dataset.available_pairs(observations.shape[1])
     print(json.dumps({"dataset_id": dataset.dataset_id,
                       "observations": list(observations.shape),
                       "truth_adjacency": list(truth.shape),
                       "weights": list(weights.shape),
+                      "nodes": len(dataset.nodes),
+                      "knowledge_pairs": len(pairs),
                       "evaluation_target": dataset.evaluation_target}, indent=2))
 
 

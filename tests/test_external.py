@@ -3,7 +3,7 @@ import json
 import numpy as np
 import pytest
 
-from notreks.external import ExternalDataError, ExternalDataset
+from notreks.external import ExternalDataError, ExternalDataset, main
 from notreks.external_sources import import_causalassembly
 
 
@@ -75,3 +75,17 @@ def test_external_manifest_checks_artifact_digests(tmp_path):
     (tmp_path / "x.npy").write_bytes(b"changed")
     with pytest.raises(ExternalDataError, match="checksum mismatch"):
         ExternalDataset.from_manifest(path).validate_arrays()
+
+
+def test_external_check_reports_pair_count(tmp_path, capsys):
+    np.save(tmp_path / "x.npy", np.zeros((4, 2)))
+    np.save(tmp_path / "truth.npy", np.zeros((2, 2)))
+    (tmp_path / "pairs.json").write_text("[[0, 1]]\n")
+    path = tmp_path / "dataset.json"
+    path.write_text(json.dumps({"dataset_id": "demo", "observations": "x.npy",
+                                "truth_adjacency": "truth.npy", "knowledge_pairs": "pairs.json",
+                                "nodes": ["a", "b"]}))
+    main([str(path)])
+    report = json.loads(capsys.readouterr().out)
+    assert report["knowledge_pairs"] == 1
+    assert report["nodes"] == 2
