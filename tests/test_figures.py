@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pytest
 
-from notreks.figures import plot_graph_clustered_trend, plot_mean_sd
+from notreks.figures import main, plot_graph_clustered_trend, plot_mean_sd
 
 
 def test_mean_sd_figure_has_no_raw_point_artifact(tmp_path: Path):
@@ -24,3 +24,18 @@ def test_graph_clustered_trend_uses_graph_level_cells(tmp_path: Path):
     output = tmp_path / "trend.png"
     plot_graph_clustered_trend(rows, output, data_label="ER4; n=500")
     assert output.stat().st_size > 0
+
+
+def test_figure_cli_defaults_to_png_and_can_write_pdf(tmp_path: Path):
+    pytest.importorskip("matplotlib")
+    input_path = tmp_path / "rows.csv"
+    with input_path.open("w", newline="") as handle:
+        writer = csv.DictWriter(handle, fieldnames=["K", "SHD", "method"])
+        writer.writeheader()
+        writer.writerows([{"K": 2, "SHD": 4, "method": "flop"},
+                          {"K": 3, "SHD": 3, "method": "flop"}])
+    main([str(input_path), str(tmp_path / "paper"), "--x", "K", "--y", "SHD"])
+    assert (tmp_path / "paper.png").is_file()
+    main([str(input_path), str(tmp_path / "vector"), "--x", "K", "--y", "SHD",
+          "--format", "pdf"])
+    assert (tmp_path / "vector.pdf").is_file()

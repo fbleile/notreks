@@ -134,10 +134,12 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--group", default="method")
     parser.add_argument("--data-label", default="")
     parser.add_argument("--title")
+    parser.add_argument("--format", choices=("png", "pdf"), default="png")
     args = parser.parse_args(argv)
-    plot_mean_sd(load_rows(args.input), args.output, x=args.x, y=args.y,
+    output = args.output.with_suffix(f".{args.format}")
+    plot_mean_sd(load_rows(args.input), output, x=args.x, y=args.y,
                  group=args.group, data_label=args.data_label, title=args.title)
-    print(f"wrote {args.output}")
+    print(f"wrote {output}")
     return 0
 
 
