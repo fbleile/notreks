@@ -155,6 +155,30 @@ def paired_wilcoxon(differences: Iterable[float]) -> WilcoxonResult:
     return WilcoxonResult(float(result.statistic), float(result.pvalue), len(values))
 
 
+def paired_metric_differences(rows: Iterable[Mapping[str, object]], *, treatment: str,
+                              baseline: str, metric: str,
+                              pair_keys: tuple[str, ...] = ("graph_id",)) -> list[float]:
+    """Return treatment-minus-baseline differences for explicitly paired rows."""
+    values: dict[tuple[object, ...], dict[str, list[float]]] = {}
+    for row in rows:
+        try:
+            key = tuple(row[name] for name in pair_keys)
+            method = str(row["method"])
+            value = float(row[metric])
+        except (KeyError, TypeError, ValueError):
+            continue
+        if not math.isfinite(value) or method not in {treatment, baseline}:
+            continue
+        values.setdefault(key, {}).setdefault(method, []).append(value)
+    differences = []
+    for methods in values.values():
+        if treatment in methods and baseline in methods:
+            differences.append(float(np.mean(methods[treatment]) - np.mean(methods[baseline])))
+    if not differences:
+        raise ValueError("no complete treatment/baseline pairs found")
+    return differences
+
+
 def holm_adjust(p_values: Iterable[float]) -> list[float]:
     """Return Holm-adjusted p-values in the original order."""
     values = list(float(value) for value in p_values)
@@ -165,6 +189,23 @@ def holm_adjust(p_values: Iterable[float]) -> list[float]:
         running = max(running, min(1.0, (len(values) - rank) * values[index]))
         adjusted[index] = running
     return adjusted
+
+
+def paired_wilcoxon_family(rows: Iterable[Mapping[str, object]], *, comparisons: list[tuple[str, str]],
+                           metric: str, pair_keys: tuple[str, ...] = ("graph_id",)) -> list[dict[str, object]]:
+    """Run a two-sided paired Wilcoxon family and apply Holm correction."""
+    rows = list(rows)
+    results = []
+    raw = []
+    for treatment, baseline in comparisons:
+        result = paired_wilcoxon(paired_metric_differences(
+            rows, treatment=treatment, baseline=baseline, metric=metric, pair_keys=pair_keys))
+        results.append({"treatment": treatment, "baseline": baseline,
+                        **result.to_dict()})
+        raw.append(result.p_two_sided)
+    for result, adjusted in zip(results, holm_adjust(raw)):
+        result["p_holm"] = adjusted
+    return results
 
 
 def read_csv(path: Path) -> list[dict[str, str]]:
@@ -191,12 +232,34 @@ def main() -> None:
     parser.add_argument("--graph", default="graph_id")
     parser.add_argument("--k", default="target_chromatic_number")
     parser.add_argument("--metric", default="SHD_cpdag")
+    parser.add_argument("--treatment")
+    parser.add_argument("--baseline")
+    parser.add_argument("--comparison", action="append",
+                        help="treatment:baseline; repeat for a Holm-corrected family")
+    parser.add_argument("--pair-keys", default="graph_id")
     args = parser.parse_args()
     cells = graph_k_cells(read_csv(args.input), graph=args.graph, k=args.k, metric=args.metric)
     import json
-    print(json.dumps({"trend": clustered_fixed_effects(cells).to_dict(),
-                      "by_K": k_summaries(cells),
-                      "adjacent_changes": adjacent_changes(cells)}, indent=2))
+    output = {"trend": clustered_fixed_effects(cells).to_dict(),
+              "by_K": k_summaries(cells),
+              "adjacent_changes": adjacent_changes(cells)}
+    if args.treatment and args.baseline:
+        differences = paired_metric_differences(
+            read_csv(args.input), treatment=args.treatment, baseline=args.baseline,
+            metric=args.metric, pair_keys=tuple(args.pair_keys.split(",")))
+        output["paired_wilcoxon"] = paired_wilcoxon(differences).to_dict()
+    if args.comparison:
+        comparisons = []
+        for specification in args.comparison:
+            try:
+                treatment, baseline = specification.split(":", 1)
+            except ValueError as error:
+                raise SystemExit("--comparison must have the form treatment:baseline") from error
+            comparisons.append((treatment, baseline))
+        output["paired_wilcoxon_family"] = paired_wilcoxon_family(
+            read_csv(args.input), comparisons=comparisons, metric=args.metric,
+            pair_keys=tuple(args.pair_keys.split(",")))
+    print(json.dumps(output, indent=2))
 
 
 if __name__ == "__main__":

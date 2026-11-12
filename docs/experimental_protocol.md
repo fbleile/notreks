@@ -112,4 +112,6 @@ fits graph fixed effects with CR1 cluster-robust uncertainty and a Student-t
 reference with `G-1` degrees of freedom. All confirmatory tests use two-sided
 p-values. Paired method comparisons use the Wilcoxon signed-rank test on
 graph-matched metric differences, with multiplicity correction applied after
-the test family is specified.
+the test family is specified. The CLI accepts repeated
+`--comparison treatment:baseline` arguments and reports Holm-adjusted
+two-sided p-values for that family.

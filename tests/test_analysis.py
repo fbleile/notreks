@@ -1,7 +1,8 @@
 import pytest
 
 from notreks.analysis import (adjacent_changes, clustered_fixed_effects, graph_k_cells,
-                               holm_adjust, k_summaries, paired_wilcoxon)
+                               holm_adjust, k_summaries, paired_metric_differences,
+                               paired_wilcoxon, paired_wilcoxon_family)
 
 
 def test_graph_k_cells_gives_each_graph_k_one_observation():
@@ -52,3 +53,27 @@ def test_paired_wilcoxon_is_two_sided():
     assert result.pairs == 5
     assert result.p_two_sided < 0.1
     assert paired_wilcoxon([0, 0, 0]).p_two_sided == 1.0
+
+
+def test_paired_metric_differences_average_duplicate_rows():
+    rows = [
+        {"graph_id": "g1", "method": "vanilla", "SHD": 5},
+        {"graph_id": "g1", "method": "notreks", "SHD": 3},
+        {"graph_id": "g1", "method": "notreks", "SHD": 1},
+        {"graph_id": "g2", "method": "vanilla", "SHD": 4},
+        {"graph_id": "g2", "method": "notreks", "SHD": 4},
+    ]
+    differences = paired_metric_differences(rows, treatment="notreks", baseline="vanilla",
+                                             metric="SHD")
+    assert differences == pytest.approx([-3.0, 0.0])
+
+
+def test_paired_wilcoxon_family_adds_holm_values():
+    rows = [{"graph_id": graph, "method": method, "SHD": value}
+            for graph, values in {"g1": {"vanilla": 5, "notreks": 1, "other": 5},
+                                  "g2": {"vanilla": 2, "notreks": 2, "other": 4}}.items()
+            for method, value in values.items()]
+    result = paired_wilcoxon_family(rows, comparisons=[("notreks", "vanilla"),
+                                                       ("other", "vanilla")], metric="SHD")
+    assert len(result) == 2
+    assert all("p_holm" in item and item["p_holm"] >= item["p_two_sided"] for item in result)
