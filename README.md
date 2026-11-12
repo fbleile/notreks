@@ -35,6 +35,15 @@ After installation, the same entry points are available as `notreks` and
 `notreks-aggregate`. A plan is always generated before execution, so a local
 smoke, a selected slice, and a cluster job all consume the same run manifest.
 
+Before aggregation, inspect a result root without loading scientific table
+dependencies:
+
+```bash
+notreks-inspect results/ --json
+```
+
+The report counts run and stage states and lists every preserved traceback.
+
 The current Benchpress repository remains the reference archive while the
 remaining optimizer details are migrated incrementally.
 

@@ -9,6 +9,7 @@ from pathlib import Path
 from .aggregate import collect, write_tables
 from .catalog_planning import CatalogSelection, expand_catalog, write_catalog_plan
 from .integrations import register_benchpress, register_direct
+from .inspect import inspect_output
 from .figures import load_rows, plot_graph_clustered_trend, plot_mean_sd
 from .jobfarm import write_commands
 from .manifest import write_manifest
@@ -101,6 +102,9 @@ def main(argv: list[str] | None = None) -> int:
     audit_parser = commands.add_parser("solver-audit", help="hash the external solver closure")
     audit_parser.add_argument("repository", type=Path)
     audit_parser.add_argument("output", type=Path)
+    inspect_parser = commands.add_parser("inspect", help="summarize run and stage states")
+    inspect_parser.add_argument("root", type=Path)
+    inspect_parser.add_argument("--json", action="store_true", dest="as_json")
     commands.add_parser("smoke", help="run the dependency-light local smoke")
     args = parser.parse_args(argv)
     if args.command == "plan":
@@ -159,6 +163,16 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "solver-audit":
         write_solver_audit(args.output, args.repository)
         print(f"wrote {args.output}")
+        return 0
+    if args.command == "inspect":
+        report = inspect_output(args.root)
+        if args.as_json:
+            print(json.dumps(report, indent=2, sort_keys=True))
+        else:
+            print(f"runs={report['runs']} run_states={report['run_states']}")
+            for stage, states in report["stage_states"].items():
+                print(f"stage={stage} states={states}")
+            print(f"tracebacks={len(report['errors'])}")
         return 0
     _smoke()
     return 0
