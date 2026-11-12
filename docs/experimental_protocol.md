@@ -104,3 +104,9 @@ solver diagnostics, status files, and traceback on failure. For every analysis,
 retain the exact input table, analysis script or command, output table, and
 figure-generation command. Cluster command files are derived from plans and
 must not become the scientific source of truth.
+
+The graph-clustered chromatic trend analysis is available as
+`notreks-trend`. It first creates one graph--K cell mean per graph and K, then
+fits graph fixed effects with CR1 cluster-robust uncertainty and a Student-t
+reference with `G-1` degrees of freedom. The default lower-tail p-value tests
+whether the SHD slope is negative.
