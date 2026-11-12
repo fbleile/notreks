@@ -28,3 +28,9 @@ def test_chromatic_catalog_expands_target_k_strategies():
     assert definition.target_k_values == tuple(range(2, 21))
     strategies = {run.knowledge_strategy for run in runs if run.knowledge_fraction == 0.25}
     assert strategies == {f"target-k-{k}" for k in range(2, 21)}
+
+
+def test_external_catalog_does_not_create_empty_plan():
+    import pytest
+    with pytest.raises(ValueError, match="external dataset manifests"):
+        expand_catalog("causalman-small")

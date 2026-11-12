@@ -89,6 +89,8 @@ The data stage validates array shapes and preserves the manifest provenance.
 Evaluation uses the declared projection target and does not relabel it as
 CPDAG SHD or CPDAG Ancestor-AID. Missing external files fail explicitly with
 a stage traceback. Prior pairs are never inferred from the truth adjacency.
+The catalog therefore refuses to generate an empty external plan when these
+manifests have not been supplied.
 
 ## Exact feasibility motivation
 

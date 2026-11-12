@@ -45,6 +45,14 @@ def expand_catalog(name: str, *, master_seed: int = 20260917,
                    selection: CatalogSelection = CatalogSelection()) -> tuple[ExperimentDefinition, list[RunSpec]]:
     definition = get(name)
     if not definition.cells:
+        if definition.data_model.endswith("_observational"):
+            raise ValueError(
+                f"{name} requires external dataset manifests; provide the "
+                "observations, truth, knowledge_pairs, and evaluation metadata "
+                "before generating a plan")
+        if definition.arm == "motivational_exact":
+            raise ValueError(
+                f"{name} is an analysis-only catalog entry and has no solver runs")
         return definition, []
     stop = definition.graph_replicates if selection.graph_limit is None else min(
         definition.graph_replicates, selection.graph_start + selection.graph_limit)
