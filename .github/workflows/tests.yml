@@ -13,4 +13,5 @@ jobs:
         with:
           python-version: "3.11"
       - run: python -m pip install -e ".[test,analysis]"
-      - run: python -m pytest -q
+      - run: make check
+      - run: python examples/smoke.py
