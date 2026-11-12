@@ -21,3 +21,13 @@ def test_objective_adds_pstrek_term():
         W, covariance, [(0, 1)], config=ObjectiveConfig(pstrek_weight=2.0))
     assert constrained[2]["pstrek"] > 0.0
     assert constrained[0] > base[0]
+
+
+def test_objective_supports_l2_score():
+    W = np.array([[0.0, 0.1], [0.02, 0.0]])
+    covariance = np.eye(2)
+    total, gradient, terms = value_and_grad(
+        W, covariance, [], config=ObjectiveConfig(score_type="l2"))
+    assert np.isfinite(total)
+    assert gradient.shape == W.shape
+    assert terms["pstrek"] == 0.0

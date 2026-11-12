@@ -7,7 +7,7 @@ import numpy as np
 import scipy.linalg as sla
 
 from .continuation import ContinuationConfig, ContinuationResult, fit
-from .dagma_math import ValueGradient, logdet_acyclicity, profile_gaussian_score
+from .dagma_math import ValueGradient, l2_score, logdet_acyclicity, profile_gaussian_score
 from .pstrek import resolvent_value_and_grad
 from .postselection import order_parent_postselection
 from .scores import is_dag
@@ -25,12 +25,13 @@ def deterministic_initial_weights(dimension: int, seed: int, scale: float = 0.05
     return weights
 
 
-def fit_profile_pstrek(
+def fit_pstrek(
     observations: np.ndarray,
     pairs: Sequence[tuple[int, int]],
     *,
     config: ContinuationConfig | None = None,
     initial_weights: np.ndarray | None = None,
+    score_type: str = "profile_gaussian",
 ) -> ContinuationResult:
     """Fit profile-Gaussian DAGMA with the shifted PSTrek resolvent."""
     observations = np.asarray(observations, dtype=float)
@@ -42,9 +43,12 @@ def fit_profile_pstrek(
     covariance = standardized.T @ standardized / float(standardized.shape[0])
     d = standardized.shape[1]
     config = ContinuationConfig() if config is None else config
+    if score_type not in {"l2", "profile_gaussian"}:
+        raise ValueError("score_type must be l2 or profile_gaussian")
 
     def score(W: np.ndarray) -> ValueGradient:
-        return profile_gaussian_score(W, covariance, config.variance_epsilon)
+        return (l2_score(W, covariance) if score_type == "l2"
+                else profile_gaussian_score(W, covariance, config.variance_epsilon))
 
     def structural(W: np.ndarray, s: float) -> ValueGradient:
         return logdet_acyclicity(W, s)
@@ -70,6 +74,12 @@ def fit_profile_pstrek(
 
     return fit(score, structural, prior, d, config=config,
                domain=domain, initial_weights=initial_weights)
+
+
+def fit_profile_pstrek(*args, **kwargs) -> ContinuationResult:
+    """Backward-compatible explicit profile-Gaussian entry point."""
+    kwargs["score_type"] = "profile_gaussian"
+    return fit_pstrek(*args, **kwargs)
 
 
 def finalize_profile_pstrek(

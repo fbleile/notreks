@@ -6,13 +6,14 @@ from typing import Sequence
 
 import numpy as np
 
-from .dagma_math import logdet_acyclicity, profile_gaussian_score
+from .dagma_math import l2_score, logdet_acyclicity, profile_gaussian_score
 from .pstrek import value_and_grad as pstrek_value_and_grad
 from .tcc import value_and_grad as tcc_value_and_grad
 
 
 @dataclass(frozen=True)
 class ObjectiveConfig:
+    score_type: str = "profile_gaussian"
     dagma_weight: float = 1.0
     pstrek_weight: float = 0.0
     tcc_weight: float = 0.0
@@ -21,6 +22,8 @@ class ObjectiveConfig:
     variance_epsilon: float = 1e-8
 
     def validate(self) -> None:
+        if self.score_type not in {"l2", "profile_gaussian"}:
+            raise ValueError("score_type must be l2 or profile_gaussian")
         weights = (self.dagma_weight, self.pstrek_weight, self.tcc_weight)
         if any(not np.isfinite(x) or x < 0 for x in weights):
             raise ValueError("objective weights must be finite and non-negative")
@@ -37,7 +40,8 @@ def value_and_grad(
     """Evaluate the smooth continuous objective and return term diagnostics."""
     config = ObjectiveConfig() if config is None else config
     config.validate()
-    score = profile_gaussian_score(W, covariance, config.variance_epsilon)
+    score = (l2_score(W, covariance) if config.score_type == "l2"
+             else profile_gaussian_score(W, covariance, config.variance_epsilon))
     total = score.value
     gradient = score.gradient.copy()
     diagnostics = {"score": float(score.value), "dagma": 0.0, "pstrek": 0.0, "tcc": 0.0}

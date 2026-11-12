@@ -52,6 +52,18 @@ def profile_gaussian_score(W: np.ndarray, covariance: np.ndarray, variance_epsil
     return ValueGradient(value, gradient)
 
 
+def l2_score(W: np.ndarray, covariance: np.ndarray) -> ValueGradient:
+    """Evaluate the upstream DAGMA least-squares score and gradient."""
+    W = _square(W)
+    covariance = _square(covariance)
+    if covariance.shape != W.shape:
+        raise ValueError("covariance and W must have the same shape")
+    identity_minus_weights = np.eye(W.shape[0]) - W
+    rhs = covariance @ identity_minus_weights
+    value = 0.5 * float(np.trace(identity_minus_weights.T @ rhs))
+    return ValueGradient(value, -rhs)
+
+
 def _square(matrix: np.ndarray) -> np.ndarray:
     matrix = np.asarray(matrix, dtype=float)
     if matrix.ndim != 2 or matrix.shape[0] != matrix.shape[1]:
