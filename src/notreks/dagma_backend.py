@@ -21,9 +21,11 @@ def fit_profile_pstrek(
     observations = np.asarray(observations, dtype=float)
     if observations.ndim != 2 or observations.shape[0] < 2:
         raise ValueError("observations must be a two-dimensional data matrix")
-    centered = observations - observations.mean(axis=0, keepdims=True)
-    covariance = centered.T @ centered / float(centered.shape[0])
-    d = centered.shape[1]
+    means = observations.mean(axis=0, keepdims=True)
+    standard_deviations = np.maximum(observations.std(axis=0, ddof=0, keepdims=True), 1e-12)
+    standardized = (observations - means) / standard_deviations
+    covariance = standardized.T @ standardized / float(standardized.shape[0])
+    d = standardized.shape[1]
     config = ContinuationConfig() if config is None else config
 
     def score(W: np.ndarray) -> ValueGradient:
