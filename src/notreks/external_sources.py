@@ -48,6 +48,61 @@ def _oracle_no_treks(adjacency: np.ndarray) -> list[list[int]]:
             if not np.any(ancestors[left] & ancestors[right])]
 
 
+def _as_frame(value, name: str):
+    import pandas as pd
+    if isinstance(value, pd.DataFrame):
+        return value.copy()
+    try:
+        return pd.DataFrame(value)
+    except Exception as error:
+        raise ValueError(f"CausalMan returned an invalid {name}") from error
+
+
+def _observational_mask(table, rows: int) -> np.ndarray:
+    """Keep rows without an active intervention in any intervention column."""
+    import pandas as pd
+    if table is None or table.empty:
+        return np.ones(rows, dtype=bool)
+    if len(table) != rows:
+        raise ValueError(f"intervention table has {len(table)} rows but observations have {rows}")
+    flags = np.zeros(rows, dtype=bool)
+    for column in table.columns:
+        values = table[column]
+        if pd.api.types.is_bool_dtype(values):
+            active = values.fillna(False).to_numpy(bool)
+        elif pd.api.types.is_numeric_dtype(values):
+            active = values.fillna(0).to_numpy(float) != 0
+        else:
+            text = values.fillna("").astype(str).str.strip()
+            active = (~text.isin(("", "0", "none", "None", "nan"))).to_numpy(bool)
+        flags |= active
+    return ~flags
+
+
+def _continuous_columns(frame):
+    """Return measured continuous columns, excluding identifiers and low-cardinality fields."""
+    import pandas as pd
+    selected = []
+    for column in frame.columns:
+        name = str(column).strip().lower()
+        if name == "batch_id_num":
+            continue
+        values = frame[column]
+        if pd.api.types.is_bool_dtype(values) or not pd.api.types.is_numeric_dtype(values):
+            continue
+        numeric = pd.to_numeric(values, errors="coerce")
+        if not np.isfinite(numeric.to_numpy(float)).all():
+            continue
+        if numeric.nunique(dropna=True) <= 1:
+            continue
+        if pd.api.types.is_integer_dtype(values):
+            continue
+        if numeric.nunique(dropna=True) <= min(10, max(2, len(values) // 20)):
+            continue
+        selected.append(str(column))
+    return selected
+
+
 def import_causalassembly(output: Path, *, data_csv: Path | None = None,
                           truth_json: Path | None = None, download: bool = False) -> Path:
     """Create a portable official CausalAssembly n=500 external manifest."""
@@ -114,30 +169,42 @@ def import_causalman(output: Path, *, variant: str, seed: int, sample_size: int 
             "networkx, and pandas; no substitute generator is used") from error
     if variant not in {"causalman_small", "causalman_medium"}:
         raise ValueError("variant must be causalman_small or causalman_medium")
-    result = CausalMan(name=variant, seed=int(seed), batch_multiplier=1,
-                       parallelize=False, debug_mode=False).sample(n_samples=sample_size)
+    upstream_dir = output / "upstream"
+    upstream_dir.mkdir(parents=True, exist_ok=True)
+    simulator = CausalMan(name=variant, seed=int(seed), batch_multiplier=1,
+                           parallelize=False, save_path=str(upstream_dir),
+                           debug_mode=False)
+    try:
+        result = simulator.sample(n_samples=sample_size)
+    except TypeError as error:
+        if "n_samples" not in str(error):
+            raise
+        result = simulator.sample()
     if len(result) == 4:
         observed, intervention, _path, causal_dag = result
     elif len(result) == 6:
         observed, _mag, _admg, _full, causal_dag, intervention = result
     else:
         raise ValueError(f"unsupported CausalMan sample return arity: {len(result)}")
-    observed = observed if isinstance(observed, pd.DataFrame) else pd.DataFrame(observed)
-    intervention = intervention if isinstance(intervention, pd.DataFrame) else pd.DataFrame(intervention)
+    observed = _as_frame(observed, "observations")
+    intervention = _as_frame(intervention, "intervention table")
+    observed.columns = [str(column) for column in observed.columns]
+    observed = observed.loc[_observational_mask(intervention, len(observed))].reset_index(drop=True)
     graph = causal_dag if isinstance(causal_dag, nx.DiGraph) else nx.DiGraph(causal_dag)
     graph = nx.relabel_nodes(graph, {node: str(node) for node in graph.nodes}, copy=True)
-    if len(intervention) == len(observed) and not intervention.empty:
-        active = intervention.astype(str).apply(lambda column: ~column.str.strip().isin({"", "0", "False", "None", "nan"}))
-        observed = observed.loc[~active.any(axis=1)].reset_index(drop=True)
-    nodes = [str(node) for node in graph.nodes if str(node) in observed.columns]
-    nodes = [node for node in nodes if pd.api.types.is_numeric_dtype(observed[node]) and observed[node].nunique() > 1]
+    observable = [str(node) for node in graph.nodes
+                  if bool(graph.nodes[node].get("Observable", graph.nodes[node].get("observable", False)))]
+    nodes = [node for node in observable if node in observed.columns]
+    if not nodes:
+        nodes = _continuous_columns(observed)
+    if len(observed) < sample_size:
+        raise ValueError(f"only {len(observed)} observational rows remain; {sample_size} required")
+    observed = observed.iloc[:sample_size]
     if not nodes:
         raise ValueError("CausalMan produced no nonconstant observed numeric variables")
     values = observed.loc[:, nodes].to_numpy(float)
     if not np.isfinite(values).all():
         raise ValueError("CausalMan observations contain nonfinite values")
-    selected_graph = graph.subgraph(nodes).copy()
-    projection_graph = selected_graph.copy()
     observed_set = set(nodes)
     for node in graph.nodes:
         graph.nodes[node]["Observable"] = node in observed_set
