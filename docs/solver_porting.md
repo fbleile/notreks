@@ -42,5 +42,5 @@ This avoids creating a superficially standalone repository whose solver behavior
 | Continuation loop | `notreks.continuation` | deterministic callback smoke and domain backtracking | compare every update detail with legacy |
 | Direct DAGMA+PSTrek smoke path | `notreks.dagma_backend` | direct solver adapter smoke | end-to-end legacy parity and proximal-L1 parity |
 | DAGMA candidate post-processing | `finalize_profile_pstrek` | candidate/final graph smoke | compare standardized BIC and repair diagnostics |
-| DAGMA restart selection | direct integration adapter | two-restart smoke and BIC selection | compare restart initialization and exact selection metadata |
+| DAGMA restart selection | direct integration adapter | two-restart smoke, deterministic initialization, and BIC selection | compare exact selection metadata |
 | Production DAGMA continuation | legacy adapter | end-to-end solver parity harness | remove only after the preceding checks |
