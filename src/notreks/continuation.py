@@ -15,6 +15,7 @@ from .dagma_math import ValueGradient
 
 Term = Callable[[np.ndarray, float], ValueGradient]
 Score = Callable[[np.ndarray], ValueGradient]
+Domain = Callable[[np.ndarray, float], bool]
 
 
 @dataclass(frozen=True)
@@ -31,6 +32,8 @@ class ContinuationConfig:
     checkpoint: int = 1_000
     relative_tolerance: float = 1e-6
     threshold: float = 0.3
+    backtracking_factor: float = 0.5
+    minimum_learning_rate: float = 1e-16
 
     def validate(self) -> None:
         if self.stages < 1 or self.warm_iter < 1 or self.max_iter < 1:
@@ -39,7 +42,9 @@ class ContinuationConfig:
             raise ValueError("invalid continuation weights")
         if len(self.s_schedule) < self.stages or any(s <= 0 for s in self.s_schedule):
             raise ValueError("s_schedule must contain positive values for all stages")
-        if self.learning_rate <= 0 or self.checkpoint < 1 or self.threshold < 0:
+        if (self.learning_rate <= 0 or self.checkpoint < 1 or self.threshold < 0
+                or not 0 < self.backtracking_factor < 1
+                or self.minimum_learning_rate <= 0):
             raise ValueError("invalid optimizer settings")
 
 
@@ -72,6 +77,8 @@ def fit(
     *,
     config: ContinuationConfig | None = None,
     initial_weights: np.ndarray | None = None,
+    domain: Domain | None = None,
+    edge_mask: np.ndarray | None = None,
 ) -> ContinuationResult:
     """Run the central-path loop with explicit objective callbacks."""
     config = ContinuationConfig() if config is None else config
@@ -80,6 +87,10 @@ def fit(
     if W.shape != (dimension, dimension):
         raise ValueError("initial_weights has the wrong shape")
     np.fill_diagonal(W, 0.0)
+    mask = np.ones_like(W) if edge_mask is None else np.asarray(edge_mask, dtype=float)
+    if mask.shape != W.shape or not np.all(np.isin(mask, [0.0, 1.0])):
+        raise ValueError("edge_mask must be a binary matrix matching dimension")
+    np.fill_diagonal(mask, 0.0)
     moment = np.zeros_like(W)
     velocity = np.zeros_like(W)
     diagnostics: list[StageDiagnostic] = []
@@ -101,8 +112,15 @@ def fit(
             velocity = 0.999 * velocity + 0.001 * gradient * gradient
             corrected_moment = moment / (1.0 - 0.99 ** iteration)
             corrected_velocity = velocity / (1.0 - 0.999 ** iteration)
-            W -= config.learning_rate * corrected_moment / (np.sqrt(corrected_velocity) + 1e-8)
-            W *= 1.0 - np.eye(dimension)
+            step = config.learning_rate
+            direction = corrected_moment / (np.sqrt(corrected_velocity) + 1e-8)
+            proposal = (W - step * direction) * mask
+            while domain is not None and not domain(proposal, s):
+                step *= config.backtracking_factor
+                if step < config.minimum_learning_rate:
+                    raise RuntimeError("DAGMA domain backtracking reached its minimum step")
+                proposal = (W - step * direction) * mask
+            W = proposal
             if iteration % config.checkpoint == 0 or iteration == limit:
                 relative_change = abs((previous - objective) / previous) if np.isfinite(previous) else np.inf
                 previous = objective
