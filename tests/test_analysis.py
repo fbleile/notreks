@@ -1,7 +1,7 @@
 import pytest
 
 from notreks.analysis import (adjacent_changes, clustered_fixed_effects, graph_k_cells,
-                               holm_adjust, k_summaries)
+                               holm_adjust, k_summaries, paired_wilcoxon)
 
 
 def test_graph_k_cells_gives_each_graph_k_one_observation():
@@ -25,7 +25,7 @@ def test_clustered_fixed_effects_detects_negative_trend():
     assert result.slope == pytest.approx(-1.0)
     assert result.graphs == 3
     assert result.cells == 9
-    assert result.p_one_sided < 0.05
+    assert result.p_two_sided < 0.05
 
 
 def test_holm_adjust_preserves_order_and_monotonicity():
@@ -45,3 +45,10 @@ def test_k_summaries_and_adjacent_changes_use_graph_level_cells():
     changes = adjacent_changes(cells)
     assert changes[0]["graphs"] == 2
     assert changes[0]["mean_change"] == pytest.approx(-1.0)
+
+
+def test_paired_wilcoxon_is_two_sided():
+    result = paired_wilcoxon([-4, -3, -5, -2, -6])
+    assert result.pairs == 5
+    assert result.p_two_sided < 0.1
+    assert paired_wilcoxon([0, 0, 0]).p_two_sided == 1.0

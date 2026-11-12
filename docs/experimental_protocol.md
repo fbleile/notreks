@@ -109,5 +109,7 @@ must not become the scientific source of truth.
 The graph-clustered chromatic trend analysis is available as
 `notreks-trend`. It first creates one graph--K cell mean per graph and K, then
 fits graph fixed effects with CR1 cluster-robust uncertainty and a Student-t
-reference with `G-1` degrees of freedom. The default lower-tail p-value tests
-whether the SHD slope is negative.
+reference with `G-1` degrees of freedom. All confirmatory tests use two-sided
+p-values. Paired method comparisons use the Wilcoxon signed-rank test on
+graph-matched metric differences, with multiplicity correction applied after
+the test family is specified.

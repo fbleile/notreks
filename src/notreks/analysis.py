@@ -26,9 +26,21 @@ class TrendResult:
     ci_high: float
     t_statistic: float
     df: int
-    p_one_sided: float
+    p_two_sided: float
     graphs: int
     cells: int
+
+    def to_dict(self) -> dict[str, float | int]:
+        return asdict(self)
+
+
+@dataclass(frozen=True)
+class WilcoxonResult:
+    """Two-sided paired Wilcoxon signed-rank result."""
+
+    statistic: float
+    p_two_sided: float
+    pairs: int
 
     def to_dict(self) -> dict[str, float | int]:
         return asdict(self)
@@ -127,6 +139,22 @@ def clustered_fixed_effects(cells: Iterable[Mapping[str, object]], *, critical: 
                        t_stat, df, p_value, g, n)
 
 
+def paired_wilcoxon(differences: Iterable[float]) -> WilcoxonResult:
+    """Test paired differences against zero using a two-sided alternative."""
+    values = np.asarray([float(value) for value in differences], dtype=float)
+    values = values[np.isfinite(values)]
+    if len(values) < 2:
+        raise ValueError("at least two finite paired differences are required")
+    if np.all(values == 0):
+        return WilcoxonResult(float(len(values) * (len(values) + 1) / 4), 1.0, len(values))
+    try:
+        from scipy.stats import wilcoxon
+    except ImportError as error:
+        raise RuntimeError("Wilcoxon inference requires scipy") from error
+    result = wilcoxon(values, alternative="two-sided", zero_method="wilcox", method="auto")
+    return WilcoxonResult(float(result.statistic), float(result.pvalue), len(values))
+
+
 def holm_adjust(p_values: Iterable[float]) -> list[float]:
     """Return Holm-adjusted p-values in the original order."""
     values = list(float(value) for value in p_values)
@@ -150,7 +178,8 @@ def _student_t_values(t_statistic: float, df: int, confidence: float) -> tuple[f
     except ImportError as error:
         raise RuntimeError("trend inference requires scipy") from error
     critical = float(t.ppf((1 + confidence) / 2, df))
-    p_value = float(t.cdf(t_statistic, df))
+    lower = float(t.cdf(t_statistic, df))
+    p_value = min(1.0, 2.0 * min(lower, 1.0 - lower))
     return critical, p_value
 
 
