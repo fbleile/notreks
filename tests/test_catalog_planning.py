@@ -20,3 +20,11 @@ def test_chromatic_methods_are_dimension_specific():
     definition, _ = expand_catalog("prior-structure-chrom", selection=CatalogSelection(graph_limit=1))
     assert methods_for_condition(definition, 50, 0.25) == ("dagma_notreks",)
     assert methods_for_condition(definition, 100, 0.25) == ("flop_notreks",)
+
+
+def test_chromatic_catalog_expands_target_k_strategies():
+    definition, runs = expand_catalog("prior-structure-chrom", master_seed=3,
+                                      selection=CatalogSelection(graph_limit=1))
+    assert definition.target_k_values == tuple(range(2, 21))
+    strategies = {run.knowledge_strategy for run in runs if run.knowledge_fraction == 0.25}
+    assert strategies == {f"target-k-{k}" for k in range(2, 21)}

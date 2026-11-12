@@ -27,6 +27,7 @@ class ExperimentDefinition:
     one_run_per_prior_set: bool = False
     analysis_cutoff: str | None = None
     excluded_methods_by_dimension: tuple[tuple[int, tuple[str, ...]], ...] = ()
+    target_k_values: tuple[int, ...] = ()
 
     def cells_for_dimension(self, dimension: int) -> tuple[tuple[int, str, int], ...]:
         return tuple(cell for cell in self.cells if cell[0] == dimension)
@@ -91,7 +92,8 @@ CATALOG: dict[str, ExperimentDefinition] = {
         ("target-k",), "Fixed pair budget; one solver run per generated prior set.",
         one_run_per_prior_set=True, analysis_cutoff="target K represented for >=90% of graphs",
         excluded_methods_by_dimension=((50, ("flop", "flop_notreks")),
-                                       (100, ("dagma", "dagma_notreks")))),
+                                       (100, ("dagma", "dagma_notreks"))),
+        target_k_values=tuple(range(2, 21))),
     "pstrek-vs-tcc": ExperimentDefinition(
         "pstrek-vs-tcc", "constraint_comparison", "linear_gaussian",
         tuple((dimension, "er", density) for dimension in (8, 10, 12) for density in (2, 4)),

@@ -13,6 +13,7 @@ import numpy as np
 
 from .experiment import RunDirectory, RunRecorder, atomic_json, utc_now
 from .external import ExternalDataset
+from .knowledge import canonical_pair_set_hash, target_k_partite_pairs
 from .graphs import generate
 from .protocol import RunSpec
 from .solvers import SolverConfig, SolverRegistry, SolverResult
@@ -134,14 +135,27 @@ def _prepare_data(run: RunSpec, shared: Path, *, rscript: str | None) -> tuple[P
 def _prepare_knowledge(run: RunSpec, shared: Path) -> Path:
     graph = np.load(shared / "graph.npy")
     all_pairs = no_trek_pairs(graph)
-    pairs = select_pairs(all_pairs, run.knowledge_fraction, run.knowledge_seed)
-    path = shared / "knowledge" / f"q{run.knowledge_fraction:g}_r{run.knowledge_round}.json"
+    if run.knowledge_strategy.startswith("target-k-"):
+        try:
+            target = int(run.knowledge_strategy.rsplit("-", 1)[1])
+        except ValueError as error:
+            raise ValueError(f"invalid target-K strategy: {run.knowledge_strategy!r}") from error
+        pairs = target_k_partite_pairs(all_pairs, run.dimension, run.knowledge_fraction,
+                                       run.knowledge_seed, target)
+        target_k = target
+    else:
+        pairs = select_pairs(all_pairs, run.knowledge_fraction, run.knowledge_seed)
+        target_k = None
+    safe_strategy = run.knowledge_strategy.replace("/", "_")
+    path = shared / "knowledge" / f"{safe_strategy}_q{run.knowledge_fraction:g}_r{run.knowledge_round}.json"
     expected = {
         "data_id": run.data_id, "knowledge_seed": run.knowledge_seed,
         "knowledge_fraction": run.knowledge_fraction,
         "knowledge_round": run.knowledge_round,
         "knowledge_strategy": run.knowledge_strategy,
+        "target_chromatic_number": target_k,
         "available_pairs": len(all_pairs), "selected_pairs": len(pairs),
+        "pair_set_hash": canonical_pair_set_hash(pairs),
         "pairs": [list(pair) for pair in pairs],
     }
     if path.exists() and json.loads(path.read_text()) != expected:

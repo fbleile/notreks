@@ -34,6 +34,13 @@ def methods_for_condition(definition: ExperimentDefinition, dimension: int, frac
     return available
 
 
+def knowledge_requests(definition: ExperimentDefinition, fraction: float) -> tuple[str, ...]:
+    """Expand catalog knowledge policies into deterministic strategy labels."""
+    if fraction > 0 and definition.knowledge_strategies == ("target-k",):
+        return tuple(f"target-k-{value}" for value in definition.target_k_values)
+    return definition.knowledge_strategies
+
+
 def expand_catalog(name: str, *, master_seed: int = 20260917,
                    selection: CatalogSelection = CatalogSelection()) -> tuple[ExperimentDefinition, list[RunSpec]]:
     definition = get(name)
@@ -54,17 +61,19 @@ def expand_catalog(name: str, *, master_seed: int = 20260917,
                 data_seed = seeds.derive("data", data_id, definition.data_model)
                 for fraction in definition.knowledge_fractions:
                     rounds = definition.partial_rounds if 0.0 < fraction < 1.0 else 1
-                    for round_id in range(rounds):
-                        knowledge_seed = seeds.derive("knowledge", data_id, fraction, round_id)
-                        for method in methods_for_condition(definition, dimension, fraction):
-                            runs.append(RunSpec(
+                    for strategy in knowledge_requests(definition, fraction):
+                        for round_id in range(rounds):
+                            knowledge_seed = seeds.derive("knowledge", data_id, fraction, strategy, round_id)
+                            for method in methods_for_condition(definition, dimension, fraction):
+                                runs.append(RunSpec(
                                 protocol=definition.name, graph_id=graph_id, data_id=data_id,
                                 method=method, dimension=dimension, sample_size=sample_size,
                                 graph_family=family, density=density, graph_seed=graph_seed,
                                 data_seed=data_seed, knowledge_seed=knowledge_seed,
-                                knowledge_fraction=fraction, knowledge_round=round_id,
-                                data_model=definition.data_model,
-                            ))
+                                    knowledge_fraction=fraction, knowledge_round=round_id,
+                                    data_model=definition.data_model,
+                                    knowledge_strategy=strategy,
+                                ))
     return definition, runs
 
 
