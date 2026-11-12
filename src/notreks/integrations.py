@@ -114,12 +114,16 @@ def register_dagma(registry: SolverRegistry) -> dict[str, Any]:
                 threshold=0.3,
             ),
         )
-        return SolverResult("dagma_notreks", result.adjacency, {
+        from .dagma_backend import finalize_profile_pstrek
+        adjacency, final_diagnostics = finalize_profile_pstrek(
+            observations, pairs, result)
+        return SolverResult("dagma_notreks", adjacency, {
             "backend": "notreks.continuation",
             "loss": "profile_gaussian",
             "threshold": 0.3,
             "stages": len(result.stages),
             "converged": result.converged,
+            **final_diagnostics,
         })
 
     registry.register("dagma_notreks", solve_notreks)

@@ -9,6 +9,8 @@ import scipy.linalg as sla
 from .continuation import ContinuationConfig, ContinuationResult, fit
 from .dagma_math import ValueGradient, logdet_acyclicity, profile_gaussian_score
 from .pstrek import resolvent_value_and_grad
+from .postselection import order_parent_postselection
+from .scores import is_dag
 
 
 def fit_profile_pstrek(
@@ -54,6 +56,40 @@ def fit_profile_pstrek(
         return bool(np.all(np.isfinite(inverse)) and np.all(inverse >= -1e-12))
 
     return fit(score, structural, prior, d, config=config, domain=domain)
+
+
+def finalize_profile_pstrek(
+    observations: np.ndarray,
+    pairs: Sequence[tuple[int, int]],
+    result: ContinuationResult,
+    *,
+    lambda_bic: float = 2.0,
+) -> tuple[np.ndarray, dict[str, object]]:
+    """Post-process a thresholded candidate and retain auditable diagnostics."""
+    data = np.asarray(observations, dtype=float)
+    means = data.mean(axis=0, keepdims=True)
+    stds = np.maximum(data.std(axis=0, ddof=0, keepdims=True), 1e-12)
+    standardized = (data - means) / stds
+    candidate = np.asarray(result.adjacency, dtype=np.uint8)
+    diagnostics: dict[str, object] = {
+        "candidate_edges": int(candidate.sum()),
+        "postselection_policy": "order_parent_shrink_growback",
+    }
+    if not is_dag(candidate):
+        diagnostics["postselection_status"] = "skipped_candidate_not_dag"
+        diagnostics["final_edges"] = int(candidate.sum())
+        return candidate, diagnostics
+    final, postselection = order_parent_postselection(
+        standardized, candidate, pairs, lambda_bic=lambda_bic)
+    diagnostics.update({
+        "postselection_status": "applied",
+        "final_edges": int(final.sum()),
+        "postselection_deletions": postselection["postselection_deletions"],
+        "postselection_feasibility_deletions": postselection["postselection_feasibility_deletions"],
+        "postselection_growback_additions": postselection["postselection_growback_additions"],
+        "postprocessed_bic": postselection["postprocessed_bic"],
+    })
+    return final, diagnostics
 
 
 def main() -> None:

@@ -27,3 +27,4 @@ def test_direct_dagma_notreks_smoke():
     assert provenance["backend"] == "dagma+notreks"
     assert result.adjacency.shape == (4, 4)
     assert result.diagnostics["backend"] == "notreks.continuation"
+    assert "postselection_status" in result.diagnostics
