@@ -44,3 +44,9 @@ This avoids creating a superficially standalone repository whose solver behavior
 | DAGMA candidate post-processing | `finalize_profile_pstrek` | candidate/final graph smoke | compare standardized BIC and repair diagnostics |
 | DAGMA restart selection | direct integration adapter | two-restart smoke, deterministic initialization, and BIC selection | compare exact selection metadata |
 | Production DAGMA continuation | legacy adapter | end-to-end solver parity harness | remove only after the preceding checks |
+
+The direct solver names are intentionally explicit: `dagma` is the upstream
+DAGMA L2 implementation, `dagma_profile` is the standalone continuation with
+the profiled Gaussian score, and `dagma_notreks` adds PSTrek to that profiled
+path. The legacy production adapter remains available for exact reported-run
+reproduction.

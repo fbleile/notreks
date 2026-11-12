@@ -99,9 +99,9 @@ def register_dagma(registry: SolverRegistry) -> dict[str, Any]:
 
     registry.register("dagma", solve)
 
-    from .dagma_backend import fit_profile_pstrek
+    from .dagma_backend import fit_pstrek
 
-    def solve_notreks(observations, pairs, seed, config):
+    def solve_custom(observations, pairs, seed, config, method, score_type):
         from .continuation import ContinuationConfig
         from .dagma_backend import finalize_profile_pstrek
         from .scores import gaussian_bic, is_dag
@@ -115,7 +115,7 @@ def register_dagma(registry: SolverRegistry) -> dict[str, Any]:
                            observations.shape[1], int(seed) + restart))
             default_s = (1.0, 0.9, 0.8, 0.7, 0.6)
             s_schedule = default_s + (default_s[-1],) * max(0, config.dagma_stages - len(default_s))
-            result = fit_profile_pstrek(
+            result = fit_pstrek(
                 observations, pairs,
                 config=ContinuationConfig(
                     stages=config.dagma_stages,
@@ -126,6 +126,7 @@ def register_dagma(registry: SolverRegistry) -> dict[str, Any]:
                     threshold=0.3,
                 ),
                 initial_weights=initial,
+                score_type=score_type,
             )
             adjacency, final_diagnostics = finalize_profile_pstrek(observations, pairs, result)
             bic = (gaussian_bic(observations, adjacency, lambda_bic=2.0)[0]
@@ -137,9 +138,9 @@ def register_dagma(registry: SolverRegistry) -> dict[str, Any]:
         if best is None:
             raise SolverError("DAGMA+PSTrek produced no restart result")
         result, adjacency, final_diagnostics = best
-        return SolverResult("dagma_notreks", adjacency, {
+        return SolverResult(method, adjacency, {
             "backend": "notreks.continuation",
-            "loss": "profile_gaussian",
+            "loss": score_type,
             "threshold": 0.3,
             "stages": len(result.stages),
             "converged": result.converged,
@@ -150,8 +151,19 @@ def register_dagma(registry: SolverRegistry) -> dict[str, Any]:
             **final_diagnostics,
         })
 
+    def solve_notreks(observations, pairs, seed, config):
+        return solve_custom(observations, pairs, seed, config,
+                            "dagma_notreks", "profile_gaussian")
+
+    def solve_profile(observations, pairs, seed, config):
+        del pairs
+        return solve_custom(observations, [], seed, config,
+                            "dagma_profile", "profile_gaussian")
+
     registry.register("dagma_notreks", solve_notreks)
-    return {"backend": "dagma+notreks", "loss": "l2/profile_gaussian", "threshold": 0.3}
+    registry.register("dagma_profile", solve_profile)
+    return {"backend": "dagma+notreks", "loss": "l2/profile_gaussian", "threshold": 0.3,
+            "profile_baseline": "dagma_profile"}
 
 
 def _flop_adapter(function: Callable[..., tuple[np.ndarray, dict[str, Any]]], name: str):

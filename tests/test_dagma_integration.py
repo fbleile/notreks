@@ -29,3 +29,14 @@ def test_direct_dagma_notreks_smoke():
     assert result.diagnostics["backend"] == "notreks.continuation"
     assert "postselection_status" in result.diagnostics
     assert result.diagnostics["attempts_completed"] == 2
+
+
+def test_direct_profile_dagma_baseline_smoke():
+    registry = SolverRegistry()
+    register_dagma(registry)
+    result = registry.run(
+        "dagma_profile", np.random.default_rng(6).normal(size=(24, 3)), [], 9,
+        SolverConfig(attempts=1, dagma_stages=1, dagma_warm_iter=2, dagma_max_iter=3),
+    )
+    assert result.method == "dagma_profile"
+    assert result.diagnostics["loss"] == "profile_gaussian"
