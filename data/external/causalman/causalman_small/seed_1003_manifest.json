@@ -1,0 +1,268 @@
+{
+  "dataset": "causalman_small",
+  "seed": 1003,
+  "target_rows": 5000,
+  "observational_rows": 5000,
+  "stored_rows": 5000,
+  "nodes_full": 157,
+  "edges_full": 251,
+  "nodes_observed_continuous": 11,
+  "selected_nodes": [
+    "PF_M1_T1_s0",
+    "PF_M1_T1_Force",
+    "PF_M1_T1_sgrad",
+    "PF_M1_T1_Fmax",
+    "PF_M1_T1_smax",
+    "PF_M1_T2_s0",
+    "PF_M1_T2_Force",
+    "PF_M1_T2_sgrad",
+    "PF_M1_T2_Fmax",
+    "PF_M1_T2_smax",
+    "batch_ID_num"
+  ],
+  "dropped_variables": {
+    "MV1_T1_MV_Type_ID_num": "low_cardinality_discrete",
+    "MV1_T1_MV_Supplier_ID_num": "low_cardinality_discrete",
+    "MV2_T2_MV_Type_ID_num": "low_cardinality_discrete",
+    "MV2_T2_MV_Supplier_ID_num": "low_cardinality_discrete",
+    "PSec_MVgeneration_pSection_ID_num": "low_cardinality_discrete",
+    "HU_HU_Block_Type_ID_num": "low_cardinality_discrete",
+    "HU_HU_Block_Supplier_ID_num": "low_cardinality_discrete",
+    "PSec_HUgeneration_pSection_ID_num": "low_cardinality_discrete",
+    "PF_M1_T1_s0_LTL": "low_cardinality_discrete",
+    "PF_M1_T1_s0_UTL": "low_cardinality_discrete",
+    "PF_M1_T1_s0_MpGood": "constant",
+    "PF_M1_T1_Force_LTL": "low_cardinality_discrete",
+    "PF_M1_T1_Force_UTL": "low_cardinality_discrete",
+    "PF_M1_T1_Force_MpGood": "low_cardinality_discrete",
+    "PF_M1_T1_sgrad_LTL": "low_cardinality_discrete",
+    "PF_M1_T1_sgrad_UTL": "low_cardinality_discrete",
+    "PF_M1_T1_sgrad_MpGood": "low_cardinality_discrete",
+    "PF_M1_T1_Fmax_LTL": "low_cardinality_discrete",
+    "PF_M1_T1_Fmax_UTL": "low_cardinality_discrete",
+    "PF_M1_T1_Fmax_MpGood": "low_cardinality_discrete",
+    "PF_M1_T1_smax_LTL": "low_cardinality_discrete",
+    "PF_M1_T1_smax_UTL": "low_cardinality_discrete",
+    "PF_M1_T1_smax_MpGood": "low_cardinality_discrete",
+    "PSec_C2_pSection_ID_num": "low_cardinality_discrete",
+    "PF_M1_T2_s0_LTL": "low_cardinality_discrete",
+    "PF_M1_T2_s0_UTL": "low_cardinality_discrete",
+    "PF_M1_T2_s0_MpGood": "constant",
+    "PF_M1_T2_Force_LTL": "low_cardinality_discrete",
+    "PF_M1_T2_Force_UTL": "low_cardinality_discrete",
+    "PF_M1_T2_Force_MpGood": "low_cardinality_discrete",
+    "PF_M1_T2_sgrad_LTL": "low_cardinality_discrete",
+    "PF_M1_T2_sgrad_UTL": "low_cardinality_discrete",
+    "PF_M1_T2_sgrad_MpGood": "low_cardinality_discrete",
+    "PF_M1_T2_Fmax_LTL": "low_cardinality_discrete",
+    "PF_M1_T2_Fmax_UTL": "low_cardinality_discrete",
+    "PF_M1_T2_Fmax_MpGood": "low_cardinality_discrete",
+    "PF_M1_T2_smax_LTL": "low_cardinality_discrete",
+    "PF_M1_T2_smax_UTL": "low_cardinality_discrete",
+    "PF_M1_T2_smax_MpGood": "low_cardinality_discrete",
+    "Sec_C2_Machine1_ProcessResult": "low_cardinality_discrete",
+    "product_type_ID_num": "low_cardinality_discrete",
+    "line_ID_num": "low_cardinality_discrete"
+  },
+  "intervention": {
+    "intervention_columns": [],
+    "intervention_rows": 0
+  },
+  "batch_multiplier": 1,
+  "projection": {
+    "directed": [
+      [
+        "PF_M1_T1_Force",
+        "PF_M1_T1_Fmax"
+      ],
+      [
+        "PF_M1_T1_Force",
+        "PF_M1_T1_sgrad"
+      ],
+      [
+        "PF_M1_T1_s0",
+        "PF_M1_T1_sgrad"
+      ],
+      [
+        "PF_M1_T1_sgrad",
+        "PF_M1_T1_smax"
+      ],
+      [
+        "PF_M1_T2_Force",
+        "PF_M1_T2_Fmax"
+      ],
+      [
+        "PF_M1_T2_Force",
+        "PF_M1_T2_sgrad"
+      ],
+      [
+        "PF_M1_T2_s0",
+        "PF_M1_T2_sgrad"
+      ],
+      [
+        "PF_M1_T2_sgrad",
+        "PF_M1_T2_smax"
+      ]
+    ],
+    "bidirected": [
+      [
+        "PF_M1_T1_Fmax",
+        "PF_M1_T1_s0"
+      ],
+      [
+        "PF_M1_T1_Fmax",
+        "PF_M1_T1_sgrad"
+      ],
+      [
+        "PF_M1_T1_Fmax",
+        "PF_M1_T1_smax"
+      ],
+      [
+        "PF_M1_T1_Fmax",
+        "PF_M1_T2_Fmax"
+      ],
+      [
+        "PF_M1_T1_Fmax",
+        "PF_M1_T2_s0"
+      ],
+      [
+        "PF_M1_T1_Fmax",
+        "PF_M1_T2_sgrad"
+      ],
+      [
+        "PF_M1_T1_Fmax",
+        "PF_M1_T2_smax"
+      ],
+      [
+        "PF_M1_T1_Force",
+        "PF_M1_T1_sgrad"
+      ],
+      [
+        "PF_M1_T1_Force",
+        "PF_M1_T2_Force"
+      ],
+      [
+        "PF_M1_T1_Force",
+        "PF_M1_T2_sgrad"
+      ],
+      [
+        "PF_M1_T1_s0",
+        "PF_M1_T1_sgrad"
+      ],
+      [
+        "PF_M1_T1_s0",
+        "PF_M1_T1_smax"
+      ],
+      [
+        "PF_M1_T1_s0",
+        "PF_M1_T2_Fmax"
+      ],
+      [
+        "PF_M1_T1_s0",
+        "PF_M1_T2_s0"
+      ],
+      [
+        "PF_M1_T1_s0",
+        "PF_M1_T2_sgrad"
+      ],
+      [
+        "PF_M1_T1_s0",
+        "PF_M1_T2_smax"
+      ],
+      [
+        "PF_M1_T1_sgrad",
+        "PF_M1_T1_smax"
+      ],
+      [
+        "PF_M1_T1_sgrad",
+        "PF_M1_T2_Fmax"
+      ],
+      [
+        "PF_M1_T1_sgrad",
+        "PF_M1_T2_Force"
+      ],
+      [
+        "PF_M1_T1_sgrad",
+        "PF_M1_T2_s0"
+      ],
+      [
+        "PF_M1_T1_sgrad",
+        "PF_M1_T2_sgrad"
+      ],
+      [
+        "PF_M1_T1_sgrad",
+        "PF_M1_T2_smax"
+      ],
+      [
+        "PF_M1_T1_smax",
+        "PF_M1_T2_Fmax"
+      ],
+      [
+        "PF_M1_T1_smax",
+        "PF_M1_T2_s0"
+      ],
+      [
+        "PF_M1_T1_smax",
+        "PF_M1_T2_sgrad"
+      ],
+      [
+        "PF_M1_T1_smax",
+        "PF_M1_T2_smax"
+      ],
+      [
+        "PF_M1_T2_Fmax",
+        "PF_M1_T2_s0"
+      ],
+      [
+        "PF_M1_T2_Fmax",
+        "PF_M1_T2_sgrad"
+      ],
+      [
+        "PF_M1_T2_Fmax",
+        "PF_M1_T2_smax"
+      ],
+      [
+        "PF_M1_T2_Force",
+        "PF_M1_T2_sgrad"
+      ],
+      [
+        "PF_M1_T2_s0",
+        "PF_M1_T2_sgrad"
+      ],
+      [
+        "PF_M1_T2_s0",
+        "PF_M1_T2_smax"
+      ],
+      [
+        "PF_M1_T2_sgrad",
+        "PF_M1_T2_smax"
+      ]
+    ]
+  },
+  "sample_api": "causalman_0.1_six_value",
+  "path_metadata_available": false,
+  "oracle_no_trek_pairs": 14,
+  "total_pairs": 55,
+  "source_source_no_trek_pairs": 0,
+  "source_incident_no_trek_pairs": 10,
+  "non_source_no_trek_pairs": 4,
+  "disconnected_section_pairs": 10,
+  "remaining_nontrivial_pairs": 4,
+  "oracle_pair_abs_corr_mean": 0.4462924122997216,
+  "oracle_pair_abs_corr_max": 0.7871994973508535,
+  "data_checksum": "c46cfefc4a1cabd499ed295830967a6823692028a756848ed523d687337ab8fc",
+  "full_graph_checksum": "aa4f0a75bcf1f9a051277e3639e65baba8e69625844edd2aa25463ebe5ea5d94",
+  "package": {
+    "source_url": "https://github.com/boschresearch/CausalMan",
+    "paper_url": "https://arxiv.org/abs/2502.12707",
+    "license": "AGPL-3.0",
+    "upstream_revision": "17529dad5ec8b8c691494c617b9af4533aa44bf8",
+    "causalman_version": "0.1.0",
+    "numpy_version": "2.5.1",
+    "pandas_version": "3.0.5",
+    "networkx_version": "3.6.1"
+  },
+  "master_seed": 20260917,
+  "eligible_for_oracle": true,
+  "eligibility_reason": "ok"
+}
