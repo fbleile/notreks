@@ -1,6 +1,7 @@
 import pytest
 
-from notreks.analysis import clustered_fixed_effects, graph_k_cells, holm_adjust
+from notreks.analysis import (adjacent_changes, clustered_fixed_effects, graph_k_cells,
+                               holm_adjust, k_summaries)
 
 
 def test_graph_k_cells_gives_each_graph_k_one_observation():
@@ -32,3 +33,15 @@ def test_holm_adjust_preserves_order_and_monotonicity():
     assert adjusted[0] == pytest.approx(0.03)
     assert adjusted[2] == pytest.approx(0.06)
     assert adjusted[1] == pytest.approx(0.2)
+
+
+def test_k_summaries_and_adjacent_changes_use_graph_level_cells():
+    cells = [{"graph": graph, "K": target, "mean": value}
+             for graph, value in (("a", 8), ("b", 6)) for target in (2, 3)
+             for value in [value - target + 2]]
+    summaries = k_summaries(cells)
+    assert summaries[0]["graphs"] == 2
+    assert summaries[0]["variance"] == pytest.approx(2.0)
+    changes = adjacent_changes(cells)
+    assert changes[0]["graphs"] == 2
+    assert changes[0]["mean_change"] == pytest.approx(-1.0)

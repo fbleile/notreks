@@ -52,6 +52,35 @@ def graph_k_cells(rows: Iterable[Mapping[str, object]], *, graph: str,
             for (graph_id, target), observations in sorted(values.items())]
 
 
+def k_summaries(cells: Iterable[Mapping[str, object]]) -> list[dict[str, float | int]]:
+    """Summarize graph-level means, spread, and graph counts at each K."""
+    grouped: dict[float, list[float]] = {}
+    for row in cells:
+        grouped.setdefault(float(row["K"]), []).append(float(row["mean"]))
+    return [{"K": target, "graphs": len(values), "mean": float(np.mean(values)),
+             "std": float(np.std(values, ddof=1)) if len(values) > 1 else 0.0,
+             "variance": float(np.var(values, ddof=1)) if len(values) > 1 else 0.0}
+            for target, values in sorted(grouped.items())]
+
+
+def adjacent_changes(cells: Iterable[Mapping[str, object]]) -> list[dict[str, float | int]]:
+    """Return paired mean changes for each adjacent observed K pair."""
+    by_graph: dict[str, dict[float, float]] = {}
+    for row in cells:
+        by_graph.setdefault(str(row["graph"]), {})[float(row["K"])] = float(row["mean"])
+    targets = sorted({target for values in by_graph.values() for target in values})
+    summaries = []
+    for left, right in zip(targets, targets[1:]):
+        changes = [values[right] - values[left] for values in by_graph.values()
+                   if left in values and right in values]
+        if not changes:
+            continue
+        summaries.append({"from_K": left, "to_K": right, "graphs": len(changes),
+                          "mean_change": float(np.mean(changes)),
+                          "std_change": float(np.std(changes, ddof=1)) if len(changes) > 1 else 0.0})
+    return summaries
+
+
 def clustered_fixed_effects(cells: Iterable[Mapping[str, object]], *, critical: float = 0.95) -> TrendResult:
     """Fit graph fixed effects with graph-clustered uncertainty.
 
@@ -135,7 +164,10 @@ def main() -> None:
     parser.add_argument("--metric", default="SHD_cpdag")
     args = parser.parse_args()
     cells = graph_k_cells(read_csv(args.input), graph=args.graph, k=args.k, metric=args.metric)
-    print(TrendResult(**clustered_fixed_effects(cells).to_dict()))
+    import json
+    print(json.dumps({"trend": clustered_fixed_effects(cells).to_dict(),
+                      "by_K": k_summaries(cells),
+                      "adjacent_changes": adjacent_changes(cells)}, indent=2))
 
 
 if __name__ == "__main__":
