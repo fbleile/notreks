@@ -38,6 +38,10 @@ External datasets use the same shared artifact layout after validation. Their
 evaluation target is read from the manifest and projection diagnostics are
 kept separate from ordinary CPDAG metrics.
 
+The import and provenance procedure is documented in
+`docs/external_data.md`; external arrays are intentionally not repository
+fixtures.
+
 ## Migration boundary
 
 The new repository is the authority for protocol definitions, seeds, artifacts, evaluation, analysis, and figures. The Benchpress checkout is currently used only through the explicit solver adapter in `integrations.py`. This boundary is temporary and auditable: the adapter records the checkout path, while the new repository does not import Benchpress implicitly.
