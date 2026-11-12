@@ -11,6 +11,12 @@ This repository is intentionally small and inspectable. The experiment pipeline 
 5. evaluate the result;
 6. aggregate, test, and plot.
 
+## Installation
+
+For a development environment, use `conda env create -f environment.yml` and
+then activate the resulting `notreks` environment. A pip-only installation is
+also supported: `python -m pip install -e ".[test,analysis,solvers]"`.
+
 The protocol, artifact lifecycle, evaluation, figure, cluster, FLOP, and
 vanilla DAGMA layers are available. The direct DAGMA+PSTrek path is also
 available as a checked migration backend; the legacy continuation remains the

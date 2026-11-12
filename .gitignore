@@ -10,5 +10,6 @@ dist/
 *.egg-info/
 results/
 logs/
+artifacts/
 .coverage
 

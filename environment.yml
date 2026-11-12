@@ -4,6 +4,7 @@ channels:
 dependencies:
   - python=3.11
   - numpy>=1.26
+  - scipy>=1.11
   - pip
   - pip:
-      - -e .
+      - -e .[analysis,solvers]
