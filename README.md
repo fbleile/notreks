@@ -54,6 +54,12 @@ notreks-inspect results/ --json
 
 The report counts run and stage states and lists every preserved traceback.
 
+Before a long run, check the environment explicitly:
+
+```bash
+notreks-preflight --backend direct --methods flop_notreks dagma_notreks
+```
+
 The current Benchpress repository remains the reference archive while the
 remaining optimizer details are migrated incrementally.
 

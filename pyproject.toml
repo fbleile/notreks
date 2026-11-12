@@ -17,6 +17,7 @@ notreks-external-import = "notreks.external_sources:main"
 notreks-trend = "notreks.analysis:main"
 notreks-exact = "notreks.exact:main"
 notreks-inspect = "notreks.inspect:main"
+notreks-preflight = "notreks.preflight:main"
 
 [project.optional-dependencies]
 test = ["pytest>=8"]

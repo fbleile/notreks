@@ -18,6 +18,7 @@ from .manifest import write_manifest
 from .provenance import write as write_provenance
 from .solver_audit import write as write_solver_audit
 from .planning import PlanSelection, expand_protocol, external_plan, write_plan
+from .preflight import check as preflight_check
 from .protocol import ProtocolSpec, RunSpec
 from .runner import prepare_run, solve_prepared
 from .solvers import SolverConfig, SolverRegistry
@@ -119,6 +120,10 @@ def main(argv: list[str] | None = None) -> int:
     inspect_parser.add_argument("--json", action="store_true", dest="as_json")
     catalog_list_parser = commands.add_parser("catalog", help="list registered experiment arms")
     catalog_list_parser.add_argument("--json", action="store_true", dest="as_json")
+    preflight_parser = commands.add_parser("preflight", help="check an execution environment")
+    preflight_parser.add_argument("--backend", choices=("direct", "benchpress"), default="direct")
+    preflight_parser.add_argument("--methods", nargs="+", default=["flop_notreks"])
+    preflight_parser.add_argument("--benchpress-root", type=Path)
     commands.add_parser("smoke", help="run the dependency-light local smoke")
     args = parser.parse_args(argv)
     if args.command == "plan":
@@ -224,6 +229,11 @@ def main(argv: list[str] | None = None) -> int:
                 cells = len(definition["cells"])
                 print(f"{name}: arm={definition['arm']} cells={cells} methods={','.join(definition['methods'])}")
         return 0
+    if args.command == "preflight":
+        report = preflight_check(backend=args.backend, methods=tuple(args.methods),
+                                 benchpress_root=args.benchpress_root)
+        print(json.dumps(report, indent=2, sort_keys=True))
+        return 0 if report["ok"] else 2
     _smoke()
     return 0
 
