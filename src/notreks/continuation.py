@@ -93,7 +93,6 @@ def fit(
     mask = np.ones_like(W) if edge_mask is None else np.asarray(edge_mask, dtype=float)
     if mask.shape != W.shape or not np.all(np.isin(mask, [0.0, 1.0])):
         raise ValueError("edge_mask must be a binary matrix matching dimension")
-    np.fill_diagonal(mask, 0.0)
     diagnostics: list[StageDiagnostic] = []
     mu = config.mu_init
     for stage in range(config.stages):
@@ -136,6 +135,7 @@ def fit(
                                            float(prior_term.value), stage_converged))
         mu *= config.mu_factor
     adjacency = (np.abs(W) >= config.threshold).astype(np.uint8)
+    np.fill_diagonal(adjacency, 0)
     return ContinuationResult(W, adjacency, tuple(diagnostics), all(item.converged for item in diagnostics))
 
 
