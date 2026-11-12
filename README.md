@@ -84,6 +84,13 @@ notreks-external-plan path/to/manifest.json plans/causalman.json \
 The plan records the manifest path on every run and derives its dimension and
 sample size from the validated arrays.
 
+To package an already prepared cluster cache for Git or an archival data
+release, copy only the artifacts referenced by its manifest:
+
+```bash
+notreks-external-pack /cluster/path/manifest.json data/external/causalman-small
+```
+
 ## Direct solver smoke tests
 
 ```bash

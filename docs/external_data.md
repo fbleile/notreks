@@ -48,3 +48,8 @@ evaluation target as a latent-projection diagnostic rather than CPDAG SHD.
 Keep the resulting `manifest.json`, upstream revision, package environment,
 and command line with the experiment outputs. Do not copy large raw datasets
 into the Git repository merely to make a plan syntactically complete.
+
+If an approved prepared cache already exists on a cluster, package it with
+`notreks-external-pack`. The command copies only the files named by the
+manifest, rewrites their paths relative to the destination, preserves
+provenance, and validates the resulting bundle.

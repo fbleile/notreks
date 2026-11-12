@@ -5,6 +5,7 @@ import pytest
 
 from notreks.external import ExternalDataError, ExternalDataset, main
 from notreks.external_sources import import_causalassembly
+from notreks.external_pack import pack
 
 
 def test_external_manifest_validates_arrays(tmp_path):
@@ -89,3 +90,19 @@ def test_external_check_reports_pair_count(tmp_path, capsys):
     report = json.loads(capsys.readouterr().out)
     assert report["knowledge_pairs"] == 1
     assert report["nodes"] == 2
+
+
+def test_external_pack_copies_only_manifest_artifacts(tmp_path):
+    np.save(tmp_path / "x.npy", np.zeros((4, 2)))
+    np.save(tmp_path / "truth.npy", np.zeros((2, 2)))
+    (tmp_path / "pairs.json").write_text("[[0, 1]]\n")
+    (tmp_path / "unreferenced.txt").write_text("do not copy")
+    manifest = tmp_path / "dataset.json"
+    manifest.write_text(json.dumps({"dataset_id": "demo", "observations": "x.npy",
+                                    "truth_adjacency": "truth.npy", "knowledge_pairs": "pairs.json",
+                                    "nodes": ["a", "b"]}))
+    output = pack(manifest, tmp_path / "bundle")
+    assert output.is_file()
+    assert (output.parent / "x.npy").is_file()
+    assert not (output.parent / "unreferenced.txt").exists()
+    assert ExternalDataset.from_manifest(output).validate_arrays()[0].shape == (4, 2)
