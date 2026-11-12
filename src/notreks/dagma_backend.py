@@ -53,7 +53,7 @@ def fit_profile_pstrek(
         if not pairs or config.prior_weight == 0.0:
             return ValueGradient(0.0, np.zeros_like(W))
         adjacency = W * W
-        matrix = (s + config.inverse_epsilon) * np.eye(d) - adjacency
+        matrix = s * np.eye(d) - adjacency
         resolvent = sla.solve(matrix, np.eye(d), check_finite=False)
         value, gradient_adjacency = resolvent_value_and_grad(
             adjacency, resolvent, pairs,
@@ -61,7 +61,7 @@ def fit_profile_pstrek(
         return ValueGradient(value, 2.0 * W * gradient_adjacency)
 
     def domain(W: np.ndarray, s: float) -> bool:
-        matrix = (s + config.inverse_epsilon) * np.eye(d) - W * W
+        matrix = s * np.eye(d) - W * W
         try:
             inverse = sla.solve(matrix, np.eye(d), check_finite=False)
         except np.linalg.LinAlgError:
