@@ -80,6 +80,13 @@ notreks trend-figure aggregate_results.csv figures/chromatic.png \
 PNG is the default output format. Pass `--format pdf` when a vector PDF is
 needed.
 
+The same analysis can be retained as a machine-readable report:
+
+```bash
+notreks-trend aggregate_results.csv --metric SHD_cpdag \
+  --output analysis/chromatic_shd.json
+```
+
 ## Repository layout
 
 ```text

@@ -1,8 +1,21 @@
+import json
+
 import pytest
 
 from notreks.analysis import (adjacent_changes, clustered_fixed_effects, graph_k_cells,
                                holm_adjust, k_summaries, paired_metric_differences,
                                paired_wilcoxon, paired_wilcoxon_family)
+
+
+def test_trend_cli_can_retain_json_report(tmp_path, capsys):
+    input_path = tmp_path / "rows.csv"
+    input_path.write_text("graph_id,target_chromatic_number,SHD_cpdag\n"
+                          "g1,2,4\ng1,3,3\ng2,2,5\ng2,3,4\n")
+    output_path = tmp_path / "report.json"
+    from notreks.analysis import main
+    main([str(input_path), "--output", str(output_path)])
+    assert json.loads(output_path.read_text())["trend"]["graphs"] == 2
+    assert '"trend"' in capsys.readouterr().out
 
 
 def test_graph_k_cells_gives_each_graph_k_one_observation():

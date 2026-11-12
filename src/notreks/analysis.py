@@ -224,7 +224,7 @@ def _student_t_values(t_statistic: float, df: int, confidence: float) -> tuple[f
     return critical, p_value
 
 
-def main() -> None:
+def main(argv: list[str] | None = None) -> None:
     """Run the trend analysis on a CSV with graph, K, and metric columns."""
     import argparse
     parser = argparse.ArgumentParser(prog="notreks-trend")
@@ -237,7 +237,9 @@ def main() -> None:
     parser.add_argument("--comparison", action="append",
                         help="treatment:baseline; repeat for a Holm-corrected family")
     parser.add_argument("--pair-keys", default="graph_id")
-    args = parser.parse_args()
+    parser.add_argument("--output", type=Path,
+                        help="write the JSON report here as well as printing it")
+    args = parser.parse_args(argv)
     cells = graph_k_cells(read_csv(args.input), graph=args.graph, k=args.k, metric=args.metric)
     import json
     output = {"trend": clustered_fixed_effects(cells).to_dict(),
@@ -259,7 +261,11 @@ def main() -> None:
         output["paired_wilcoxon_family"] = paired_wilcoxon_family(
             read_csv(args.input), comparisons=comparisons, metric=args.metric,
             pair_keys=tuple(args.pair_keys.split(",")))
-    print(json.dumps(output, indent=2))
+    rendered = json.dumps(output, indent=2) + "\n"
+    if args.output is not None:
+        args.output.parent.mkdir(parents=True, exist_ok=True)
+        args.output.write_text(rendered)
+    print(rendered, end="")
 
 
 if __name__ == "__main__":

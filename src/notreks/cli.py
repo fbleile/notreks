@@ -57,12 +57,18 @@ def main(argv: list[str] | None = None) -> int:
     jobfarm_parser.add_argument("plan", type=Path)
     jobfarm_parser.add_argument("output", type=Path)
     jobfarm_parser.add_argument("output_root", type=Path)
-    jobfarm_parser.add_argument("benchpress_root", type=Path)
+    jobfarm_parser.add_argument("benchpress_root", type=Path, nargs="?", default=Path("."))
     jobfarm_parser.add_argument("python", type=Path)
     jobfarm_parser.add_argument("project_root", type=Path)
     jobfarm_parser.add_argument("--attempts", type=int, default=1)
     jobfarm_parser.add_argument("--start", type=int, default=0)
     jobfarm_parser.add_argument("--limit", type=int)
+    jobfarm_parser.add_argument("--backend", choices=("benchpress", "direct"), default="benchpress")
+    jobfarm_parser.add_argument("--flop-sweeps", type=int, default=16)
+    jobfarm_parser.add_argument("--dagma-stages", type=int, default=5)
+    jobfarm_parser.add_argument("--dagma-warm-iter", type=int, default=30_000)
+    jobfarm_parser.add_argument("--dagma-max-iter", type=int, default=60_000)
+    jobfarm_parser.add_argument("--trek-weight", type=float, default=1.0)
     figure_parser = commands.add_parser("figure", help="plot grouped means and standard deviations")
     figure_parser.add_argument("input", type=Path)
     figure_parser.add_argument("output", type=Path)
@@ -117,7 +123,12 @@ def main(argv: list[str] | None = None) -> int:
                                args.benchpress_root, args.python,
                                args.project_root,
                                attempts=args.attempts, start=args.start,
-                               limit=args.limit)
+                               limit=args.limit, backend=args.backend,
+                               flop_sweeps=args.flop_sweeps,
+                               dagma_stages=args.dagma_stages,
+                               dagma_warm_iter=args.dagma_warm_iter,
+                               dagma_max_iter=args.dagma_max_iter,
+                               trek_weight=args.trek_weight)
         print(f"wrote {count} JobFarm commands -> {args.output}")
         return 0
     if args.command == "figure":
