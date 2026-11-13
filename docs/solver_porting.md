@@ -41,7 +41,7 @@ This avoids creating a superficially standalone repository whose solver behavior
 |---|---|---|---|
 | PSTrek value and gradient | `notreks.pstrek` | finite differences and four-function legacy parity | connect to continuation |
 | DAGMA acyclicity and scores | `notreks.dagma_math` | finite differences and legacy parity for L2 and profile-Gaussian scores | use both score modes in continuation |
-| TCC value and gradient | `notreks.tcc` | deterministic checks and legacy parity | connect to continuation |
+| TCC value and gradient | `notreks.tcc` | strict finite differences and legacy block-construction parity | connect to continuation |
 | Objective composition | `notreks.objectives` | component and weight checks | add optimizer loop |
 | Continuation loop | `notreks.continuation` | deterministic callback smoke, domain backtracking, and tiny fixed-run parity | compare full production diagnostics |
 | Direct DAGMA+PSTrek smoke path | `notreks.dagma_backend` | direct solver adapter smoke | end-to-end legacy parity and proximal-L1 parity |

@@ -28,8 +28,11 @@ adapter fails explicitly when that capability is absent.
 
 ## Still requiring migration or the legacy checkout
 
-The paper-scale external runs and exact combinatorial pilot still need their
-full orchestration and budget definitions. Direct FLOP edge masking now uses
+The paper-scale external runs still require the supplied result archive and
+solver closure for exact historical reproduction. The exact combinatorial
+pilot now has both exhaustive d≤5 and uncapped d≤15 subset-DP entry points;
+complete-MEC auditing is explicit and bounded by the requested audit options.
+Direct FLOP edge masking now uses
 the installed optimizer's forbidden-edge hook. Direct DAGMA edge masking still
 uses a deletion-safe post-mask because upstream DAGMA does not expose that
 constraint during optimization, and direct post-selection remains a compact
