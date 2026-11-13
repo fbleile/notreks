@@ -32,7 +32,8 @@ def write_commands(plan: Path, output: Path, output_root: Path,
                    start: int = 0, limit: int | None = None,
                    backend: str = "benchpress", flop_sweeps: int = 16,
                    dagma_stages: int = 5, dagma_warm_iter: int = 30_000,
-                   dagma_max_iter: int = 60_000, trek_weight: float = 1.0) -> int:
+                   dagma_max_iter: int = 60_000, trek_weight: float = 1.0,
+                   ancestry_depth: int | None = None) -> int:
     """Write commands for a contiguous plan slice and return task count."""
     payload = json.loads(plan.read_text())
     total = len(payload["runs"])
@@ -62,6 +63,8 @@ def write_commands(plan: Path, output: Path, output_root: Path,
             "--trek-weight", str(trek_weight),
             "--start", str(index), "--limit", "1",
         ]
+        if ancestry_depth is not None:
+            command += ["--ancestry-depth", str(ancestry_depth)]
         commands.append(" ".join(shlex.quote(part) for part in command))
     output.write_text("\n".join(commands) + ("\n" if commands else ""))
     return len(commands)
@@ -84,6 +87,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--dagma-warm-iter", type=int, default=30_000)
     parser.add_argument("--dagma-max-iter", type=int, default=60_000)
     parser.add_argument("--trek-weight", type=float, default=1.0)
+    parser.add_argument("--ancestry-depth", type=int)
     args = parser.parse_args(argv)
     count = write_commands(args.plan, args.output, args.output_root,
                            args.benchpress_root, args.python,
@@ -93,7 +97,8 @@ def main(argv: list[str] | None = None) -> int:
                            dagma_stages=args.dagma_stages,
                            dagma_warm_iter=args.dagma_warm_iter,
                            dagma_max_iter=args.dagma_max_iter,
-                           trek_weight=args.trek_weight)
+                           trek_weight=args.trek_weight,
+                           ancestry_depth=args.ancestry_depth)
     print(f"wrote {count} JobFarm commands -> {args.output}")
     return 0
 

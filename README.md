@@ -24,6 +24,12 @@ vanilla DAGMA layers are available. The direct DAGMA+PSTrek path is also
 available as a checked migration backend; the legacy continuation remains the
 reference until full end-to-end parity is complete.
 
+For FLOP+NOTREKS, omitting ``--ancestry-depth`` selects the paper's full
+ancestry constraint. ``--ancestry-depth 1`` selects the genuine in-search
+direct-edge restriction. Larger depths require a solver backend that exposes
+bounded-ancestry proposal constraints; they are never emulated by deleting
+edges after a completed search.
+
 ## Development smoke test
 
 ```bash

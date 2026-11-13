@@ -29,6 +29,7 @@ class SolverConfig:
     dagma_max_iter: int = 60_000
     trek_weight: float = 1.0
     tcc: bool = False
+    ancestry_depth: int | None = None
 
     def validate(self) -> None:
         if self.attempts < 1 or self.flop_sweeps < 1:
@@ -37,6 +38,8 @@ class SolverConfig:
             raise ValueError("DAGMA iteration settings must be positive")
         if self.trek_weight < 0:
             raise ValueError("trek_weight must be non-negative")
+        if self.ancestry_depth is not None and self.ancestry_depth < 1:
+            raise ValueError("ancestry_depth must be omitted or at least one")
 
 
 @dataclass(frozen=True)

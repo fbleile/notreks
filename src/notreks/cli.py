@@ -74,6 +74,7 @@ def main(argv: list[str] | None = None) -> int:
     jobfarm_parser.add_argument("--dagma-warm-iter", type=int, default=30_000)
     jobfarm_parser.add_argument("--dagma-max-iter", type=int, default=60_000)
     jobfarm_parser.add_argument("--trek-weight", type=float, default=1.0)
+    jobfarm_parser.add_argument("--ancestry-depth", type=int)
     figure_parser = commands.add_parser("figure", help="plot grouped means and standard deviations")
     figure_parser.add_argument("input", type=Path)
     figure_parser.add_argument("output", type=Path)
@@ -152,7 +153,8 @@ def main(argv: list[str] | None = None) -> int:
                                dagma_stages=args.dagma_stages,
                                dagma_warm_iter=args.dagma_warm_iter,
                                dagma_max_iter=args.dagma_max_iter,
-                               trek_weight=args.trek_weight)
+                               trek_weight=args.trek_weight,
+                               ancestry_depth=args.ancestry_depth)
         print(f"wrote {count} JobFarm commands -> {args.output}")
         return 0
     if args.command == "figure":
@@ -297,6 +299,8 @@ def _solver_arguments(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--dagma-warm-iter", type=int, default=30_000)
     parser.add_argument("--dagma-max-iter", type=int, default=60_000)
     parser.add_argument("--trek-weight", type=float, default=1.0)
+    parser.add_argument("--ancestry-depth", type=int,
+                        help="FLOP NOTREKS ancestry depth; omit for full ancestry")
 
 
 def _solver_config(args: argparse.Namespace, attempts: int) -> SolverConfig:
@@ -307,6 +311,7 @@ def _solver_config(args: argparse.Namespace, attempts: int) -> SolverConfig:
         dagma_warm_iter=args.dagma_warm_iter,
         dagma_max_iter=args.dagma_max_iter,
         trek_weight=args.trek_weight,
+        ancestry_depth=args.ancestry_depth,
     )
 
 

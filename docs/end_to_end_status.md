@@ -20,6 +20,12 @@ post-selection, and both SortnRegress baselines. The LRZ smoke exercises the
 same plan-based path under JobFarm. These are execution tests, not scientific
 benchmark results.
 
+FLOP+NOTREKS uses full ancestry by default. The optional ``--ancestry-depth``
+setting is an in-search constraint, not a post-processing mask: depth one
+forbids the two orientations of every supplied endpoint pair. Depth two and
+larger require a FLOP backend exposing a bounded-ancestry proposal table; the
+adapter fails explicitly when that capability is absent.
+
 ## Still requiring migration or the legacy checkout
 
 The paper-scale external runs and exact combinatorial pilot still need their

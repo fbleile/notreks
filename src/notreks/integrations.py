@@ -9,12 +9,14 @@ there is no implicit import from the current working directory.
 from __future__ import annotations
 
 from pathlib import Path
+import inspect
 import sys
 from typing import Any, Callable
 
 import numpy as np
 
 from .solvers import SolverConfig, SolverError, SolverRegistry, SolverResult
+from .ancestry import describe, direct_ancestry_edges
 
 
 DIRECT_METHODS = frozenset({
@@ -69,11 +71,25 @@ def register_flopsearch(registry: SolverRegistry) -> dict[str, Any]:
     def solve_flop(observations, pairs, seed, config, method, *, forbidden_edges=(), search_version=None):
         if search_version is None:
             search_version = "global_greedy_rust" if method == "flop" else "flop_like"
+        ancestry = config.ancestry_depth
+        effective_pairs = list(pairs)
+        effective_forbidden = tuple(forbidden_edges)
+        if method == "flop_notreks" and ancestry == 1:
+            # Depth one is exactly the direct-edge restriction, but it is
+            # enforced by the proposal evaluator rather than by post-masking.
+            effective_pairs = []
+            effective_forbidden = direct_ancestry_edges(pairs)
+        elif method == "flop_notreks" and ancestry is not None and ancestry > 1:
+            if "ancestry_depth" not in inspect.signature(flopsearch.flop_notreks).parameters:
+                raise SolverError(
+                    "the installed flopsearch backend does not expose bounded "
+                    "ancestry constraints; depth 2+ cannot be emulated by post-masking")
         candidate, diagnostics = flopsearch.flop_notreks(
-            observations, 2.0, pairs, restarts=max(0, config.attempts - 1),
+            observations, 2.0, effective_pairs, restarts=max(0, config.attempts - 1),
             seed=seed, max_signature_rounds=config.flop_sweeps,
             search_version=search_version, local_greedy_passes=8,
-            forbidden_edges=tuple(forbidden_edges),
+            forbidden_edges=effective_forbidden,
+            **({"ancestry_depth": ancestry} if ancestry is not None and ancestry > 1 else {}),
             return_diagnostics=True)
         selected = diagnostics.get("selected_dag_edges")
         if selected is not None:
@@ -81,7 +97,10 @@ def register_flopsearch(registry: SolverRegistry) -> dict[str, Any]:
             for parent, child in selected:
                 graph[int(parent), int(child)] = 1
             candidate = graph
-        return SolverResult(method, _binary(candidate), diagnostics)
+        return SolverResult(method, _binary(candidate), {
+            **diagnostics, **describe(ancestry),
+            "constraint_enforcement": "proposal_evaluator",
+        })
 
     registry.register("flop_notreks", lambda observations, pairs, seed, config:
                       solve_flop(observations, pairs, seed, config, "flop_notreks"))
@@ -260,11 +279,17 @@ def _flop_adapter(function: Callable[..., tuple[np.ndarray, dict[str, Any]]], na
 
 def _flop_notreks_adapter(function: Callable[..., tuple[np.ndarray, dict[str, Any]]]):
     def solve(observations, pairs, seed, config):
+        if config.ancestry_depth is not None:
+            raise SolverError(
+                "bounded ancestry depth is available only in the direct FLOP "
+                "backend; the compatibility adapter exposes full ancestry")
         candidate, diagnostics = function(
             observations, pairs, seed, config.attempts, config.flop_sweeps,
             search_version="flop_like", local_greedy_passes=8,
         )
-        return SolverResult("flop_notreks", _binary(candidate), diagnostics)
+        return SolverResult("flop_notreks", _binary(candidate), {
+            **diagnostics, **describe(None), "constraint_enforcement": "proposal_evaluator",
+        })
     return solve
 
 
