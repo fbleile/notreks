@@ -18,7 +18,9 @@ from .solvers import SolverConfig, SolverError, SolverRegistry, SolverResult
 
 
 DIRECT_METHODS = frozenset({
-    "flop", "flop_notreks", "dagma", "dagma_notreks", "dagma_profile", "dagma_tcc",
+    "flop", "flop_notreks", "flop-nt-edge-mask", "flop-nt-post",
+    "dagma", "dagma_notreks", "dagma-nt-edge-mask", "dagma-nt-post",
+    "dagma_profile", "dagma_tcc", "var_sortnregress", "r2_sortnregress",
 })
 BENCHPRESS_METHODS = frozenset({
     "flop", "flop_notreks", "dagma", "dagma_notreks", "dagma_tcc",
@@ -76,6 +78,24 @@ def register_flopsearch(registry: SolverRegistry) -> dict[str, Any]:
                       solve_flop(observations, pairs, seed, config, "flop_notreks"))
     registry.register("flop", lambda observations, pairs, seed, config:
                       solve_flop(observations, pairs, seed, config, "flop"))
+    from .postselection import direct_mask_edges, order_parent_postselection
+
+    def edge_mask(observations, pairs, seed, config):
+        result = solve_flop(observations, [], seed, config, "flop-nt-edge-mask")
+        candidate = result.adjacency.copy()
+        for parent, child in direct_mask_edges(pairs):
+            candidate[parent, child] = 0
+        return SolverResult("flop-nt-edge-mask", candidate,
+                            {**result.diagnostics, "baseline": "edge_mask"})
+
+    def postselection(observations, pairs, seed, config):
+        result = solve_flop(observations, [], seed, config, "flop-nt-post")
+        candidate, diagnostics = order_parent_postselection(observations, result.adjacency, pairs)
+        return SolverResult("flop-nt-post", candidate,
+                            {**result.diagnostics, **diagnostics, "baseline": "postselection"})
+
+    registry.register("flop-nt-edge-mask", edge_mask)
+    registry.register("flop-nt-post", postselection)
     return {"backend": "flopsearch", "version": getattr(flopsearch, "__version__", None)}
 
 
@@ -90,6 +110,15 @@ def register_direct(registry: SolverRegistry, methods: set[str]) -> dict[str, An
         provenance["flopsearch"] = register_flopsearch(registry)
     if any(method.startswith("dagma") for method in methods):
         provenance["dagma"] = register_dagma(registry)
+    if {"var_sortnregress", "r2_sortnregress"} & methods:
+        from .sortnregress import sortnregress
+        for name, kind in (("var_sortnregress", "variance"), ("r2_sortnregress", "r2")):
+            if name in methods:
+                def baseline(observations, pairs, seed, config, *, kind=kind, method_name=name):
+                    del pairs, seed, config
+                    adjacency, diagnostics = sortnregress(observations, kind)
+                    return SolverResult(method_name, adjacency, diagnostics)
+                registry.register(name, baseline)
     return provenance
 
 
@@ -193,6 +222,24 @@ def register_dagma(registry: SolverRegistry) -> dict[str, Any]:
     registry.register("dagma_notreks", solve_notreks)
     registry.register("dagma_profile", solve_profile)
     registry.register("dagma_tcc", solve_tcc)
+    from .postselection import direct_mask_edges, order_parent_postselection
+
+    def dagma_edge_mask(observations, pairs, seed, config):
+        result = solve(observations, [], seed, config)
+        candidate = result.adjacency.copy()
+        for parent, child in direct_mask_edges(pairs):
+            candidate[parent, child] = 0
+        return SolverResult("dagma-nt-edge-mask", candidate,
+                            {**result.diagnostics, "baseline": "edge_mask"})
+
+    def dagma_postselection(observations, pairs, seed, config):
+        result = solve(observations, [], seed, config)
+        candidate, diagnostics = order_parent_postselection(observations, result.adjacency, pairs)
+        return SolverResult("dagma-nt-post", candidate,
+                            {**result.diagnostics, **diagnostics, "baseline": "postselection"})
+
+    registry.register("dagma-nt-edge-mask", dagma_edge_mask)
+    registry.register("dagma-nt-post", dagma_postselection)
     return {"backend": "dagma+notreks", "loss": "l2/profile_gaussian", "threshold": 0.3,
             "profile_baseline": "dagma_profile"}
 

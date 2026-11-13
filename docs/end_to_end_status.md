@@ -14,19 +14,21 @@ protocol JSON → plan JSON → graph/data/knowledge artifacts → direct solver
 → evaluation → aggregate_results.csv and aggregate_issues.csv
 ```
 
-It has been tested for a tiny synthetic FLOP run and for a bundled CausalMan
-manifest. The LRZ smoke exercises the same plan-based path under JobFarm. Direct
-FLOP, direct vanilla DAGMA, direct DAGMA+PSTrek, and direct DAGMA+TCC are the
-currently registered solver paths.
+It has been tested for a tiny synthetic FLOP run, a bundled CausalMan manifest,
+and a 20-run direct ablation smoke covering FLOP, DAGMA, edge masking,
+post-selection, and both SortnRegress baselines. The LRZ smoke exercises the
+same plan-based path under JobFarm. These are execution tests, not scientific
+benchmark results.
 
 ## Still requiring migration or the legacy checkout
 
-The paper catalog also names edge-masking and post-selection ablations, and the
-Var-SortnRegress and $R^2$-SortnRegress baselines. Their exact adapters are not
-yet registered in the new repository. CausalAssembly and CausalMan data
-manifests are available, but a complete paper-scale external run still requires
-the corresponding solver set and budgets. The exact combinatorial pilot remains
-an analysis-only entry.
+The paper-scale external runs and exact combinatorial pilot still need their
+full orchestration and budget definitions. The direct edge-masking smoke uses a
+deletion-safe post-mask because the independently installed FLOP package does
+not expose the archived optimizer's forbidden-edge hook; it must not be used as
+a claim of numerical parity with the archived paper run. For exact historical
+figures, use the legacy Benchpress backend until parity tests cover these
+settings.
 
 The preflight command now reports unsupported method names before a farm is
 submitted:

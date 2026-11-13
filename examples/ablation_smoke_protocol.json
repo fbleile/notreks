@@ -1,0 +1,21 @@
+{
+  "name": "ablation-smoke",
+  "dimensions": [6],
+  "sample_sizes": [32],
+  "graph_families": ["er"],
+  "densities": [2],
+  "methods": [
+    "flop", "flop_notreks", "flop-nt-edge-mask", "flop-nt-post",
+    "dagma", "dagma_notreks", "dagma-nt-edge-mask", "dagma-nt-post",
+    "var_sortnregress", "r2_sortnregress"
+  ],
+  "knowledge_fractions": [0.0, 0.25],
+  "knowledge_strategies": ["random"],
+  "partial_rounds": 1,
+  "graph_replicates": 1,
+  "method_attempts": {
+    "flop": 1, "flop_notreks": 1, "flop-nt-edge-mask": 1, "flop-nt-post": 1,
+    "dagma": 1, "dagma_notreks": 1, "dagma-nt-edge-mask": 1, "dagma-nt-post": 1,
+    "var_sortnregress": 1, "r2_sortnregress": 1
+  }
+}

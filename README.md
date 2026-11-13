@@ -31,6 +31,11 @@ make check
 python examples/smoke.py
 ```
 
+For a solver-coverage smoke that includes the ablation and SortnRegress
+adapters, use `examples/ablation_smoke_protocol.json` with the direct backend;
+keep its iteration budgets small and never treat its results as scientific
+benchmarks.
+
 After installation, the same entry points are available as `notreks` and the
 focused commands `notreks-catalog-plan`, `notreks-jobfarm`, `notreks-figure`,
 and `notreks-aggregate`. A plan is always generated before execution, so a local
