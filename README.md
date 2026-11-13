@@ -72,6 +72,14 @@ Before a long run, check the environment explicitly:
 notreks-preflight --backend direct --methods flop_notreks dagma_notreks
 ```
 
+When the legacy Benchpress checkout is available, run the fixed-input parity
+comparison before treating the direct backend as a replacement:
+
+```bash
+notreks-parity --benchpress-root /path/to/benchpress \
+  --method flop_notreks --output parity/flop_notreks.json
+```
+
 The current Benchpress repository remains the reference archive while the
 remaining optimizer details are migrated incrementally. See
 `docs/solver_porting.md` for the exact parity boundary; this repository does

@@ -40,6 +40,19 @@ The report must include the first differing graph edge, the first differing
 diagnostic field, feasibility violations before and after post-processing, and
 the complete environment and solver hashes.
 
+The fixed-input comparison is executable with:
+
+```bash
+notreks-parity --benchpress-root /path/to/benchpress \
+  --method flop_notreks --dimension 6 --sample-size 64 \
+  --output parity/flop_notreks.json
+```
+
+The command constructs the input once, passes copies to both registrations,
+stores the input seed and pair list, and returns status 2 when the adjacency
+differs. Run it once for each row in this matrix before removing the legacy
+adapter.
+
 ## Bounded ancestry
 
 Full ancestry and depth one are already separate documented modes. Depth two

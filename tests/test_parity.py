@@ -16,3 +16,5 @@ def test_parity_reports_equal_and_unequal_adjacencies():
     report = compare(reference, candidate, "toy", np.zeros((4, 3)), [], 1, SolverConfig())
     assert report.passed
     assert report.reference_diagnostic_keys == ("version",)
+    assert report.first_differing_edge is None
+    assert report.diagnostic_key_difference == ()

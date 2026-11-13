@@ -32,6 +32,7 @@ notreks-solver-audit = "notreks.solver_audit:main"
 notreks-release-audit = "notreks.release:main"
 notreks-constraint-check = "notreks.constraint_diagnostics:main"
 notreks-paper-outputs = "notreks.paper_outputs:main"
+notreks-parity = "notreks.parity:main"
 
 [project.optional-dependencies]
 test = ["pytest>=8"]
