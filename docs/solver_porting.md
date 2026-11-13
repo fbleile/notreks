@@ -51,3 +51,21 @@ the profiled Gaussian score, `dagma_notreks` adds PSTrek to that profiled path,
 and `dagma_tcc` replaces PSTrek with the TCC constraint and disables the
 ordinary log-det DAG penalty, as in the legacy TCC regime. The legacy
 production adapter remains available for exact reported-run reproduction.
+
+## Bounded ancestry backend contract
+
+The protocol exposes `SolverConfig.ancestry_depth` for FLOP+NOTREKS. An omitted
+value means the existing full-ancestry constraint. A value of one means that
+the supplied endpoint pairs are passed as both directed forbidden-edge
+orientations to the optimizer's proposal evaluator. This is the direct-edge
+ablation, not a deletion mask.
+
+For values larger than one, the FLOP backend must expose a proposal-level
+bounded-ancestry table. The required call contract is an
+`ancestry_depth=<positive integer>` keyword on `flopsearch.flop_notreks`; the
+backend must reject every candidate proposal containing an ancestry path of
+length at most that value for a supplied pair and return the same diagnostics
+contract as full NOTREKS. The repository deliberately does not reinterpret
+the unrelated `source_prefix` or `trek_graph` arguments from older FLOP builds
+as this table. Until a backend with this contract is installed, depth two and
+larger fail explicitly.

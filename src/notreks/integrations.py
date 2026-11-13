@@ -80,7 +80,13 @@ def register_flopsearch(registry: SolverRegistry) -> dict[str, Any]:
             effective_pairs = []
             effective_forbidden = direct_ancestry_edges(pairs)
         elif method == "flop_notreks" and ancestry is not None and ancestry > 1:
-            if "ancestry_depth" not in inspect.signature(flopsearch.flop_notreks).parameters:
+            try:
+                parameters = inspect.signature(flopsearch.flop_notreks).parameters
+            except (TypeError, ValueError) as error:
+                raise SolverError(
+                    "cannot inspect the installed flopsearch bounded-ancestry "
+                    "interface; refusing to approximate depth 2+ by post-masking") from error
+            if "ancestry_depth" not in parameters:
                 raise SolverError(
                     "the installed flopsearch backend does not expose bounded "
                     "ancestry constraints; depth 2+ cannot be emulated by post-masking")
