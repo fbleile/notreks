@@ -1,6 +1,12 @@
 # Solver porting boundary
 
-The validated solver implementation is not a single-file dependency. FLOP is now available directly through the optional `flopsearch` package; the top-level compatibility adapter remains the parity reference. DAGMA and its NOTREKS objective still import the following functional layers:
+The validated solver implementation is not a single-file dependency. Vanilla FLOP
+is available through the public optional `flopsearch` package, but the public
+wheel does not include the `flop_notreks` extension used by this project. A
+source-built NOTREKS-enabled FLOP backend is therefore required for direct
+FLOP+NOTREKS runs; the repository refuses to substitute vanilla FLOP under that
+method name. The top-level compatibility adapter remains the parity reference.
+DAGMA and its NOTREKS objective still import the following functional layers:
 
 - FLOP search and restart selection;
 - DAGMA continuation and score objective;

@@ -6,7 +6,9 @@ from notreks.solvers import SolverConfig, SolverRegistry
 
 
 def test_direct_flopsearch_smoke():
-    pytest.importorskip("flopsearch")
+    flopsearch = pytest.importorskip("flopsearch")
+    if not callable(getattr(flopsearch, "flop_notreks", None)):
+        pytest.skip("the public flopsearch wheel does not include the NOTREKS extension")
     registry = SolverRegistry()
     provenance = register_flopsearch(registry)
     result = registry.run("flop_notreks", np.random.default_rng(3).normal(size=(32, 5)), [], 7,

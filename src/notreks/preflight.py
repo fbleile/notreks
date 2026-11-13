@@ -43,6 +43,21 @@ def check(*, backend: str, methods: tuple[str, ...], benchpress_root: Path | Non
         except importlib.metadata.PackageNotFoundError:
             checks["packages"][label] = None
             checks["errors"].append(f"missing package: {package}")
+    if backend == "direct" and any(method.startswith("flop") for method in methods):
+        try:
+            import flopsearch
+        except ImportError:
+            pass
+        else:
+            needs_notreks = any(
+                method in {"flop_notreks", "flop-nt-edge-mask", "flop-nt-post"}
+                for method in methods
+            )
+            if needs_notreks and not callable(getattr(flopsearch, "flop_notreks", None)):
+                checks["errors"].append(
+                    "installed flopsearch lacks flop_notreks; install the source-built "
+                    "NOTREKS backend (vanilla FLOP is not a substitute)"
+                )
     if backend == "benchpress":
         if benchpress_root is None or not (benchpress_root / "workflow").is_dir():
             checks["errors"].append("Benchpress backend requires a checkout containing workflow/")

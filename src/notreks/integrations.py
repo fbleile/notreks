@@ -68,6 +68,12 @@ def register_flopsearch(registry: SolverRegistry) -> dict[str, Any]:
         import flopsearch
     except ImportError as error:
         raise SolverError("direct FLOP integration requires the flopsearch package") from error
+    if not callable(getattr(flopsearch, "flop_notreks", None)):
+        raise SolverError(
+            "the installed flopsearch package does not contain the NOTREKS extension "
+            "(flop_notreks); install the source-built NOTREKS backend rather than "
+            "silently substituting vanilla FLOP"
+        )
 
     def solve_flop(observations, pairs, seed, config, method, *, forbidden_edges=(), search_version=None):
         if search_version is None:
