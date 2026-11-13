@@ -40,6 +40,11 @@ The report must include the first differing graph edge, the first differing
 diagnostic field, feasibility violations before and after post-processing, and
 the complete environment and solver hashes.
 
+The report also maps adapter-specific names onto the stable concepts `bic`,
+`violations`, `edge_count`, and `restart_count`. Each concept is marked as
+`equal_within_tolerance`, `different`, `unmapped`, or `non_numeric`; unmapped
+fields require an explicit mapping before production parity is declared.
+
 The fixed-input comparison is executable with:
 
 ```bash

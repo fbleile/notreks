@@ -18,3 +18,4 @@ def test_parity_reports_equal_and_unequal_adjacencies():
     assert report.reference_diagnostic_keys == ("version",)
     assert report.first_differing_edge is None
     assert report.diagnostic_key_difference == ()
+    assert report.diagnostic_checks["bic"]["status"] == "unmapped"

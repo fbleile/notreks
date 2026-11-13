@@ -23,6 +23,12 @@ The five comparisons below returned identical adjacency matrices:
 | DAGMA+NOTREKS | 0 |
 | DAGMA+TCC | 0 |
 
+The FLOP+NOTREKS comparison was additionally repeated at `d=20`, `n=100`,
+with four FLOP sweeps. Adjacency, BIC, supplied-pair violation count, and
+restart count all agreed within the recorded tolerance. The edge-count
+diagnostic remains unmapped because the two adapters do not expose a common
+field name.
+
 The direct and legacy adapters expose different diagnostic schemas. The parity
 JSON therefore records diagnostic-key differences instead of treating them as
 solver disagreements. Production acceptance still requires explicit mapping

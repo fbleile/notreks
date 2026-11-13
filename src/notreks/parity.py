@@ -24,6 +24,7 @@ class ParityReport:
     candidate_diagnostic_keys: tuple[str, ...]
     diagnostic_key_difference: tuple[str, ...] = ()
     first_differing_edge: tuple[int, int] | None = None
+    diagnostic_checks: dict[str, dict[str, Any]] | None = None
 
     @property
     def passed(self) -> bool:
@@ -42,6 +43,7 @@ def compare(reference: SolverRegistry, candidate: SolverRegistry, method: str,
                   if len(differing) else None)
     reference_keys = tuple(sorted(expected.diagnostics))
     candidate_keys = tuple(sorted(actual.diagnostics))
+    diagnostic_checks = _compare_diagnostics(expected.diagnostics, actual.diagnostics)
     return ParityReport(
         method=method,
         adjacency_equal=difference == 0,
@@ -52,12 +54,55 @@ def compare(reference: SolverRegistry, candidate: SolverRegistry, method: str,
         candidate_diagnostic_keys=candidate_keys,
         diagnostic_key_difference=tuple(sorted(set(reference_keys) ^ set(candidate_keys))),
         first_differing_edge=first_edge,
+        diagnostic_checks=diagnostic_checks,
     )
 
 
 def write_report(path: Path, report: ParityReport) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(asdict(report), indent=2, sort_keys=True) + "\n")
+
+
+_DIAGNOSTIC_ALIASES = {
+    "bic": ("optimizer_final_bic", "final_bic", "selected_bic", "postprocessed_bic"),
+    "violations": ("optimizer_violations", "final_no_trek_violation_count"),
+    "edge_count": ("selected_dag_edge_count", "final_edges", "candidate_edges"),
+    "restart_count": ("optimizer_restarts", "restarts_requested", "attempts_requested"),
+}
+
+
+def _first_present(diagnostics: dict[str, Any], names: tuple[str, ...]) -> tuple[str, Any] | None:
+    for name in names:
+        if name in diagnostics:
+            return name, diagnostics[name]
+    return None
+
+
+def _compare_diagnostics(reference: dict[str, Any], candidate: dict[str, Any]) -> dict[str, dict[str, Any]]:
+    """Compare stable diagnostic concepts despite adapter-specific field names."""
+    checks: dict[str, dict[str, Any]] = {}
+    for concept, aliases in _DIAGNOSTIC_ALIASES.items():
+        left = _first_present(reference, aliases)
+        right = _first_present(candidate, aliases)
+        if left is None or right is None:
+            checks[concept] = {"status": "unmapped", "reference": left[0] if left else None,
+                               "candidate": right[0] if right else None}
+            continue
+        left_name, left_value = left
+        right_name, right_value = right
+        try:
+            difference = abs(float(left_value) - float(right_value))
+            scale = max(1.0, abs(float(left_value)), abs(float(right_value)))
+            checks[concept] = {
+                "status": "equal_within_tolerance" if difference <= 1e-8 * scale else "different",
+                "reference_field": left_name, "candidate_field": right_name,
+                "reference": left_value, "candidate": right_value,
+                "absolute_difference": difference,
+            }
+        except (TypeError, ValueError):
+            checks[concept] = {"status": "non_numeric", "reference_field": left_name,
+                               "candidate_field": right_name}
+    return checks
 
 
 def main(argv: list[str] | None = None) -> int:
