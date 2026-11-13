@@ -7,6 +7,8 @@ mkdir -p "$ROOT/plans" "$ROOT/provenance"
 PYTHONPATH=src python -m notreks.catalog_planning all "$ROOT/plans/catalog_all.json"
 PYTHONPATH=src python -m notreks.provenance \
   "$ROOT/provenance/environment.json" --project-root .
+PYTHONPATH=src python -m notreks.release . \
+  --output "$ROOT/provenance/release-audit.json" >/dev/null
 
 find data/external/causalman/canonical data/external/causalassembly/canonical \
   -name manifest.json -print0 |

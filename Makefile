@@ -12,6 +12,7 @@ manifest:
 check: test smoke
 
 release-check: check
+	@PYTHONPATH=src python -m notreks.release . >/dev/null
 	@find data/external/causalman/canonical data/external/causalassembly/canonical \
 	  -name manifest.json -exec sh -c \
 	  'for manifest do PYTHONPATH=src python -m notreks.external "$$manifest" >/dev/null || exit; done' \
