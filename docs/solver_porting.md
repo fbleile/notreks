@@ -27,6 +27,10 @@ The migration rule is parity before replacement:
 4. retain the external adapter until the comparison is exact or a documented numerical tolerance is justified;
 5. only then remove the corresponding legacy import.
 
+The concrete fixed-input acceptance matrix is maintained in
+`docs/solver_parity_matrix.md`. It is the checklist for each migration step;
+the smoke tests alone do not establish production parity.
+
 This avoids creating a superficially standalone repository whose solver behavior differs from the reported experiments.
 
 `notreks.parity.compare` implements the reference-versus-candidate check. It compares the returned adjacency exactly, records diagnostic-key changes, and reports runtimes without using them as a correctness criterion.
