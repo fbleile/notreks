@@ -135,6 +135,15 @@ notreks trend-figure aggregate_results.csv figures/chromatic.png \
 PNG is the default output format. Pass `--format pdf` when a vector PDF is
 needed.
 
+Use `--data-label auto` to generate the canonical compact footer from the
+plotted rows. It reports only fields constant in the input, in the order
+`graph-family/density; d; n; q`; mixed inputs omit the varying field instead of
+silently printing a misleading label.
+
+The package is already installable with pip. A small notebook can be added later
+as a thin presentation layer over the same plan, run, aggregate, and figure
+commands; it should not become a second experiment implementation.
+
 Validate a bundled external dataset with the lightweight release smoke:
 
 ```bash

@@ -3,15 +3,7 @@ title: "NOTREKS: Reproducible experiments for marginal independence in score-bas
 message: "If you use this repository, please cite the accompanying NOTREKS paper."
 type: software
 authors:
-  - family-names: Bleile
-    given-names: Fabian
-    email: f.bleile@tum.de
-  - family-names: Lumpp
-    given-names: Sarah
-    email: sarah.lumpp@tum.de
-  - family-names: Drton
-    given-names: Mathias
-    email: mathias.drton@tum.de
+  - name: "NOTREKS authors"
 version: 0.1.0
 date-released: 2026-11-12
 license: MIT

@@ -28,6 +28,61 @@ def load_rows(path: Path) -> list[dict[str, str]]:
         return list(csv.DictReader(handle))
 
 
+def _unique_value(rows: list[dict[str, str]], names: tuple[str, ...]) -> str | None:
+    values = {row[name].strip() for row in rows for name in names
+              if row.get(name, "").strip()}
+    return next(iter(values)) if len(values) == 1 else None
+
+
+def _format_q(value: str) -> str:
+    number = float(value)
+    if number == 0:
+        return "0"
+    if number == 1:
+        return "1"
+    return f"{number:g}"
+
+
+def canonical_data_label(rows: Iterable[dict[str, str]]) -> str:
+    """Return the canonical compact footer used by project figures.
+
+    A field is shown only when it is constant in the plotted input.  This
+    prevents a misleading footer when a table intentionally combines several
+    families, dimensions, sample sizes, or knowledge fractions.
+    """
+    rows = list(rows)
+    if not rows:
+        return ""
+    family = _unique_value(rows, ("graph_family", "graph_type", "family"))
+    density = _unique_value(rows, ("graph_density", "density", "er_degree", "ws_degree"))
+    graph = None
+    if family is not None:
+        graph = family.upper()
+        if density is not None:
+            try:
+                graph += f"{float(density):g}"
+            except ValueError:
+                graph += str(density)
+    parts: list[str] = []
+    if graph:
+        parts.append(graph)
+    dimension = _unique_value(rows, ("dimension", "d"))
+    sample_size = _unique_value(rows, ("sample_size", "n"))
+    fraction = _unique_value(rows, ("knowledge_fraction", "q"))
+    if dimension is not None:
+        parts.append(f"d={dimension}")
+    if sample_size is not None:
+        parts.append(f"n={sample_size}")
+    if fraction is not None:
+        parts.append(f"q={_format_q(fraction)}")
+    return "; ".join(parts)
+
+
+def _resolve_data_label(rows: Iterable[dict[str, str]], label: str) -> str:
+    rows = list(rows)
+    return canonical_data_label(rows) if label == "auto" else label
+
+
 def plot_mean_sd(rows: Iterable[dict[str, str]], output: Path, *, x: str, y: str,
                  group: str = "method", data_label: str = "",
                  title: str | None = None, xlabel: str | None = None,
@@ -132,13 +187,14 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--x", required=True)
     parser.add_argument("--y", required=True)
     parser.add_argument("--group", default="method")
-    parser.add_argument("--data-label", default="")
+    parser.add_argument("--data-label", default="", help="footer text or 'auto'")
     parser.add_argument("--title")
     parser.add_argument("--format", choices=("png", "pdf"), default="png")
     args = parser.parse_args(argv)
     output = args.output.with_suffix(f".{args.format}")
-    plot_mean_sd(load_rows(args.input), output, x=args.x, y=args.y,
-                 group=args.group, data_label=args.data_label, title=args.title)
+    rows = load_rows(args.input)
+    plot_mean_sd(rows, output, x=args.x, y=args.y, group=args.group,
+                 data_label=_resolve_data_label(rows, args.data_label), title=args.title)
     print(f"wrote {output}")
     return 0
 

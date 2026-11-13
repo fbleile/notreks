@@ -1,7 +1,7 @@
 import json
 from pathlib import Path
 
-from notreks.jobfarm import write_commands
+from notreks.jobfarm import retry_failed_commands, write_commands
 
 
 def test_jobfarm_commands_are_one_per_run(tmp_path: Path):
@@ -33,3 +33,15 @@ def test_jobfarm_direct_commands_do_not_require_benchpress(tmp_path: Path):
     assert "--backend direct" in line
     assert "--benchpress-root" not in line
     assert "--dagma-warm-iter 30000" in line
+
+
+def test_retry_keeps_only_non_successful_tasks(tmp_path: Path):
+    commands = tmp_path / "commands.cmd"
+    commands.write_text("env first\nenv second\nenv third\n")
+    results = tmp_path / "commands.cmd_res"
+    results.mkdir()
+    (results / "1").write_text("** STOP SUCCESS\n")
+    (results / "2").write_text("** STOP FAILED\ntraceback\n")
+    retry = tmp_path / "retry.cmd"
+    assert retry_failed_commands(commands, results, retry) == 2
+    assert retry.read_text().splitlines() == ["env second", "env third"]

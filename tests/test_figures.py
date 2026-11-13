@@ -3,7 +3,18 @@ from pathlib import Path
 
 import pytest
 
-from notreks.figures import main, plot_graph_clustered_trend, plot_mean_sd
+from notreks.figures import (canonical_data_label, main,
+                             plot_graph_clustered_trend, plot_mean_sd)
+
+
+def test_canonical_data_label_is_compact_and_omits_mixed_fields():
+    rows = [{"graph_family": "er", "graph_density": "4", "dimension": "50",
+             "sample_size": "500", "knowledge_fraction": "0.25"},
+            {"graph_family": "er", "graph_density": "4", "dimension": "50",
+             "sample_size": "500", "knowledge_fraction": "0.25"}]
+    assert canonical_data_label(rows) == "ER4; d=50; n=500; q=0.25"
+    mixed = rows + [{**rows[0], "sample_size": "2000"}]
+    assert canonical_data_label(mixed) == "ER4; d=50; q=0.25"
 
 
 def test_mean_sd_figure_has_no_raw_point_artifact(tmp_path: Path):

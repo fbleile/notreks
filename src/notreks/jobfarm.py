@@ -8,6 +8,25 @@ from pathlib import Path
 import shlex
 
 
+def retry_failed_commands(command_file: Path, result_directory: Path, output: Path) -> int:
+    """Write only missing, failed, or incomplete tasks to a new command file.
+
+    JobFarm numbers result files according to their one-based command index.
+    Successful tasks are deliberately omitted, so rerunning a timed-out farm
+    is safe and does not duplicate completed results.
+    """
+    commands = [line for line in command_file.read_text().splitlines()
+                if line.strip() and not line.lstrip().startswith("#")]
+    retry: list[str] = []
+    for index, command in enumerate(commands, start=1):
+        result = result_directory / str(index)
+        if not result.is_file() or "STOP SUCCESS" not in result.read_text(errors="replace"):
+            retry.append(command)
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_text("\n".join(retry) + ("\n" if retry else ""))
+    return len(retry)
+
+
 def write_commands(plan: Path, output: Path, output_root: Path,
                    benchpress_root: Path, python: Path, project_root: Path, *, attempts: int | None = None,
                    start: int = 0, limit: int | None = None,
@@ -76,6 +95,18 @@ def main(argv: list[str] | None = None) -> int:
                            dagma_max_iter=args.dagma_max_iter,
                            trek_weight=args.trek_weight)
     print(f"wrote {count} JobFarm commands -> {args.output}")
+    return 0
+
+
+def retry_main(argv: list[str] | None = None) -> int:
+    """CLI entry point for safe continuation after a timeout or failed task."""
+    parser = argparse.ArgumentParser(prog="notreks-jobfarm-retry")
+    parser.add_argument("command_file", type=Path)
+    parser.add_argument("result_directory", type=Path)
+    parser.add_argument("output", type=Path)
+    args = parser.parse_args(argv)
+    count = retry_failed_commands(args.command_file, args.result_directory, args.output)
+    print(f"wrote {count} retry commands -> {args.output}")
     return 0
 
 

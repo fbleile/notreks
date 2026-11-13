@@ -9,8 +9,7 @@
 #SBATCH --cpus-per-task=1
 #SBATCH --time=24:00:00
 #SBATCH --export=ALL
-#SBATCH --mail-type=BEGIN,END
-#SBATCH --mail-user=f.bleile@tum.de
+#SBATCH --mail-type=NONE
 
 # Run a generated one-command-per-line file through LRZ JobFarm.  The
 # allocation is intentionally explicit: four nodes and one task per core,

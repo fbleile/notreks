@@ -12,7 +12,8 @@ from .catalog_planning import (CatalogSelection, expand_all_catalog, expand_cata
                                write_catalog_plan, write_combined_catalog_plan)
 from .integrations import register_benchpress, register_direct
 from .inspect import inspect_output
-from .figures import load_rows, plot_graph_clustered_trend, plot_mean_sd
+from .figures import (load_rows, plot_graph_clustered_trend, plot_mean_sd,
+                      canonical_data_label)
 from .jobfarm import write_commands
 from .manifest import write_manifest
 from .provenance import write as write_provenance
@@ -79,7 +80,7 @@ def main(argv: list[str] | None = None) -> int:
     figure_parser.add_argument("--x", required=True)
     figure_parser.add_argument("--y", required=True)
     figure_parser.add_argument("--group", default="method")
-    figure_parser.add_argument("--data-label", default="")
+    figure_parser.add_argument("--data-label", default="", help="footer text or 'auto'")
     figure_parser.add_argument("--title")
     figure_parser.add_argument("--format", choices=("png", "pdf"), default="png")
     trend_figure_parser = commands.add_parser("trend-figure",
@@ -90,7 +91,7 @@ def main(argv: list[str] | None = None) -> int:
     trend_figure_parser.add_argument("--k", default="target_chromatic_number")
     trend_figure_parser.add_argument("--y", default="SHD_cpdag")
     trend_figure_parser.add_argument("--group", default="method")
-    trend_figure_parser.add_argument("--data-label", default="")
+    trend_figure_parser.add_argument("--data-label", default="", help="footer text or 'auto'")
     trend_figure_parser.add_argument("--title")
     trend_figure_parser.add_argument("--format", choices=("png", "pdf"), default="png")
     provenance_parser = commands.add_parser("provenance", help="record environment provenance")
@@ -156,15 +157,19 @@ def main(argv: list[str] | None = None) -> int:
         return 0
     if args.command == "figure":
         output = args.output.with_suffix(f".{args.format}")
-        plot_mean_sd(load_rows(args.input), output, x=args.x, y=args.y,
-                     group=args.group, data_label=args.data_label, title=args.title)
+        rows = load_rows(args.input)
+        label = canonical_data_label(rows) if args.data_label == "auto" else args.data_label
+        plot_mean_sd(rows, output, x=args.x, y=args.y,
+                     group=args.group, data_label=label, title=args.title)
         print(f"wrote {output}")
         return 0
     if args.command == "trend-figure":
         output = args.output.with_suffix(f".{args.format}")
-        plot_graph_clustered_trend(load_rows(args.input), output,
+        rows = load_rows(args.input)
+        label = canonical_data_label(rows) if args.data_label == "auto" else args.data_label
+        plot_graph_clustered_trend(rows, output,
                                    graph=args.graph, k=args.k, y=args.y,
-                                   group=args.group, data_label=args.data_label,
+                                   group=args.group, data_label=label,
                                    title=args.title)
         print(f"wrote {output}")
         return 0
