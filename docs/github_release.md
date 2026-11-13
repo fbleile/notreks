@@ -1,17 +1,17 @@
-# GitHub and anonymous release procedure
+# GitHub release procedure
 
 The repository is intentionally free of author names, institutional paths,
 cluster usernames, and personal email addresses. `CITATION.cff` uses a neutral
 placeholder until the paper is de-anonymized.
 
-## First public repository
+## Current GitHub repository
 
 From a clean working tree, create an empty GitHub repository and configure it
 as the only remote:
 
 ```bash
 git remote add origin <github-url>
-git push -u origin anonymous-release:main
+git push -u origin main
 ```
 
 Before pushing, run:
@@ -27,18 +27,18 @@ file and line. The final command must produce no output. Publish the repository 
 that has passed the release checklist, then create an immutable tag for the
 paper artifact.
 
-## Anonymous paper repository
+## Optional anonymous paper repository
 
 Use a separate anonymous GitHub repository or anonymous archive mirror. Do not
 rewrite the scientific history after the paper is submitted. Instead, publish
 the exact commit or tag used for the paper and cite that immutable identifier
 in the anonymized paper's reproducibility statement.
 
-The local `main` branch retains development history and personal commit
-metadata. The `anonymous-release` branch is a single neutral root commit and
-is the branch to publish for double-blind review. When the paper is
-de-anonymized, update only the citation metadata and paper link in a separate
-public release repository; do not expose the development branch by accident.
+The local `main` branch is the normal development and release branch. For
+double-blind review, create a separate anonymous repository or branch manually
+and publish only the audited anonymous snapshot. Keep that process separate
+from the normal GitHub repository so that the public development history is not
+rewritten accidentally.
 
 ## Paper integration
 
