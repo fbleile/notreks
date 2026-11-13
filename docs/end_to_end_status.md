@@ -23,10 +23,11 @@ benchmark results.
 ## Still requiring migration or the legacy checkout
 
 The paper-scale external runs and exact combinatorial pilot still need their
-full orchestration and budget definitions. The direct edge-masking smoke uses a
-deletion-safe post-mask because the independently installed FLOP package does
-not expose the archived optimizer's forbidden-edge hook; it must not be used as
-a claim of numerical parity with the archived paper run. For exact historical
+full orchestration and budget definitions. Direct FLOP edge masking now uses
+the installed optimizer's forbidden-edge hook. Direct DAGMA edge masking still
+uses a deletion-safe post-mask because upstream DAGMA does not expose that
+constraint during optimization, and direct post-selection remains a compact
+port rather than a byte-for-byte archived implementation. For exact historical
 figures, use the legacy Benchpress backend until parity tests cover these
 settings.
 

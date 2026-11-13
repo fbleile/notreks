@@ -66,12 +66,21 @@ def register_flopsearch(registry: SolverRegistry) -> dict[str, Any]:
     except ImportError as error:
         raise SolverError("direct FLOP integration requires the flopsearch package") from error
 
-    def solve_flop(observations, pairs, seed, config, method):
+    def solve_flop(observations, pairs, seed, config, method, *, forbidden_edges=(), search_version=None):
+        if search_version is None:
+            search_version = "global_greedy_rust" if method == "flop" else "flop_like"
         candidate, diagnostics = flopsearch.flop_notreks(
             observations, 2.0, pairs, restarts=max(0, config.attempts - 1),
             seed=seed, max_signature_rounds=config.flop_sweeps,
-            search_version="local_greedy_rust", local_greedy_passes=8,
+            search_version=search_version, local_greedy_passes=8,
+            forbidden_edges=tuple(forbidden_edges),
             return_diagnostics=True)
+        selected = diagnostics.get("selected_dag_edges")
+        if selected is not None:
+            graph = np.zeros((observations.shape[1], observations.shape[1]), dtype=np.uint8)
+            for parent, child in selected:
+                graph[int(parent), int(child)] = 1
+            candidate = graph
         return SolverResult(method, _binary(candidate), diagnostics)
 
     registry.register("flop_notreks", lambda observations, pairs, seed, config:
@@ -81,12 +90,9 @@ def register_flopsearch(registry: SolverRegistry) -> dict[str, Any]:
     from .postselection import direct_mask_edges, order_parent_postselection
 
     def edge_mask(observations, pairs, seed, config):
-        result = solve_flop(observations, [], seed, config, "flop-nt-edge-mask")
-        candidate = result.adjacency.copy()
-        for parent, child in direct_mask_edges(pairs):
-            candidate[parent, child] = 0
-        return SolverResult("flop-nt-edge-mask", candidate,
-                            {**result.diagnostics, "baseline": "edge_mask"})
+        return solve_flop(observations, [], seed, config, "flop-nt-edge-mask",
+                          forbidden_edges=direct_mask_edges(pairs),
+                          search_version="local_greedy_rust")
 
     def postselection(observations, pairs, seed, config):
         result = solve_flop(observations, [], seed, config, "flop-nt-post")
