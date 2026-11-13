@@ -11,5 +11,7 @@ dist/
 results/
 logs/
 artifacts/
+reproduction/
+plans/
 .coverage
 

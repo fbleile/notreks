@@ -12,10 +12,8 @@ manifest:
 check: test smoke
 
 release-check: check
-	@set -e; \
-	find data/external/causalman/canonical data/external/causalassembly/canonical \
-	  -name manifest.json -print0 | \
-	  while IFS= read -r -d '' manifest; do \
-	    PYTHONPATH=src python -m notreks.external "$$manifest" >/dev/null; \
-	  done
+	@find data/external/causalman/canonical data/external/causalassembly/canonical \
+	  -name manifest.json -exec sh -c \
+	  'for manifest do PYTHONPATH=src python -m notreks.external "$$manifest" >/dev/null || exit; done' \
+	  sh {} +
 	@echo "release check passed"
