@@ -11,7 +11,7 @@ as the only remote:
 
 ```bash
 git remote add origin <github-url>
-git push -u origin main
+git push -u origin anonymous-release:main
 ```
 
 Before pushing, run:
@@ -34,9 +34,11 @@ rewrite the scientific history after the paper is submitted. Instead, publish
 the exact commit or tag used for the paper and cite that immutable identifier
 in the anonymized paper's reproducibility statement.
 
-When the paper is de-anonymized, update only the citation metadata and the
-paper link in a separate release commit. The code, protocol, result schemas,
-and experiment identities must remain unchanged.
+The local `main` branch retains development history and personal commit
+metadata. The `anonymous-release` branch is a single neutral root commit and
+is the branch to publish for double-blind review. When the paper is
+de-anonymized, update only the citation metadata and paper link in a separate
+public release repository; do not expose the development branch by accident.
 
 ## Paper integration
 
