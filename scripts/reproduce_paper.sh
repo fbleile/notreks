@@ -14,6 +14,14 @@ find data/external/causalman/canonical data/external/causalassembly/canonical \
   -name manifest.json -print0 |
   while IFS= read -r -d '' manifest; do
     PYTHONPATH=src python -m notreks.external "$manifest" >/dev/null
+    label=${manifest#data/external/}
+    label=${label//\//_}
+    PYTHONPATH=src python -m notreks.external_plan "$manifest" \
+      "$ROOT/plans/${label%.json}.json" --name "external-${label%.json}" \
+      --methods flop flop_notreks dagma dagma_notreks \
+      --fractions 0 0.25 1 \
+      --attempts flop:20 --attempts flop_notreks:20 \
+      --attempts dagma:2 --attempts dagma_notreks:2 >/dev/null
   done
 
 echo "paper protocol and bundled external data validated"

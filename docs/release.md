@@ -46,6 +46,11 @@ PYTHONPATH=src python -m notreks.external_plan \
   --fractions 0 0.25 1 --attempts flop:20 --attempts flop_notreks:20
 ```
 
+The checked-in `scripts/reproduce_paper.sh` generates the synthetic plan and
+one external plan for every bundled seed. It does not submit production jobs;
+the resulting plans are inspected and then passed to the local or JobFarm
+runner. The expected output layout is specified in `docs/result_archive.md`.
+
 Run a selected local slice with the direct backend or submit the generated
 plan through `cluster/lrz_jobfarm.sh`. Full production execution is expected
 to run on LRZ and is not part of the fast CI job.
