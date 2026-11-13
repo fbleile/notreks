@@ -1,6 +1,9 @@
 import pytest
+import numpy as np
 
-from notreks.ancestry import describe, direct_ancestry_edges, normalize_ancestry_depth
+from notreks.ancestry import (bounded_ancestry_feasible,
+                              bounded_ancestry_violations, describe,
+                              direct_ancestry_edges, normalize_ancestry_depth)
 
 
 def test_full_ancestry_is_the_default():
@@ -16,3 +19,10 @@ def test_depth_one_is_a_symmetric_in_search_edge_constraint():
 def test_depth_zero_is_invalid():
     with pytest.raises(ValueError, match="at least one"):
         normalize_ancestry_depth(0)
+
+
+def test_bounded_table_distinguishes_depth_one_and_two():
+    graph = np.zeros((3, 3), dtype=np.uint8)
+    graph[0, 1] = graph[1, 2] = 1
+    assert bounded_ancestry_feasible(graph, [(0, 2)], 1)
+    assert bounded_ancestry_violations(graph, [(0, 2)], 2) == ((0, 2, 2),)

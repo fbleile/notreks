@@ -16,7 +16,8 @@ from typing import Any, Callable
 import numpy as np
 
 from .solvers import SolverConfig, SolverError, SolverRegistry, SolverResult
-from .ancestry import describe, direct_ancestry_edges
+from .ancestry import (bounded_ancestry_violations, describe,
+                       direct_ancestry_edges)
 
 
 DIRECT_METHODS = frozenset({
@@ -103,9 +104,18 @@ def register_flopsearch(registry: SolverRegistry) -> dict[str, Any]:
             for parent, child in selected:
                 graph[int(parent), int(child)] = 1
             candidate = graph
-        return SolverResult(method, _binary(candidate), {
+        binary_candidate = _binary(candidate)
+        bounded_violations = ()
+        if method == "flop_notreks" and ancestry is not None and ancestry > 1:
+            bounded_violations = bounded_ancestry_violations(binary_candidate, pairs, ancestry)
+            if bounded_violations:
+                raise SolverError(
+                    "bounded-ancestry FLOP backend returned an infeasible graph: "
+                    f"{bounded_violations[:3]!r}")
+        return SolverResult(method, binary_candidate, {
             **diagnostics, **describe(ancestry),
             "constraint_enforcement": "proposal_evaluator",
+            "bounded_ancestry_violations": len(bounded_violations),
         })
 
     registry.register("flop_notreks", lambda observations, pairs, seed, config:

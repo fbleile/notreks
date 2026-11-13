@@ -12,6 +12,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Iterable
 
+import numpy as np
+
 
 @dataclass(frozen=True)
 class AncestryConstraint:
@@ -45,6 +47,43 @@ def direct_ancestry_edges(pairs: Iterable[tuple[int, int]]) -> tuple[tuple[int, 
     edges = {(int(left), int(right)) for left, right in pairs}
     edges |= {(right, left) for left, right in edges}
     return tuple(sorted(edges))
+
+
+def bounded_ancestry_violations(adjacency: np.ndarray,
+                                pairs: Iterable[tuple[int, int]],
+                                depth: int) -> tuple[tuple[int, int, int], ...]:
+    """List endpoint-ancestry paths of length at most ``depth``.
+
+    A row ``(left, right, length)`` means that the candidate contains a
+    directed path of that length from ``left`` to ``right`` or, after the
+    canonical ordering of the supplied pair, in the reverse direction. This
+    is the finite ancestry table used by bounded backends: depth one is
+    exactly direct-edge masking, and depth two additionally blocks a
+    two-edge ancestor chain. Full NOTREKS remains the separate ``depth=None``
+    regime because it also rules out common ancestors of arbitrary depth.
+    """
+    value = normalize_ancestry_depth(depth)
+    if value is None:
+        raise ValueError("bounded ancestry violations require a finite depth")
+    graph = np.asarray(adjacency, dtype=bool)
+    if graph.ndim != 2 or graph.shape[0] != graph.shape[1]:
+        raise ValueError("adjacency must be square")
+    powers = graph.copy()
+    found: set[tuple[int, int, int]] = set()
+    for length in range(1, value + 1):
+        for left, right in pairs:
+            u, v = sorted((int(left), int(right)))
+            if powers[u, v] or powers[v, u]:
+                found.add((u, v, length))
+        powers = powers @ graph
+    return tuple(sorted(found))
+
+
+def bounded_ancestry_feasible(adjacency: np.ndarray,
+                              pairs: Iterable[tuple[int, int]],
+                              depth: int) -> bool:
+    """Return whether a candidate has no endpoint path within ``depth``."""
+    return not bounded_ancestry_violations(adjacency, pairs, depth)
 
 
 def describe(depth: int | None) -> dict[str, object]:
