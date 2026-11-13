@@ -19,6 +19,7 @@ notreks-external-pack = "notreks.external_pack:main"
 notreks-external-bundle = "notreks.external_bundle:main"
 notreks-trend = "notreks.analysis:main"
 notreks-exact = "notreks.exact:main"
+notreks-exact-bic = "notreks.exact_bic:main"
 notreks-inspect = "notreks.inspect:main"
 notreks-preflight = "notreks.preflight:main"
 notreks-catalog-plan = "notreks.catalog_planning:main"
@@ -28,6 +29,7 @@ notreks-figure = "notreks.figures:main"
 notreks-manifest = "notreks.manifest:main"
 notreks-solver-audit = "notreks.solver_audit:main"
 notreks-release-audit = "notreks.release:main"
+notreks-constraint-check = "notreks.constraint_diagnostics:main"
 
 [project.optional-dependencies]
 test = ["pytest>=8"]

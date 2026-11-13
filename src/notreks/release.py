@@ -13,6 +13,7 @@ from .inspect import inspect_output
 
 REQUIRED_FILES = (
     "README.md", "LICENSE", "CITATION.cff", "CHANGELOG.md",
+    "CONTRIBUTING.md",
     "docs/experimental_protocol.md", "docs/solver_porting.md",
     "docs/solver_parity_matrix.md", "docs/auxiliary_experiments.md",
     "docs/github_release.md", "docs/release.md", "docs/release_checklist.md",

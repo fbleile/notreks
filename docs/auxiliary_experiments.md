@@ -9,9 +9,9 @@ specialized computation stage.
 
 | Study | Scientific purpose | Current status | Canonical destination |
 |---|---|---|---|
-| Exact hard-NOTREKS/BIC motivation | Globally optimize Gaussian BIC under supplied no-trek constraints and certify the complete optimal MEC set | The repository currently has only the bounded fixed-order feasibility pilot; the original d=5/d=10/d=15 tiered study remains in `archive/NOTREKS` | `notreks-exact` with an `exact-bic-motivation` mode and ordinary run/checkpoint artifacts |
+| Exact hard-NOTREKS/BIC motivation | Globally optimize Gaussian BIC under supplied no-trek constraints and certify the complete optimal MEC set | The first exhaustive d=5 tier is now available as `notreks-exact-bic`; the original d=10/d=15 tiered study remains in `archive/NOTREKS` | `notreks-exact-bic` with ordinary input and summary artifacts; larger tiers remain to be ported |
 | Fixed-order feasibility pilot | Enumerate feasible DAGs for small ordered graphs and compare structural properties of prior sets | Implemented as `notreks-exact` | Existing `exact-feasibility-pilot` output layout |
-| PSTrek/TCC value comparison | Compare the constraint values and gradients on identical matrices, independently of structure recovery | Mathematical kernels and the recovery arm exist; the standalone comparison table/figure still needs a dedicated analysis command | `notreks-trek-comparison` or an analysis subcommand consuming serialized matrices |
+| PSTrek/TCC value comparison | Compare the constraint values and gradients on identical matrices, independently of structure recovery | Implemented as `notreks-constraint-check`; the current TCC gradient is exposed as a failing diagnostic | `notreks-constraint-check` JSON output |
 | PSTrek versus TCC recovery | Compare DAGMA with PSTrek and TCC under the same supplied pairs | Registered as `pstrek-vs-tcc` in the catalog | Existing plan, solve, evaluate, aggregate, and figure stages |
 | Chromatic-number recovery | Test whether prior structure matters beyond prior-set size | Implemented as `prior-structure-chrom` | Existing graph-clustered trend analysis |
 | Synthetic ablations and misspecification | Compare vanilla, global NOTREKS, edge masking, and post-selection across data-generating arms | Registered in the three synthetic catalog arms | Existing common benchmark stages |
@@ -32,15 +32,16 @@ artifact. The port must preserve:
 - feasible-DAG counts, CPDAG recovery, and feasibility summaries;
 - resumable case-level checkpoints and a machine-readable summary.
 
-The port should call the shared graph/data/knowledge contracts and write one
-run directory per graph--dataset--prior condition. It must not silently use
-the current fixed-order pilot as a substitute: that pilot answers a different
+The d=5 port calls the shared graph/data/knowledge contracts and writes a
+reproducible summary. The larger port should write one run directory per
+graph--dataset--prior condition. It must not silently use the current
+fixed-order pilot as a substitute: that pilot answers a different
 combinatorial question.
 
 ## PSTrek/TCC value comparison
 
-The value comparison is not a solver benchmark. It should generate fixed
-dimension, fixed-seed matrices and pair sets, evaluate PSTrek and TCC values
+The value comparison is not a solver benchmark. `notreks-constraint-check`
+generates fixed-dimension, fixed-seed matrices and pair sets, evaluates PSTrek and TCC values
 and gradients using the shared kernel modules, and retain:
 
 ```text
@@ -51,6 +52,12 @@ backend/version provenance, and the plotting/analysis command
 
 The existing `pstrek-vs-tcc` recovery arm must remain separate from this
 diagnostic study. Similar names do not imply the same estimand.
+
+The command is `notreks-constraint-check`. Its `--fail-on-error` option is
+intentionally strict. At the current commit, PSTrek passes the default
+finite-difference check, while the TCC analytic gradient does not yet pass it
+on the default deterministic case. This is recorded as an open kernel issue,
+not hidden by loosening the test tolerance.
 
 ## Rule for future special studies
 

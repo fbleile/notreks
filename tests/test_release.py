@@ -6,6 +6,7 @@ from notreks.release import audit
 def test_release_audit_reports_required_metadata(tmp_path):
     for relative in (
         "README.md", "LICENSE", "CITATION.cff", "CHANGELOG.md",
+        "CONTRIBUTING.md",
         "docs/experimental_protocol.md", "docs/solver_porting.md",
         "docs/solver_parity_matrix.md", "docs/auxiliary_experiments.md",
         "docs/github_release.md", "docs/release.md", "docs/release_checklist.md",

@@ -150,6 +150,27 @@ notreks trend-figure aggregate_results.csv figures/chromatic.png \
 PNG is the default output format. Pass `--format pdf` when a vector PDF is
 needed.
 
+To check the mathematical kernels independently of a solver, run:
+
+```bash
+notreks-constraint-check --output constraint_diagnostics.json
+```
+
+Use `--fail-on-error` in development or CI when both analytic gradients must
+pass finite differences. The current TCC gradient is intentionally reported
+as an open issue by this check; PSTrek passes the default diagnostic.
+
+For the first globally exhaustive Gaussian-BIC motivation tier, use the
+reviewer-sized command:
+
+```bash
+notreks-exact-bic --dimension 5 --output results/exact-bic-smoke
+```
+
+This enumerates every labeled DAG at `d=5`, retains all score-optimal CPDAGs,
+and writes a reproducible summary. It is distinct from the fixed-order
+feasibility pilot and from the larger archived MEC-retrieval study.
+
 Use `--data-label auto` to generate the canonical compact footer from the
 plotted rows. It reports only fields constant in the input, in the order
 `graph-family/density; d; n; q`; mixed inputs omit the varying field instead of
