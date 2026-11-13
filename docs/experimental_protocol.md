@@ -101,6 +101,20 @@ separately from recovery results. The runnable entry point is
 `notreks-exact`; it is deliberately bounded to small dimensions and writes
 one JSON artifact per pair-set plus a summary.
 
+The original exact Gaussian-BIC motivation study is a separate auxiliary
+artifact, not the fixed-order pilot above. Its required port and provenance
+are specified in `docs/auxiliary_experiments.md`; until that port is complete,
+the archive version remains the reference for the exact-MEC results.
+
+## Auxiliary diagnostic studies
+
+The PSTrek/TCC recovery benchmark is registered as `pstrek-vs-tcc`. A separate
+value-and-gradient comparison is required when reproducing the corresponding
+diagnostic figure. It uses the shared PSTrek and TCC kernels on serialized
+matrices and pair sets, rather than running a structure-learning method. The
+two studies must not be merged during aggregation; their estimands and output
+schemas are different.
+
 ## What is retained
 
 For every run, retain the plan, provenance, run specification, shared graph,
