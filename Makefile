@@ -1,4 +1,4 @@
-.PHONY: test smoke manifest check release-check
+.PHONY: test smoke manifest check release-check package-check
 
 test:
 	PYTHONPATH=src python -m pytest -q
@@ -18,3 +18,6 @@ release-check: check
 	  'for manifest do PYTHONPATH=src python -m notreks.external "$$manifest" >/dev/null || exit; done' \
 	  sh {} +
 	@echo "release check passed"
+
+package-check:
+	@python -m pip wheel --no-deps --no-build-isolation . --wheel-dir /tmp/notreks-wheel

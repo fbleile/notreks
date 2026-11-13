@@ -77,6 +77,10 @@ remaining optimizer details are migrated incrementally. See
 `docs/solver_porting.md` for the exact parity boundary; this repository does
 not claim full standalone DAGMA parity where that document says it is pending.
 
+Before publication, use `docs/release_checklist.md` as the acceptance gate. It
+distinguishes a reproducible protocol and data release from exact historical
+solver parity, which still requires the archived Benchpress closure.
+
 ## External observational data
 
 CausalMan and CausalAssembly are registered as external-data experiment arms,

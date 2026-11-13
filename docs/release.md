@@ -51,6 +51,11 @@ one external plan for every bundled seed. It does not submit production jobs;
 the resulting plans are inspected and then passed to the local or JobFarm
 runner. The expected output layout is specified in `docs/result_archive.md`.
 
+The publication gate is documented in `docs/release_checklist.md`. A passing
+release check validates the source and bundled inputs; it does not imply that
+the standalone optimizer has numerical parity with the legacy Benchpress
+continuation.
+
 Run a selected local slice with the direct backend or submit the generated
 plan through `cluster/lrz_jobfarm.sh`. Full production execution is expected
 to run on LRZ and is not part of the fast CI job.
