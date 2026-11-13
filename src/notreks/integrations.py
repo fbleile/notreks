@@ -17,6 +17,14 @@ import numpy as np
 from .solvers import SolverConfig, SolverError, SolverRegistry, SolverResult
 
 
+DIRECT_METHODS = frozenset({
+    "flop", "flop_notreks", "dagma", "dagma_notreks", "dagma_profile", "dagma_tcc",
+})
+BENCHPRESS_METHODS = frozenset({
+    "flop", "flop_notreks", "dagma", "dagma_notreks", "dagma_tcc",
+})
+
+
 def register_benchpress(registry: SolverRegistry, repository: Path) -> dict[str, Any]:
     """Register exact FLOP/DAGMA adapters from a validated checkout.
 
@@ -73,6 +81,10 @@ def register_flopsearch(registry: SolverRegistry) -> dict[str, Any]:
 
 def register_direct(registry: SolverRegistry, methods: set[str]) -> dict[str, Any]:
     """Register only the installed direct backends needed by a run plan."""
+    missing = set(methods) - DIRECT_METHODS
+    if missing:
+        raise SolverError(
+            "direct backend does not yet implement: " + ", ".join(sorted(missing)))
     provenance: dict[str, Any] = {"backend": "direct", "methods": sorted(methods)}
     if any(method.startswith("flop") for method in methods):
         provenance["flopsearch"] = register_flopsearch(registry)

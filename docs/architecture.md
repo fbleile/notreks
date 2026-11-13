@@ -54,6 +54,10 @@ The current adapter can be checked directly on a tiny real solve:
 python examples/benchpress_adapter_smoke.py /path/to/benchpress
 ```
 
+The current standalone execution boundary is recorded in
+`docs/end_to_end_status.md`; unsupported catalog methods are rejected by
+preflight rather than discovered after a long job has started.
+
 ## Running a bounded experiment
 
 ```bash

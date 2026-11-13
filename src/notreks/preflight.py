@@ -11,6 +11,8 @@ import shutil
 import sys
 from typing import Any
 
+from .integrations import BENCHPRESS_METHODS, DIRECT_METHODS
+
 
 def check(*, backend: str, methods: tuple[str, ...], benchpress_root: Path | None = None) -> dict[str, Any]:
     """Return explicit checks without importing or running a solver."""
@@ -24,6 +26,11 @@ def check(*, backend: str, methods: tuple[str, ...], benchpress_root: Path | Non
         "executables": {},
         "errors": [],
     }
+    supported = DIRECT_METHODS if backend == "direct" else BENCHPRESS_METHODS
+    missing_methods = set(methods) - supported
+    if missing_methods:
+        checks["errors"].append(
+            "backend adapters not implemented for: " + ", ".join(sorted(missing_methods)))
     packages = {"numpy": "numpy", "scipy": "scipy"}
     if any(method.startswith("flop") for method in methods):
         packages["flopsearch"] = "flopsearch"
