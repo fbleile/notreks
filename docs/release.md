@@ -52,9 +52,9 @@ the resulting plans are inspected and then passed to the local or JobFarm
 runner. The expected output layout is specified in `docs/result_archive.md`.
 
 The publication gate is documented in `docs/release_checklist.md`. A passing
-release check validates the source and bundled inputs; it does not imply that
-the standalone optimizer has numerical parity with the legacy Benchpress
-continuation.
+release check validates the standalone source and bundled inputs. It does not
+promise pixel-identical figures or historical optimizer traces; those are
+separate parity-audit questions.
 
 Run a selected local slice with the direct backend or submit the generated
 plan through `cluster/lrz_jobfarm.sh`. Full production execution is expected
@@ -62,8 +62,7 @@ to run on LRZ and is not part of the fast CI job.
 
 ## Release claims
 
-The direct FLOP adapter and the standalone DAGMA smoke path are included. The
-legacy Benchpress continuation remains the reference for production parity in
-the parts documented in `docs/solver_porting.md`; the release must not claim
-that the standalone DAGMA path reproduces every historical solver run until the
-listed parity checks are complete.
+The direct FLOP adapter and standalone DAGMA path are included. The legacy
+Benchpress continuation remains an optional reference for production parity in
+the parts documented in `docs/solver_porting.md`; do not claim historical
+byte-level parity unless the corresponding audit has been run.

@@ -1,6 +1,8 @@
 # Publication release checklist
 
-This checklist separates what the repository can reproduce on its own from what still depends on the archived Benchpress solver closure. A release is ready only when the commands below have been run from a clean checkout at the release commit.
+This checklist verifies the standalone repository from a clean checkout. The
+archived Benchpress solver closure is optional and is used only for historical
+parity audits.
 
 ## Clean local checkout
 
@@ -15,7 +17,10 @@ The release audit must report no missing files, no invalid external manifests, n
 
 ## Solver boundary
 
-The standalone package may be described as reproducing the protocol and the validated smoke paths. It must not be described as a byte-for-byte replacement for the historical production DAGMA continuation until the parity checks in `docs/solver_porting.md` are complete. Exact historical figures should retain the solver audit and the archived Benchpress revision.
+The standalone package may be described as reproducing the protocol, analyses,
+and validated solver workflows. Pixel-identical figures and byte-identical
+optimizer traces are not release requirements. If historical numerical parity
+is claimed, retain the solver audit and archived Benchpress revision.
 
 The default FLOP+NOTREKS mode is full ancestry. Direct-edge mode is available as `--ancestry-depth 1`. Larger bounded ancestry depths require a backend that implements the proposal-level contract in `docs/bounded_ancestry_backend.md`; the adapter must fail explicitly otherwise.
 

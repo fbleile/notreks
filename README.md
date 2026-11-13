@@ -20,9 +20,10 @@ The checked-in reference versions are in `requirements/lock.txt`; production
 outputs should additionally include `notreks provenance`.
 
 The protocol, artifact lifecycle, evaluation, figure, cluster, FLOP, and
-vanilla DAGMA layers are available. The direct DAGMA+PSTrek path is also
-available as a checked migration backend; the legacy continuation remains the
-reference until full end-to-end parity is complete.
+vanilla DAGMA layers are available without a Benchpress checkout. The direct
+DAGMA+PSTrek path is available as a standalone backend. The legacy continuation
+is retained only as an optional reference for numerical parity checks; it is
+not required for the documented standalone workflows.
 
 For FLOP+NOTREKS, omitting ``--ancestry-depth`` selects the paper's full
 ancestry constraint. ``--ancestry-depth 1`` selects the genuine in-search
@@ -80,14 +81,19 @@ notreks-parity --benchpress-root /path/to/benchpress \
   --method flop_notreks --output parity/flop_notreks.json
 ```
 
-The current Benchpress repository remains the reference archive while the
-remaining optimizer details are migrated incrementally. See
-`docs/solver_porting.md` for the exact parity boundary; this repository does
-not claim full standalone DAGMA parity where that document says it is pending.
+The current Benchpress repository can still be used as a reference archive for
+parity checks. See `docs/solver_porting.md` for the exact boundary; parity is
+an audit of historical numerical behavior, not a runtime dependency of this
+repository.
 
 Before publication, use `docs/release_checklist.md` as the acceptance gate. It
 distinguishes a reproducible protocol and data release from exact historical
 solver parity, which still requires the archived Benchpress closure.
+
+For new studies, copy `examples/custom_protocol.json` and follow
+`docs/custom_experiments.md`. Plans are the hand-off between local runs and
+LRZ JobFarm, so changing an experiment means changing its protocol rather than
+editing generated commands.
 
 ## External observational data
 

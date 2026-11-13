@@ -4,6 +4,10 @@ set -euo pipefail
 ROOT="${1:-reproduction}"
 mkdir -p "$ROOT/plans" "$ROOT/provenance"
 
+PYTHONPATH=src python -m notreks.paper_outputs --check
+PYTHONPATH=src python -m notreks.paper_outputs \
+  --output "$ROOT/provenance/paper_outputs.json"
+
 PYTHONPATH=src python -m notreks.catalog_planning all "$ROOT/plans/catalog_all.json"
 PYTHONPATH=src python -m notreks.provenance \
   "$ROOT/provenance/environment.json" --project-root .

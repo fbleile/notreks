@@ -59,10 +59,37 @@ def write_registry(output: Path) -> None:
     output.write_text(json.dumps(as_json(), indent=2) + "\n")
 
 
+def validate_registry(root: Path | None = None) -> list[str]:
+    """Return registry errors, optionally checking input artifacts under root."""
+    errors: list[str] = []
+    names = [item.name for item in PAPER_OUTPUTS]
+    if len(names) != len(set(names)):
+        errors.append("paper-output names are not unique")
+    for item in PAPER_OUTPUTS:
+        if item.kind not in {"figure", "table", "analysis"}:
+            errors.append(f"{item.name}: unsupported kind {item.kind!r}")
+        if not item.input_artifact or not item.command or not item.notes:
+            errors.append(f"{item.name}: input, command, and notes are required")
+        if root is not None and not any(root.glob(item.input_artifact)):
+            errors.append(f"{item.name}: missing input {item.input_artifact}")
+    return errors
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="notreks-paper-outputs")
     parser.add_argument("--output", type=Path)
+    parser.add_argument("--check", action="store_true")
+    parser.add_argument("--root", type=Path,
+                        help="also check that registered input artifacts exist")
     args = parser.parse_args(argv)
+    if args.check:
+        errors = validate_registry(args.root.resolve() if args.root else None)
+        if errors:
+            for error in errors:
+                print(f"ERROR: {error}")
+            return 1
+        print("paper-output registry is valid")
+        return 0
     if args.output:
         write_registry(args.output)
         print(f"wrote {args.output}")

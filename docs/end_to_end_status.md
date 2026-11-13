@@ -1,9 +1,9 @@
 # End-to-end execution status
 
-The new repository has two distinct meanings of “end to end.” The execution
-backbone is complete and tested locally and on LRZ through the same plan-based
-interface. The complete paper reproduction is still being migrated method by
-method and must not be described as standalone-complete yet.
+The standalone execution backbone is complete and tested locally and on LRZ
+through the same plan-based interface. The repository is intended to reproduce
+the protocol and scientific summaries, not necessarily byte-identical PNG
+files or every historical optimizer trace.
 
 ## Verified now
 
@@ -26,19 +26,19 @@ forbids the two orientations of every supplied endpoint pair. Depth two and
 larger require a FLOP backend exposing a bounded-ancestry proposal table; the
 adapter fails explicitly when that capability is absent.
 
-## Still requiring migration or the legacy checkout
+## Optional historical parity
 
-The paper-scale external runs still require the supplied result archive and
-solver closure for exact historical reproduction. The exact combinatorial
-pilot now has both exhaustive d≤5 and uncapped d≤15 subset-DP entry points;
+The paper-scale result archive remains useful for comparing against published
+numbers. The exact combinatorial pilot now has both exhaustive d≤5 and uncapped
+d≤15 subset-DP entry points;
 complete-MEC auditing is explicit and bounded by the requested audit options.
 Direct FLOP edge masking now uses
 the installed optimizer's forbidden-edge hook. Direct DAGMA edge masking still
 uses a deletion-safe post-mask because upstream DAGMA does not expose that
 constraint during optimization, and direct post-selection remains a compact
 port rather than a byte-for-byte archived implementation. For exact historical
-figures, use the legacy Benchpress backend until parity tests cover these
-settings.
+figures, use the legacy Benchpress backend and parity harness. This is
+optional and is not required for a normal standalone run.
 
 The preflight command now reports unsupported method names before a farm is
 submitted:
@@ -48,6 +48,6 @@ notreks-preflight --backend direct --methods flop dagma var_sortnregress
 ```
 
 This boundary is deliberate: the repository never substitutes a simpler method
-under a paper method label. Until the remaining adapters are ported and checked
-against the archived outputs, use the legacy Benchpress checkout for exact
-historical reproduction and use this repository for the verified core path.
+under a paper method label. Standalone runs use the registered direct adapters;
+the legacy checkout is used only when historical numerical parity is being
+audited.

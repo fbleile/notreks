@@ -1,4 +1,4 @@
-.PHONY: test smoke manifest check release-check package-check
+.PHONY: test smoke manifest paper-check check release-check package-check
 
 test:
 	PYTHONPATH=src python -m pytest -q
@@ -8,6 +8,9 @@ smoke:
 
 manifest:
 	PYTHONPATH=src python -m notreks.manifest artifacts/protocol_manifest.json
+
+paper-check:
+	PYTHONPATH=src python -m notreks.paper_outputs --check
 
 check: test smoke
 
