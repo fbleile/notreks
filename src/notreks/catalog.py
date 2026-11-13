@@ -28,6 +28,7 @@ class ExperimentDefinition:
     analysis_cutoff: str | None = None
     excluded_methods_by_dimension: tuple[tuple[int, tuple[str, ...]], ...] = ()
     target_k_values: tuple[int, ...] = ()
+    ancestry_depth: int | None = None
 
     def cells_for_dimension(self, dimension: int) -> tuple[tuple[int, str, int], ...]:
         return tuple(cell for cell in self.cells if cell[0] == dimension)

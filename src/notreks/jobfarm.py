@@ -38,6 +38,9 @@ def write_commands(plan: Path, output: Path, output_root: Path,
     payload = json.loads(plan.read_text())
     total = len(payload["runs"])
     plan_attempts = payload.get("attempts_by_method", {})
+    plan_ancestry_depth = payload.get("protocol", {}).get("ancestry_depth")
+    effective_ancestry_depth = (ancestry_depth if ancestry_depth is not None
+                                else plan_ancestry_depth)
     stop = total if limit is None else min(total, start + limit)
     if start < 0 or start > total or stop < start:
         raise ValueError("invalid task slice")
@@ -63,8 +66,8 @@ def write_commands(plan: Path, output: Path, output_root: Path,
             "--trek-weight", str(trek_weight),
             "--start", str(index), "--limit", "1",
         ]
-        if ancestry_depth is not None:
-            command += ["--ancestry-depth", str(ancestry_depth)]
+        if effective_ancestry_depth is not None:
+            command += ["--ancestry-depth", str(effective_ancestry_depth)]
         commands.append(" ".join(shlex.quote(part) for part in command))
     output.write_text("\n".join(commands) + ("\n" if commands else ""))
     return len(commands)

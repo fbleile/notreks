@@ -35,6 +35,19 @@ def test_jobfarm_direct_commands_do_not_require_benchpress(tmp_path: Path):
     assert "--dagma-warm-iter 30000" in line
 
 
+def test_jobfarm_inherits_protocol_ancestry_depth(tmp_path: Path):
+    plan = tmp_path / "plan.json"
+    plan.write_text(json.dumps({
+        "protocol": {"ancestry_depth": 2},
+        "runs": [{"run_key": "a", "method": "flop_notreks"}],
+        "attempts_by_method": {"flop_notreks": 1},
+    }))
+    commands = tmp_path / "depth.cmd"
+    write_commands(plan, commands, tmp_path / "results", tmp_path / "unused",
+                   tmp_path / "python", tmp_path / "project", backend="direct")
+    assert "--ancestry-depth 2" in commands.read_text()
+
+
 def test_retry_keeps_only_non_successful_tasks(tmp_path: Path):
     commands = tmp_path / "commands.cmd"
     commands.write_text("env first\nenv second\nenv third\n")

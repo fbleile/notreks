@@ -276,7 +276,9 @@ def _execute(args: argparse.Namespace, *, solve: bool) -> int:
             continue
         if solve:
             attempts = getattr(args, "attempts", None) or plan_attempts.get(run.method, 1)
-            solve_prepared(artifacts, run, registry, _solver_config(args, attempts))
+            solve_prepared(artifacts, run, registry,
+                           _solver_config(args, attempts,
+                                          payload.get("protocol", {}).get("ancestry_depth")))
         print(f"completed {run.key()} method={run.method}", flush=True)
     return 0
 
@@ -303,7 +305,8 @@ def _solver_arguments(parser: argparse.ArgumentParser) -> None:
                         help="FLOP NOTREKS ancestry depth; omit for full ancestry")
 
 
-def _solver_config(args: argparse.Namespace, attempts: int) -> SolverConfig:
+def _solver_config(args: argparse.Namespace, attempts: int,
+                   plan_ancestry_depth: int | None = None) -> SolverConfig:
     return SolverConfig(
         attempts=attempts,
         flop_sweeps=args.flop_sweeps,
@@ -311,7 +314,8 @@ def _solver_config(args: argparse.Namespace, attempts: int) -> SolverConfig:
         dagma_warm_iter=args.dagma_warm_iter,
         dagma_max_iter=args.dagma_max_iter,
         trek_weight=args.trek_weight,
-        ancestry_depth=args.ancestry_depth,
+        ancestry_depth=(args.ancestry_depth
+                        if args.ancestry_depth is not None else plan_ancestry_depth),
     )
 
 
