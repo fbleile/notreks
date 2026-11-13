@@ -29,6 +29,10 @@ class ProtocolSpec:
     densities: tuple[int, ...]
     methods: tuple[str, ...]
     knowledge_fractions: tuple[float, ...] = (0.0, 0.25, 1.0)
+    knowledge_pair_counts: tuple[int, ...] = ()
+    knowledge_strategies: tuple[str, ...] = ("random",)
+    target_k_values: tuple[int, ...] = ()
+    infeasible_policy: str = "fail"
     partial_rounds: int = 5
     graph_replicates: int = 20
     method_attempts: dict[str, int] = field(default_factory=dict)
@@ -51,6 +55,16 @@ class ProtocolSpec:
             raise ProtocolError("graph_replicates must be positive")
         if any(q < 0.0 or q > 1.0 for q in self.knowledge_fractions):
             raise ProtocolError("knowledge fractions must lie in [0, 1]")
+        if any(count < 0 for count in self.knowledge_pair_counts):
+            raise ProtocolError("knowledge pair counts must be non-negative")
+        if not self.knowledge_strategies:
+            raise ProtocolError("knowledge_strategies must not be empty")
+        if any(target < 2 for target in self.target_k_values):
+            raise ProtocolError("target chromatic numbers must be at least two")
+        if self.target_k_values and "target-k" not in self.knowledge_strategies:
+            raise ProtocolError("target_k_values require the 'target-k' strategy")
+        if self.infeasible_policy not in {"fail", "skip"}:
+            raise ProtocolError("infeasible_policy must be 'fail' or 'skip'")
         for method in self.methods:
             attempts = self.method_attempts.get(method, 1)
             if attempts < 1:
@@ -78,6 +92,8 @@ class RunSpec:
     knowledge_seed: int
     knowledge_fraction: float
     knowledge_round: int
+    knowledge_pair_count: int | None = None
+    infeasible_policy: str = "fail"
     data_model: str = "linear_gaussian"
     knowledge_strategy: str = "random"
     external_manifest: str | None = None

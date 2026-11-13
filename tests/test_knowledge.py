@@ -3,7 +3,7 @@ from itertools import combinations
 import numpy as np
 
 from notreks.knowledge import (bounded_target_k_pair_pool, canonical_pair_set_hash,
-                               target_k_partite_pairs)
+                               random_pairs_count, target_k_partite_pairs)
 
 
 def test_target_k_sets_are_fixed_size_and_hashable():
@@ -20,3 +20,11 @@ def test_target_pool_is_bounded_and_reports_availability():
     pool, audit = bounded_target_k_pair_pool(pairs, 6, .5, 2, seed=4, requested=3)
     assert len(pool) == audit["available"]
     assert audit["attempts"] <= 1000
+
+
+def test_absolute_pair_selection_is_exact_and_bounded():
+    pairs = [(0, 1), (0, 2), (1, 2), (2, 3)]
+    assert len(random_pairs_count(pairs, 3, seed=4)) == 3
+    import pytest
+    with pytest.raises(ValueError, match="only 4"):
+        random_pairs_count(pairs, 5, seed=4)

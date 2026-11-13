@@ -174,5 +174,11 @@ derived artifacts. Large transient result directories and solver caches do not
 belong in Git. The prepared external bundles are an intentional exception and
 are covered by their third-party notices.
 
+For a new experiment, start from `examples/custom_protocol.json` and change the
+declarative graph, data, method, and knowledge fields. Absolute NOTREKS budgets,
+target chromatic numbers, and an explicit skip-or-fail policy are supported; the
+planner records them in every run identity and the runner records infeasible
+knowledge constructions instead of silently changing the requested design.
+
 For the release procedure and paper-artifact workflow, see `docs/release.md`.
 

@@ -26,3 +26,12 @@ def test_protocol_rejects_invalid_fraction():
     else:
         raise AssertionError("invalid fraction was accepted")
 
+
+def test_protocol_accepts_absolute_and_target_k_knowledge_controls():
+    spec = ProtocolSpec(
+        "custom", (8,), (100,), ("er",), (4,), ("flop_notreks",),
+        knowledge_fractions=(0.25,), knowledge_pair_counts=(12,),
+        knowledge_strategies=("target-k",), target_k_values=(2, 3),
+        infeasible_policy="skip")
+    spec.validate()
+

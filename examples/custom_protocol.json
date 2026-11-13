@@ -1,0 +1,16 @@
+{
+  "name": "custom-experiment",
+  "dimensions": [20, 50],
+  "sample_sizes": [500],
+  "graph_families": ["er", "ws"],
+  "densities": [4],
+  "methods": ["flop", "flop_notreks"],
+  "knowledge_fractions": [0.0, 0.25],
+  "knowledge_pair_counts": [],
+  "knowledge_strategies": ["random"],
+  "target_k_values": [],
+  "infeasible_policy": "fail",
+  "partial_rounds": 5,
+  "graph_replicates": 20,
+  "method_attempts": {"flop": 20, "flop_notreks": 20}
+}

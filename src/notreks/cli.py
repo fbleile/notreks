@@ -268,6 +268,10 @@ def _execute(args: argparse.Namespace, *, solve: bool) -> int:
     plan_attempts = payload.get("attempts_by_method", {})
     for run in selected:
         artifacts = prepare_run(run, args.output_root)
+        knowledge_status = json.loads(artifacts.knowledge_path.read_text()).get("status", "available")
+        if knowledge_status == "infeasible":
+            print(f"skipped infeasible knowledge {run.key()} method={run.method}", flush=True)
+            continue
         if solve:
             attempts = getattr(args, "attempts", None) or plan_attempts.get(run.method, 1)
             solve_prepared(artifacts, run, registry, _solver_config(args, attempts))
@@ -278,7 +282,7 @@ def _execute(args: argparse.Namespace, *, solve: bool) -> int:
 def _load_protocol(path: Path) -> ProtocolSpec:
     values = json.loads(path.read_text())
     return ProtocolSpec(
-        **{key: tuple(value) if key in {"dimensions", "sample_sizes", "graph_families", "densities", "methods", "knowledge_fractions"} else value
+        **{key: tuple(value) if key in {"dimensions", "sample_sizes", "graph_families", "densities", "methods", "knowledge_fractions", "knowledge_pair_counts", "knowledge_strategies", "target_k_values"} else value
            for key, value in values.items()})
 
 

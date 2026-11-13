@@ -1,5 +1,27 @@
 # Cluster execution
 
+## First login and setup
+
+The repository contains the small site-specific setup layer that the old
+Benchpress checkout used to provide. It loads LRZ's Slurm and JobFarm modules,
+activates the configured micromamba environment when available, sets the
+thread limits, and exports the repository's `src/` directory. It does not submit
+jobs and contains no experiment logic.
+
+```bash
+ssh -Y <cluster-host> -l <cluster-user>
+git clone <repository-url> notreks        # use git pull --ff-only thereafter
+cd notreks
+source cluster/lrz_session_setup.sh
+python -m pip install -e ".[analysis,solvers]"
+notreks-preflight --backend direct --methods flop_notreks
+```
+
+If the cluster environment is created at a different path, set
+`NOTREKS_ENVIRONMENT=/absolute/path/to/environment` before sourcing the setup
+file. The setup is intentionally generic: no user name, email address, or
+Benchpress path is embedded in it.
+
 The cluster uses the same plan and CLI as local runs. Generate a plan once, inspect it, then let JobFarm execute disjoint index ranges. `PROJECT_DIR`, `PLAN`, and `OUTPUT_ROOT` must be absolute paths. Use `--backend benchpress` with an explicit checkout for legacy reproduction, or `--backend direct` for the installable FLOP/DAGMA backends. Solver budgets are written into every generated command, so smoke jobs cannot silently inherit production iteration counts.
 
 The final JobFarm command file is generated from the registered protocol rather than maintained as a second hand-written experiment definition.
@@ -18,6 +40,35 @@ documented allocation together, then rerun the smoke job before production.
 
 For a legacy Benchpress backend, add `--benchpress-root /absolute/path/to/benchpress`
 to the command-generator invocation. Direct mode does not require that checkout.
+
+## Constructing a new experiment
+
+For a new synthetic experiment, copy `examples/custom_protocol.json` and edit
+only its declarative fields. `dimensions`, `sample_sizes`, `graph_families`,
+`densities`, `methods`, `graph_replicates`, and `method_attempts` define the
+graph/data/solver grid. Use `knowledge_fractions` for relative information,
+or set `knowledge_pair_counts` to one or more absolute budgets while retaining
+a nominal fraction for labeling. Available strategies are `random`,
+`source-ancestor`, and `target-k`. Use `knowledge_strategies: ["target-k"]` and
+`target_k_values: [2, 3, 4]` for targeted chromatic constructions. Set
+`infeasible_policy: "skip"` when a target or budget is an expected part of the
+design that may not exist for every graph; the run records an explicit
+`status: infeasible` manifest and JobFarm continues. Keep the default `fail`
+policy when infeasibility indicates a protocol or implementation error.
+
+The standard workflow is:
+
+```bash
+notreks plan custom_protocol.json plans/custom.json
+python -m json.tool plans/custom.json | head -40
+notreks jobfarm plans/custom.json cluster/custom.cmd results/custom \
+  "$NOTREKS_ENVIRONMENT/bin/python" "$PROJECT_DIR" --backend direct
+```
+
+The absolute-pair-count and target-K choices are stored in every run manifest,
+alongside the available-pair count and pair-set hash. This makes a reviewer-
+requested variant a new plan with auditable differences rather than a manual
+edit to a command file.
 
 ## Cluster smoke and timeout recovery
 

@@ -33,3 +33,14 @@ def test_external_plan_uses_manifest_shape_and_target(tmp_path):
     assert all(run["external_manifest"] == str(manifest.resolve()) for run in payload["runs"])
     assert all(run["dimension"] == 4 for run in payload["runs"])
     assert payload["attempts_by_method"] == {"flop": 20}
+
+
+def test_plan_expands_absolute_target_k_controls():
+    spec = ProtocolSpec(
+        "custom", (8,), (100,), ("er",), (4,), ("flop_notreks",),
+        knowledge_fractions=(0.25,), knowledge_pair_counts=(12,),
+        knowledge_strategies=("target-k",), target_k_values=(2, 3),
+        graph_replicates=1)
+    runs = expand_protocol(spec)
+    assert {run.knowledge_strategy for run in runs} == {"target-k-2", "target-k-3"}
+    assert {run.knowledge_pair_count for run in runs} == {12}

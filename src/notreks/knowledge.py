@@ -29,6 +29,20 @@ def random_pairs(pairs: Iterable[tuple[int, int]], fraction: float, seed: int) -
     return [pairs[int(index)] for index in rng.permutation(len(pairs))[:count]]
 
 
+def random_pairs_count(pairs: Iterable[tuple[int, int]], count: int, seed: int) -> list[tuple[int, int]]:
+    """Select exactly ``count`` distinct pairs, or fail with a useful error."""
+    pairs = [tuple(map(int, pair)) for pair in pairs]
+    if count < 0:
+        raise ValueError("absolute knowledge pair count must be non-negative")
+    if count > len(pairs):
+        raise ValueError(
+            f"requested {count} NOTREKS pairs, but only {len(pairs)} are available")
+    if count == 0:
+        return []
+    rng = np.random.default_rng(seed)
+    return [pairs[int(index)] for index in rng.permutation(len(pairs))[:count]]
+
+
 def source_ancestor_pairs(pairs: Iterable[tuple[int, int]], truth: np.ndarray,
                           fraction: float, seed: int) -> list[tuple[int, int]]:
     """Select pairs by cycling source-ancestor endpoint classes."""

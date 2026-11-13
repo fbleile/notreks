@@ -61,25 +61,37 @@ def expand_protocol(spec: ProtocolSpec, *, data_model: str = "linear_gaussian",
                         for fraction in spec.knowledge_fractions:
                             rounds = spec.partial_rounds if 0.0 < fraction < 1.0 else 1
                             for knowledge_round in range(rounds):
-                                knowledge_seed = seeds.derive(
-                                    "knowledge", data_id, fraction, knowledge_round)
-                                for method in methods:
-                                    runs.append(RunSpec(
-                                        protocol=spec.name,
-                                        graph_id=graph_id,
-                                        data_id=data_id,
-                                        method=method,
-                                        dimension=dimension,
-                                        sample_size=sample_size,
-                                        graph_family=family,
-                                        density=density,
-                                        graph_seed=graph_seed,
-                                        data_seed=data_seed,
-                                        knowledge_seed=knowledge_seed,
-                                        knowledge_fraction=fraction,
-                                        knowledge_round=knowledge_round,
-                                        data_model=data_model,
-                                    ))
+                                pair_counts = (spec.knowledge_pair_counts
+                                               if fraction > 0 else (None,)) or (None,)
+                                strategies = ("random",) if fraction == 0.0 else spec.knowledge_strategies
+                                if spec.target_k_values and fraction > 0:
+                                    strategies = tuple(
+                                        f"target-k-{target}" for target in spec.target_k_values)
+                                for pair_count in pair_counts:
+                                    for strategy in strategies:
+                                        knowledge_seed = seeds.derive(
+                                            "knowledge", data_id, fraction, pair_count,
+                                            strategy, knowledge_round)
+                                        for method in methods:
+                                            runs.append(RunSpec(
+                                                protocol=spec.name,
+                                                graph_id=graph_id,
+                                                data_id=data_id,
+                                                method=method,
+                                                dimension=dimension,
+                                                sample_size=sample_size,
+                                                graph_family=family,
+                                                density=density,
+                                                graph_seed=graph_seed,
+                                                data_seed=data_seed,
+                                                knowledge_seed=knowledge_seed,
+                                                knowledge_fraction=fraction,
+                                                knowledge_round=knowledge_round,
+                                                knowledge_pair_count=pair_count,
+                                                infeasible_policy=spec.infeasible_policy,
+                                                data_model=data_model,
+                                                knowledge_strategy=strategy,
+                                            ))
     return runs
 
 

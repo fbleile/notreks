@@ -13,7 +13,8 @@ import numpy as np
 
 from .experiment import RunDirectory, RunRecorder, atomic_json, utc_now
 from .external import ExternalDataset
-from .knowledge import canonical_pair_set_hash, target_k_partite_pairs
+from .knowledge import (canonical_pair_set_hash, random_pairs_count,
+                         source_ancestor_pairs, target_k_partite_pairs)
 from .graphs import generate
 from .protocol import RunSpec
 from .solvers import SolverConfig, SolverRegistry, SolverResult
@@ -146,19 +147,51 @@ def _prepare_knowledge(run: RunSpec, shared: Path) -> Path:
             target = int(run.knowledge_strategy.rsplit("-", 1)[1])
         except ValueError as error:
             raise ValueError(f"invalid target-K strategy: {run.knowledge_strategy!r}") from error
-        pairs = target_k_partite_pairs(all_pairs, run.dimension, run.knowledge_fraction,
-                                       run.knowledge_seed, target)
+        try:
+            pairs = target_k_partite_pairs(
+                all_pairs, run.dimension, run.knowledge_fraction,
+                run.knowledge_seed, target, budget=run.knowledge_pair_count)
+        except ValueError as error:
+            if run.infeasible_policy != "skip":
+                raise
+            safe_strategy = run.knowledge_strategy.replace("/", "_")
+            count_tag = "" if run.knowledge_pair_count is None else f"_a{run.knowledge_pair_count}"
+            path = shared / "knowledge" / (
+                f"{safe_strategy}_q{run.knowledge_fraction:g}{count_tag}_r{run.knowledge_round}.json")
+            atomic_json(path, {
+                "status": "infeasible", "reason": str(error),
+                "data_id": run.data_id, "knowledge_strategy": run.knowledge_strategy,
+                "target_chromatic_number": target,
+                "requested_pair_count": run.knowledge_pair_count,
+                "available_pairs": len(all_pairs),
+            })
+            return path
         target_k = target
+    elif run.knowledge_strategy == "source-ancestor":
+        pairs = source_ancestor_pairs(
+            all_pairs, graph, run.knowledge_fraction, run.knowledge_seed)
+        if run.knowledge_pair_count is not None:
+            if run.knowledge_pair_count > len(pairs):
+                raise ValueError(
+                    f"requested {run.knowledge_pair_count} source-ancestor pairs, "
+                    f"but only {len(pairs)} were selected")
+            pairs = pairs[:run.knowledge_pair_count]
+        target_k = None
     else:
-        pairs = select_pairs(all_pairs, run.knowledge_fraction, run.knowledge_seed)
+        pairs = (random_pairs_count(all_pairs, run.knowledge_pair_count, run.knowledge_seed)
+                 if run.knowledge_pair_count is not None
+                 else select_pairs(all_pairs, run.knowledge_fraction, run.knowledge_seed))
         target_k = None
     safe_strategy = run.knowledge_strategy.replace("/", "_")
-    path = shared / "knowledge" / f"{safe_strategy}_q{run.knowledge_fraction:g}_r{run.knowledge_round}.json"
+    count_tag = "" if run.knowledge_pair_count is None else f"_a{run.knowledge_pair_count}"
+    path = shared / "knowledge" / (
+        f"{safe_strategy}_q{run.knowledge_fraction:g}{count_tag}_r{run.knowledge_round}.json")
     expected = {
         "data_id": run.data_id, "knowledge_seed": run.knowledge_seed,
         "knowledge_fraction": run.knowledge_fraction,
         "knowledge_round": run.knowledge_round,
         "knowledge_strategy": run.knowledge_strategy,
+        "requested_pair_count": run.knowledge_pair_count,
         "target_chromatic_number": target_k,
         "available_pairs": len(all_pairs), "selected_pairs": len(pairs),
         "pair_set_hash": canonical_pair_set_hash(pairs),
@@ -166,7 +199,7 @@ def _prepare_knowledge(run: RunSpec, shared: Path) -> Path:
     }
     if run.knowledge_strategy.startswith("target-k-"):
         pair_hash = expected["pair_set_hash"]
-        for existing in path.parent.glob(f"{safe_strategy}_q{run.knowledge_fraction:g}_r*.json"):
+        for existing in path.parent.glob(f"{safe_strategy}_q{run.knowledge_fraction:g}*_r*.json"):
             if existing == path:
                 continue
             existing_payload = json.loads(existing.read_text())
