@@ -60,6 +60,11 @@ the supplied endpoint pairs are passed as both directed forbidden-edge
 orientations to the optimizer's proposal evaluator. This is the direct-edge
 ablation, not a deletion mask.
 
+The requested depth is normalized per dimension: for a graph with (d) nodes,
+any value greater than (d-1) is represented as full ancestry (`None`), since
+a DAG has no simple directed path longer than (d-1). The requested value is
+nevertheless retained in the run diagnostics.
+
 For values larger than one, the FLOP backend must expose a proposal-level
 bounded-ancestry table. The required call contract is an
 `ancestry_depth=<positive integer>` keyword on `flopsearch.flop_notreks`; the

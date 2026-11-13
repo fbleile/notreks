@@ -17,7 +17,7 @@ import numpy as np
 
 from .solvers import SolverConfig, SolverError, SolverRegistry, SolverResult
 from .ancestry import (bounded_ancestry_violations, describe,
-                       direct_ancestry_edges)
+                       direct_ancestry_edges, effective_ancestry_depth)
 
 
 DIRECT_METHODS = frozenset({
@@ -72,7 +72,8 @@ def register_flopsearch(registry: SolverRegistry) -> dict[str, Any]:
     def solve_flop(observations, pairs, seed, config, method, *, forbidden_edges=(), search_version=None):
         if search_version is None:
             search_version = "global_greedy_rust" if method == "flop" else "flop_like"
-        ancestry = config.ancestry_depth
+        requested_ancestry = config.ancestry_depth
+        ancestry = effective_ancestry_depth(requested_ancestry, observations.shape[1])
         effective_pairs = list(pairs)
         effective_forbidden = tuple(forbidden_edges)
         if method == "flop_notreks" and ancestry == 1:
@@ -114,6 +115,7 @@ def register_flopsearch(registry: SolverRegistry) -> dict[str, Any]:
                     f"{bounded_violations[:3]!r}")
         return SolverResult(method, binary_candidate, {
             **diagnostics, **describe(ancestry),
+            "requested_ancestry_depth": requested_ancestry,
             "constraint_enforcement": "proposal_evaluator",
             "bounded_ancestry_violations": len(bounded_violations),
         })
@@ -295,7 +297,8 @@ def _flop_adapter(function: Callable[..., tuple[np.ndarray, dict[str, Any]]], na
 
 def _flop_notreks_adapter(function: Callable[..., tuple[np.ndarray, dict[str, Any]]]):
     def solve(observations, pairs, seed, config):
-        if config.ancestry_depth is not None:
+        effective_depth = effective_ancestry_depth(config.ancestry_depth, observations.shape[1])
+        if effective_depth is not None:
             raise SolverError(
                 "bounded ancestry depth is available only in the direct FLOP "
                 "backend; the compatibility adapter exposes full ancestry")
@@ -304,7 +307,9 @@ def _flop_notreks_adapter(function: Callable[..., tuple[np.ndarray, dict[str, An
             search_version="flop_like", local_greedy_passes=8,
         )
         return SolverResult("flop_notreks", _binary(candidate), {
-            **diagnostics, **describe(None), "constraint_enforcement": "proposal_evaluator",
+            **diagnostics, **describe(None),
+            "requested_ancestry_depth": config.ancestry_depth,
+            "constraint_enforcement": "proposal_evaluator",
         })
     return solve
 

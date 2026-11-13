@@ -3,7 +3,8 @@ import numpy as np
 
 from notreks.ancestry import (bounded_ancestry_feasible,
                               bounded_ancestry_violations, describe,
-                              direct_ancestry_edges, normalize_ancestry_depth)
+                              direct_ancestry_edges, effective_ancestry_depth,
+                              normalize_ancestry_depth)
 
 
 def test_full_ancestry_is_the_default():
@@ -26,3 +27,9 @@ def test_bounded_table_distinguishes_depth_one_and_two():
     graph[0, 1] = graph[1, 2] = 1
     assert bounded_ancestry_feasible(graph, [(0, 2)], 1)
     assert bounded_ancestry_violations(graph, [(0, 2)], 2) == ((0, 2, 2),)
+
+
+def test_depth_beyond_dag_path_bound_selects_full_ancestry():
+    assert effective_ancestry_depth(5, 6) == 5
+    assert effective_ancestry_depth(6, 6) is None
+    assert effective_ancestry_depth(None, 6) is None

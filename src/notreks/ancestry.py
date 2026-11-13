@@ -37,6 +37,21 @@ def normalize_ancestry_depth(depth: int | None) -> int | None:
     return value
 
 
+def effective_ancestry_depth(depth: int | None, dimension: int) -> int | None:
+    """Normalize a requested depth against the largest DAG path length.
+
+    A simple DAG on ``dimension`` nodes has no directed simple path longer
+    than ``dimension - 1``. Requests above that bound therefore add nothing
+    beyond full ancestry and are represented as ``None``. The boundary itself
+    remains a finite request, which keeps the requested protocol value visible
+    in diagnostics.
+    """
+    if dimension < 2:
+        raise ValueError("dimension must be at least two")
+    value = normalize_ancestry_depth(depth)
+    return None if value is not None and value > dimension - 1 else value
+
+
 def direct_ancestry_edges(pairs: Iterable[tuple[int, int]]) -> tuple[tuple[int, int], ...]:
     """Return both orientations of each depth-one constraint.
 
