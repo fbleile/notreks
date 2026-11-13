@@ -135,6 +135,13 @@ notreks trend-figure aggregate_results.csv figures/chromatic.png \
 PNG is the default output format. Pass `--format pdf` when a vector PDF is
 needed.
 
+Validate a bundled external dataset with the lightweight release smoke:
+
+```bash
+PYTHONPATH=src python examples/external_data_smoke.py \
+  data/external/causalassembly/canonical/seed_1001/manifest.json
+```
+
 The same analysis can be retained as a machine-readable report:
 
 ```bash

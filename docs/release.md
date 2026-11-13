@@ -15,6 +15,12 @@ make release-check
 
 This validates every canonical external manifest, checks the catalog, records
 the current commit and environment, and runs the complete fast test suite.
+The bundled external smoke can also be run directly:
+
+```bash
+PYTHONPATH=src python examples/external_data_smoke.py \
+  data/external/causalman/canonical/causalman_small/seed_1001/manifest.json
+```
 
 ## Reproduce the paper protocol
 
