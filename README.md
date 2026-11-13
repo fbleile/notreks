@@ -62,13 +62,17 @@ notreks-preflight --backend direct --methods flop_notreks dagma_notreks
 ```
 
 The current Benchpress repository remains the reference archive while the
-remaining optimizer details are migrated incrementally.
+remaining optimizer details are migrated incrementally. See
+`docs/solver_porting.md` for the exact parity boundary; this repository does
+not claim full standalone DAGMA parity where that document says it is pending.
 
 ## External observational data
 
 CausalMan and CausalAssembly are registered as external-data experiment arms,
-not as synthetic graph families. A manifest must name the observation array,
-truth adjacency, and (for latent-projection evaluation) projection metadata.
+not as synthetic graph families. Prepared benchmark caches are included under
+`data/external/`, with canonical per-seed manifests and checksums. A manifest
+must name the observation array, truth adjacency, and (for latent-projection
+evaluation) projection metadata.
 Use `python -m notreks.external path/to/dataset.json` to validate one before
 planning an external run. Missing files or ambiguous evaluation targets fail
 at the data stage and leave a traceback in the run directory.
@@ -84,7 +88,14 @@ notreks-external-plan path/to/manifest.json plans/causalman.json \
 The plan records the manifest path on every run and derives its dimension and
 sample size from the validated arrays.
 
-To package an already prepared cluster cache for Git or an archival data
+To convert a historical cache into the canonical manifest layout:
+
+```bash
+notreks-external-bundle causalman data/external/causalman data/external/causalman/canonical
+notreks-external-bundle causalassembly data/external/causalassembly data/external/causalassembly/canonical
+```
+
+To package an already prepared canonical cluster cache for an archival data
 release, copy only the artifacts referenced by its manifest:
 
 ```bash
@@ -142,5 +153,10 @@ cluster/            JobFarm conventions and cluster notes
 requirements/       dependency groups
 ```
 
-The catalog and generated plans are authoritative; shell command files are derived artifacts. Large datasets, solver caches, and result directories do not belong in Git.
+The catalog and generated plans are authoritative; shell command files are
+derived artifacts. Large transient result directories and solver caches do not
+belong in Git. The prepared external bundles are an intentional exception and
+are covered by their third-party notices.
+
+For the release procedure and paper-artifact workflow, see `docs/release.md`.
 

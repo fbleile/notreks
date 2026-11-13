@@ -3,6 +3,9 @@
 These directories contain the prepared external benchmark artifacts used by the
 paper experiments. They are included so that the experiments can be reproduced
 without rerunning the upstream simulators or downloading the original data.
+The `canonical/` subdirectories contain the standard manifest-backed form
+consumed by `notreks-external-check` and `notreks-external-plan`; the parent
+files preserve the historical cache layout used by the paper pipeline.
 
 ## CausalMan
 

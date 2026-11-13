@@ -1,0 +1,34 @@
+{
+  "dataset_id": "causalman_small_seed1001_n5000",
+  "evaluation_target": "causalman_latent_projection",
+  "knowledge_pairs": "knowledge_pairs.json",
+  "metadata": {
+    "artifact_sha256": {
+      "knowledge_pairs": "b914fe940d53567a7bdd88eb2c063aee300ae455948c8ec825ef80da98b78335",
+      "observations": "982cd83270c877d82bda2d852d1b64ae818ecff7a35ef7c6d10346b3b8db965c",
+      "projection": "d658948666daab3be0fc72f3f8039293a228578b487a07bdcc22b67924fc8141",
+      "truth_adjacency": "5638a07b7b33be346ed55ff63fa019640ae2cccbeccc08b5db66005e05930266"
+    },
+    "knowledge_pairs_source": "upstream_prepared_graph_json",
+    "projected_bidirected_edges": 33,
+    "projected_directed_edges": 8,
+    "seed": 1001,
+    "source_cache_manifest": "causalman_small/seed_1001_manifest.json",
+    "variant": "causalman_small"
+  },
+  "nodes": [
+    "PF_M1_T1_s0",
+    "PF_M1_T1_Force",
+    "PF_M1_T1_sgrad",
+    "PF_M1_T1_Fmax",
+    "PF_M1_T1_smax",
+    "PF_M1_T2_s0",
+    "PF_M1_T2_Force",
+    "PF_M1_T2_sgrad",
+    "PF_M1_T2_Fmax",
+    "PF_M1_T2_smax"
+  ],
+  "observations": "observations.npy",
+  "projection": "projection.json",
+  "truth_adjacency": "truth_adjacency.npy"
+}

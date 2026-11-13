@@ -6,6 +6,7 @@ import pytest
 from notreks.external import ExternalDataError, ExternalDataset, main
 from notreks.external_sources import import_causalassembly
 from notreks.external_pack import pack
+from notreks.external_bundle import bundle_causalassembly
 
 
 def test_external_manifest_validates_arrays(tmp_path):
@@ -106,3 +107,20 @@ def test_external_pack_copies_only_manifest_artifacts(tmp_path):
     assert (output.parent / "x.npy").is_file()
     assert not (output.parent / "unreferenced.txt").exists()
     assert ExternalDataset.from_manifest(output).validate_arrays()[0].shape == (4, 2)
+
+
+def test_external_bundle_makes_causalassembly_seed_manifest(tmp_path):
+    source = tmp_path / "source"
+    source.mkdir()
+    nodes = ["a", "b", "c"]
+    np.savez(source / "ground_truth.npz", truth=np.array([[0, 1, 0], [0, 0, 1], [0, 0, 0]], dtype=np.uint8))
+    (source / "manifest.json").write_text(json.dumps({"nodes": nodes}))
+    np.savez(source / "seed_1001.npz", reference=np.zeros((2, 3)), discovery=np.ones((2, 3)))
+    np.savez(source / "seed_1.npz", reference=np.zeros((2, 3)), discovery=np.ones((2, 3)))
+    outputs = bundle_causalassembly(source, tmp_path / "bundle")
+    assert len(outputs) == 1
+    dataset = ExternalDataset.from_manifest(outputs[0])
+    observations, truth, _ = dataset.validate_arrays()
+    assert observations.shape == (2, 3)
+    assert truth.sum() == 2
+    assert dataset.available_pairs(3) == []
