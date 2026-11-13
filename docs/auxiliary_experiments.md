@@ -9,9 +9,9 @@ specialized computation stage.
 
 | Study | Scientific purpose | Current status | Canonical destination |
 |---|---|---|---|
-| Exact hard-NOTREKS/BIC motivation | Globally optimize Gaussian BIC under supplied no-trek constraints and certify the complete optimal MEC set | The first exhaustive d=5 tier is now available as `notreks-exact-bic`; the original d=10/d=15 tiered study remains in `archive/NOTREKS` | `notreks-exact-bic` with ordinary input and summary artifacts; larger tiers remain to be ported |
+| Exact hard-NOTREKS/BIC motivation | Globally optimize Gaussian BIC under supplied no-trek constraints and audit optimal MECs | The exhaustive d=5 tier is available as `notreks-exact-bic`; the uncapped d=6--15 subset-DP tier and its optional complete-MEC audit are available as `notreks-exact-bic-dp` | `notreks-exact-bic` for exhaustive d≤5 cases and `notreks-exact-bic-dp --audit-mecs` for the larger tier |
 | Fixed-order feasibility pilot | Enumerate feasible DAGs for small ordered graphs and compare structural properties of prior sets | Implemented as `notreks-exact` | Existing `exact-feasibility-pilot` output layout |
-| PSTrek/TCC value comparison | Compare the constraint values and gradients on identical matrices, independently of structure recovery | Implemented as `notreks-constraint-check`; the current TCC gradient is exposed as a failing diagnostic | `notreks-constraint-check` JSON output |
+| PSTrek/TCC value comparison | Compare the constraint values and gradients on identical matrices, independently of structure recovery | Implemented as `notreks-constraint-check`; both analytic gradients are checked against finite differences | `notreks-constraint-check` JSON output |
 | PSTrek versus TCC recovery | Compare DAGMA with PSTrek and TCC under the same supplied pairs | Registered as `pstrek-vs-tcc` in the catalog | Existing plan, solve, evaluate, aggregate, and figure stages |
 | Chromatic-number recovery | Test whether prior structure matters beyond prior-set size | Implemented as `prior-structure-chrom` | Existing graph-clustered trend analysis |
 | Synthetic ablations and misspecification | Compare vanilla, global NOTREKS, edge masking, and post-selection across data-generating arms | Registered in the three synthetic catalog arms | Existing common benchmark stages |
@@ -33,10 +33,14 @@ artifact. The port must preserve:
 - resumable case-level checkpoints and a machine-readable summary.
 
 The d=5 port calls the shared graph/data/knowledge contracts and writes a
-reproducible summary. The larger port should write one run directory per
-graph--dataset--prior condition. It must not silently use the current
-fixed-order pilot as a substitute: that pilot answers a different
-combinatorial question.
+reproducible summary. The d=6--15 port uses the same contracts and writes one
+run directory per graph--dataset--prior condition, with the exact subset-DP
+objective, conflict-directed constraint states, search certificate, and
+reconstructed optimum. It intentionally reports one global optimum; complete
+MEC enumeration is a separate audit and is not silently substituted by this
+optimization tier. The fixed-order pilot remains separate because it answers
+a different combinatorial question. Use `--audit-mecs` for complete optimal-MEC
+retrieval; state and DAG caps make incompleteness explicit in `run.json`.
 
 ## PSTrek/TCC value comparison
 
@@ -51,13 +55,15 @@ backend/version provenance, and the plotting/analysis command
 ```
 
 The existing `pstrek-vs-tcc` recovery arm must remain separate from this
-diagnostic study. Similar names do not imply the same estimand.
+diagnostic study. Similar names do not imply the same estimand. The TCC
+diagnostic uses the exact block spectral-radius difference and its analytic
+Perron pullback; the strict finite-difference check is expected to pass for
+matrices with simple Perron roots.
 
 The command is `notreks-constraint-check`. Its `--fail-on-error` option is
-intentionally strict. At the current commit, PSTrek passes the default
-finite-difference check, while the TCC analytic gradient does not yet pass it
-on the default deterministic case. This is recorded as an open kernel issue,
-not hidden by loosening the test tolerance.
+intentionally strict. Both analytic gradients pass the default deterministic
+finite-difference check when the spectral-radius root is simple; the output
+records the root degeneracy caveat explicitly.
 
 ## Rule for future special studies
 

@@ -10,7 +10,8 @@ def test_constraint_diagnostic_is_reproducible():
     assert first["pstrek"]["relative_gradient_error"] < 1e-5
     assert first["pstrek"]["gradient_check_passed"] is True
     assert np.isfinite(first["tcc"]["relative_gradient_error"])
-    assert first["tcc"]["gradient_check_passed"] is False
+    assert first["tcc"]["relative_gradient_error"] < 1e-5
+    assert first["tcc"]["gradient_check_passed"] is True
 
 
 def test_constraint_diagnostic_accepts_empty_pair_set():

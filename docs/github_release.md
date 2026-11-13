@@ -19,10 +19,11 @@ Before pushing, run:
 ```bash
 make release-check
 make package-check
-git grep -n -I -E 'f\\.bleile|tum\\.de|/Users/|/dss/|ge86xim2' -- ':!*.lock'
+git grep -n -I -E 'personal-name|institutional-domain|absolute-user-path|cluster-user-id' -- ':!*.lock'
 ```
 
-The final command must produce no output. Publish the repository at a commit
+The release audit performs the same scan and reports the offending tracked
+file and line. The final command must produce no output. Publish the repository at a commit
 that has passed the release checklist, then create an immutable tag for the
 paper artifact.
 

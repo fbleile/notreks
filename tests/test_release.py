@@ -9,7 +9,7 @@ def test_release_audit_reports_required_metadata(tmp_path):
         "CONTRIBUTING.md",
         "docs/experimental_protocol.md", "docs/solver_porting.md",
         "docs/solver_parity_matrix.md", "docs/auxiliary_experiments.md",
-        "docs/github_release.md", "docs/release.md", "docs/release_checklist.md",
+        "docs/github_release.md", "docs/paper_outputs.md", "docs/release.md", "docs/release_checklist.md",
         "data/external/THIRD_PARTY_NOTICES.md", "pyproject.toml",
         "environment.yml", "Makefile", "scripts/reproduce_paper.sh",
         ".github/workflows/test.yml", "cluster/lrz_session_setup.sh",
