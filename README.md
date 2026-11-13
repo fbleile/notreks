@@ -29,7 +29,10 @@ For FLOP+NOTREKS, omitting ``--ancestry-depth`` selects the paper's full
 ancestry constraint. ``--ancestry-depth 1`` selects the genuine in-search
 direct-edge restriction. Larger depths require a solver backend that exposes
 bounded-ancestry proposal constraints; they are never emulated by deleting
-edges after a completed search.
+bounded-ancestry proposal constraints; they are never emulated by deleting
+edges after a completed search. ``--ancestry-depth 0`` explicitly disables the
+ancestry restriction and is the equivalence mode for comparing vanilla FLOP
+with FLOP+NOTREKS.
 
 ## Development smoke test
 

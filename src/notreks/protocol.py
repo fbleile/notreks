@@ -62,8 +62,8 @@ class ProtocolSpec:
             raise ProtocolError("knowledge_strategies must not be empty")
         if any(target < 2 for target in self.target_k_values):
             raise ProtocolError("target chromatic numbers must be at least two")
-        if self.ancestry_depth is not None and self.ancestry_depth < 1:
-            raise ProtocolError("ancestry_depth must be omitted or at least one")
+        if self.ancestry_depth is not None and self.ancestry_depth < 0:
+            raise ProtocolError("ancestry_depth must be omitted or non-negative")
         if self.target_k_values and "target-k" not in self.knowledge_strategies:
             raise ProtocolError("target_k_values require the 'target-k' strategy")
         if self.infeasible_policy not in {"fail", "skip"}:

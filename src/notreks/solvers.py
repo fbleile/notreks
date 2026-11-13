@@ -38,8 +38,8 @@ class SolverConfig:
             raise ValueError("DAGMA iteration settings must be positive")
         if self.trek_weight < 0:
             raise ValueError("trek_weight must be non-negative")
-        if self.ancestry_depth is not None and self.ancestry_depth < 1:
-            raise ValueError("ancestry_depth must be omitted or at least one")
+        if self.ancestry_depth is not None and self.ancestry_depth < 0:
+            raise ValueError("ancestry_depth must be omitted or non-negative")
 
 
 @dataclass(frozen=True)

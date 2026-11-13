@@ -4,8 +4,10 @@ The validated solver implementation is not a single-file dependency. Vanilla FLO
 is available through the public optional `flopsearch` package, but the public
 wheel does not include the `flop_notreks` extension used by this project. A
 source-built NOTREKS-enabled FLOP backend is therefore required for direct
-FLOP+NOTREKS runs; the repository refuses to substitute vanilla FLOP under that
-method name. The top-level compatibility adapter remains the parity reference.
+FLOP+NOTREKS runs. It is built from the checked-in source with
+`scripts/install_flopsearch.sh`; the repository refuses to substitute vanilla
+FLOP under that method name. The top-level compatibility adapter remains the
+parity reference.
 DAGMA and its NOTREKS objective still import the following functional layers:
 
 - FLOP search and restart selection;
@@ -77,7 +79,9 @@ nevertheless retained in the run diagnostics.
 
 For values larger than one, the FLOP backend must expose a proposal-level
 bounded-ancestry table. The required call contract is an
-`ancestry_depth=<positive integer>` keyword on `flopsearch.flop_notreks`; the
+`ancestry_depth=<non-negative integer>` keyword on `flopsearch.flop_notreks`; a
+value of zero means that no ancestry restriction is supplied and must agree with
+the vanilla FLOP call. The
 backend must reject every candidate proposal containing an ancestry path of
 length at most that value for a supplied pair and return the same diagnostics
 contract as full NOTREKS. The repository deliberately does not reinterpret

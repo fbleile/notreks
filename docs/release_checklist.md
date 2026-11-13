@@ -34,7 +34,10 @@ From a clean LRZ checkout, run the session setup, direct preflight, and the smal
 
 ```bash
 source cluster/lrz_session_setup.sh
-notreks-preflight --backend direct --methods flop_notreks
+python -m pip install --no-deps -e .
+python -m pip install maturin
+scripts/install_flopsearch.sh
+notreks-preflight --backend direct --methods flop flop_notreks
 export PROJECT_DIR=$PWD
 export CMD_FILE=$PROJECT_DIR/cluster/notreks_cluster_smoke.cmd
 sbatch --parsable --chdir="$PROJECT_DIR" \

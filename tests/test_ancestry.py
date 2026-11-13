@@ -17,9 +17,9 @@ def test_depth_one_is_a_symmetric_in_search_edge_constraint():
     assert describe(1)["ancestry_depth_interpretation"] == "direct endpoint edges"
 
 
-def test_depth_zero_is_invalid():
-    with pytest.raises(ValueError, match="at least one"):
-        normalize_ancestry_depth(0)
+def test_depth_zero_means_no_ancestry_restriction():
+    assert normalize_ancestry_depth(0) == 0
+    assert describe(0)["ancestry_constraint"] == "none"
 
 
 def test_bounded_table_distinguishes_depth_one_and_two():

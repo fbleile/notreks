@@ -57,8 +57,8 @@ jobfarm_rc=${PIPESTATUS[0]}
 set -e
 
 result_dir="${CMD_FILE}_res"
-if ! grep -q 'STOP SUCCESS' "$result_dir/1" || ! grep -q 'STOP SUCCESS' "$result_dir/2"; then
-  echo "Smoke tasks failed; inspect $result_dir/1, $result_dir/2, and $log" >&2
+if ! for task in 1 2 3 4; do grep -q 'STOP SUCCESS' "$result_dir/$task" || exit 1; done; then
+  echo "Smoke tasks failed; inspect $result_dir/1 through $result_dir/4 and $log" >&2
   exit 1
 fi
 exit "$jobfarm_rc"

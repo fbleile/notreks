@@ -22,8 +22,8 @@ class AncestryConstraint:
     depth: int | None
 
     def validate(self) -> None:
-        if self.depth is not None and self.depth < 1:
-            raise ValueError("ancestry depth must be omitted or at least one")
+        if self.depth is not None and self.depth < 0:
+            raise ValueError("ancestry depth must be omitted or non-negative")
 
     @property
     def label(self) -> str:
@@ -106,9 +106,11 @@ def describe(depth: int | None) -> dict[str, object]:
     value = normalize_ancestry_depth(depth)
     return {
         "ancestry_depth": value,
-        "ancestry_constraint": "full_ancestry" if value is None else "bounded_ancestry",
+        "ancestry_constraint": ("full_ancestry" if value is None else
+                                "none" if value == 0 else "bounded_ancestry"),
         "ancestry_depth_interpretation": (
             "all ancestral paths" if value is None else
+            "no ancestry restriction" if value == 0 else
             "direct endpoint edges" if value == 1 else
             f"ancestral paths up to length {value}"
         ),
@@ -119,12 +121,7 @@ def main() -> None:
     """Exercise the depth contract without optional solver dependencies."""
     assert describe(None)["ancestry_constraint"] == "full_ancestry"
     assert direct_ancestry_edges([(0, 2)]) == ((0, 2), (2, 0))
-    try:
-        normalize_ancestry_depth(0)
-    except ValueError:
-        pass
-    else:
-        raise AssertionError("depth zero must be rejected")
+    assert normalize_ancestry_depth(0) == 0
     print("ancestry contract smoke passed")
 
 

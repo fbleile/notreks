@@ -72,20 +72,22 @@ def register_flopsearch(registry: SolverRegistry, *, require_notreks: bool = Tru
         raise SolverError("the installed flopsearch package does not expose flop")
 
     def solve_flop(observations, pairs, seed, config, method, *, forbidden_edges=(), search_version=None):
-        if method == "flop":
+        requested_ancestry = config.ancestry_depth
+        ancestry = effective_ancestry_depth(requested_ancestry, observations.shape[1])
+        if method == "flop" or (method == "flop_notreks" and ancestry == 0) or (
+                method == "flop_notreks" and not pairs and ancestry is None):
             # The public wheel exposes vanilla FLOP separately. Do not route it
             # through the NOTREKS extension or silently change the baseline.
             del pairs, seed, forbidden_edges, search_version
             candidate = flopsearch.flop(
                 observations, 2.0, restarts=max(1, config.attempts))
-            return SolverResult("flop", _binary(candidate), {
+            return SolverResult(method, _binary(candidate), {
                 "backend": "flopsearch", "solver": "flop",
                 "attempts_requested": config.attempts,
+                **describe(ancestry),
             })
         if search_version is None:
             search_version = "global_greedy_rust" if method == "flop" else "flop_like"
-        requested_ancestry = config.ancestry_depth
-        ancestry = effective_ancestry_depth(requested_ancestry, observations.shape[1])
         effective_pairs = list(pairs)
         effective_forbidden = tuple(forbidden_edges)
         if method == "flop_notreks" and ancestry == 1:
