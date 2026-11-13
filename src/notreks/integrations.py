@@ -62,20 +62,26 @@ def register_benchpress(registry: SolverRegistry, repository: Path) -> dict[str,
     }
 
 
-def register_flopsearch(registry: SolverRegistry) -> dict[str, Any]:
+def register_flopsearch(registry: SolverRegistry, *, require_notreks: bool = True) -> dict[str, Any]:
     """Register FLOP directly from the independently installable package."""
     try:
         import flopsearch
     except ImportError as error:
         raise SolverError("direct FLOP integration requires the flopsearch package") from error
-    if not callable(getattr(flopsearch, "flop_notreks", None)):
-        raise SolverError(
-            "the installed flopsearch package does not contain the NOTREKS extension "
-            "(flop_notreks); install the source-built NOTREKS backend rather than "
-            "silently substituting vanilla FLOP"
-        )
+    if not callable(getattr(flopsearch, "flop", None)):
+        raise SolverError("the installed flopsearch package does not expose flop")
 
     def solve_flop(observations, pairs, seed, config, method, *, forbidden_edges=(), search_version=None):
+        if method == "flop":
+            # The public wheel exposes vanilla FLOP separately. Do not route it
+            # through the NOTREKS extension or silently change the baseline.
+            del pairs, seed, forbidden_edges, search_version
+            candidate = flopsearch.flop(
+                observations, 2.0, restarts=max(1, config.attempts))
+            return SolverResult("flop", _binary(candidate), {
+                "backend": "flopsearch", "solver": "flop",
+                "attempts_requested": config.attempts,
+            })
         if search_version is None:
             search_version = "global_greedy_rust" if method == "flop" else "flop_like"
         requested_ancestry = config.ancestry_depth
@@ -126,10 +132,20 @@ def register_flopsearch(registry: SolverRegistry) -> dict[str, Any]:
             "bounded_ancestry_violations": len(bounded_violations),
         })
 
-    registry.register("flop_notreks", lambda observations, pairs, seed, config:
-                      solve_flop(observations, pairs, seed, config, "flop_notreks"))
+    has_notreks = callable(getattr(flopsearch, "flop_notreks", None))
     registry.register("flop", lambda observations, pairs, seed, config:
                       solve_flop(observations, pairs, seed, config, "flop"))
+    if not has_notreks and require_notreks:
+        raise SolverError(
+            "the installed flopsearch package does not contain the NOTREKS extension "
+            "(flop_notreks); install the source-built NOTREKS backend rather than "
+            "silently substituting vanilla FLOP"
+        )
+    if not has_notreks:
+        return {"backend": "flopsearch", "version": getattr(flopsearch, "__version__", None),
+                "notreks_extension": False}
+    registry.register("flop_notreks", lambda observations, pairs, seed, config:
+                      solve_flop(observations, pairs, seed, config, "flop_notreks"))
     from .postselection import direct_mask_edges, order_parent_postselection
 
     def edge_mask(observations, pairs, seed, config):
@@ -156,7 +172,10 @@ def register_direct(registry: SolverRegistry, methods: set[str]) -> dict[str, An
             "direct backend does not yet implement: " + ", ".join(sorted(missing)))
     provenance: dict[str, Any] = {"backend": "direct", "methods": sorted(methods)}
     if any(method.startswith("flop") for method in methods):
-        provenance["flopsearch"] = register_flopsearch(registry)
+        needs_notreks = any(method in {"flop_notreks", "flop-nt-edge-mask", "flop-nt-post"}
+                            for method in methods)
+        provenance["flopsearch"] = register_flopsearch(
+            registry, require_notreks=needs_notreks)
     if any(method.startswith("dagma") for method in methods):
         provenance["dagma"] = register_dagma(registry)
     if {"var_sortnregress", "r2_sortnregress"} & methods:
