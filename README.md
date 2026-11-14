@@ -129,6 +129,7 @@ notreks-external-pack /cluster/path/manifest.json data/external/causalman-small
 
 ```bash
 python examples/smoke.py
+python examples/direct_solver_smoke.py
 python -m notreks.dagma_backend
 ```
 
@@ -149,6 +150,15 @@ and one standard deviation across graphs:
 notreks trend-figure aggregate_results.csv figures/chromatic.png \
   --graph graph_id --k target_chromatic_number --y SHD_cpdag \
   --data-label "ER4; n=500"
+```
+
+For a renderer smoke, create a small table with the lifecycle example and
+render it using the same grouped-mean style as a paper analysis:
+
+```bash
+python examples/end_to_end.py /tmp/notreks-example
+notreks figure /tmp/notreks-example/aggregate_results.csv /tmp/notreks-example/figure \
+  --x knowledge_fraction --y SHD_cpdag --group method --data-label auto
 ```
 
 PNG is the default output format. Pass `--format pdf` when a vector PDF is
