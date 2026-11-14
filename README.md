@@ -75,6 +75,13 @@ Before a long run, check the environment explicitly:
 notreks-preflight --methods flop_notreks dagma_notreks
 ```
 
+From a configured LRZ checkout, submit the tiny cluster smoke without
+reconstructing the path exports manually:
+
+```bash
+scripts/submit_lrz_smoke.sh
+```
+
 Before publication, use `docs/release_checklist.md` as the acceptance gate.
 
 For new studies, copy `examples/custom_protocol.json` and follow

@@ -82,6 +82,10 @@ sbatch --parsable --chdir="$PROJECT_DIR" \
   cluster/lrz_jobfarm_smoke.sh
 ```
 
+After the environment has been created, the same submission can be made from
+the checkout root with `scripts/submit_lrz_smoke.sh`. It validates the local
+paths first and uses the repository's documented 17-core `cm4_tiny` request.
+
 The wrapper expands `examples/smoke_protocol.json` into a fresh plan inside
 `cluster/slurm_logs/`; the command file therefore exercises the same plan-based
 execution path as production rather than passing a protocol where a plan is
