@@ -7,7 +7,9 @@
 #SBATCH --partition=cm4_tiny
 #SBATCH --qos=cm4_tiny
 #SBATCH --nodes=1
-#SBATCH --ntasks=4
+# cm4_tiny enforces a minimum CPU allocation; JobFarm may use only the four
+# command lines below, while the remaining workers stay idle.
+#SBATCH --ntasks=18
 #SBATCH --cpus-per-task=1
 #SBATCH --time=00:15:00
 #SBATCH --export=ALL
