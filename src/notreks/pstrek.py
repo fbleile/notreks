@@ -2,7 +2,7 @@
 
 The kernel is deliberately independent of an optimizer.  A solver supplies a
 weight matrix ``W`` and receives the penalty value and its gradient.  For an
-unordered pair set ``I`` we use the normalized matrix form used by the legacy
+unordered pair set ``I`` we use the normalized matrix form used by the
 implementation,
 
     R_I(W) = 1/2 * (2/(d-1)) * sum(M * (F.T @ F)),
@@ -85,7 +85,7 @@ def value_and_grad(
 
     ``function='inv'`` is the form used alongside DAGMA's inverse resolvent;
     ``exp``, ``log``, and ``binom`` retain the reference kernel choices for
-    isolated numerical checks and later optimizer integration.
+    isolated numerical checks and optimizer integration.
     """
     W = np.asarray(W, dtype=float)
     if W.ndim != 2 or W.shape[0] != W.shape[1]:

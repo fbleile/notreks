@@ -63,5 +63,5 @@ If an approved prepared cache already exists on a cluster, package a canonical
 manifest-backed cache with `notreks-external-pack`. The command copies only the
 files named by the manifest, rewrites their paths relative to the destination,
 preserves provenance, and validates the resulting bundle. The checked-in
-legacy-style caches above are retained verbatim because they are the exact
-artifacts used by the historical benchmark protocol.
+prepared caches above are retained verbatim because they are the exact
+artifacts used by the benchmark protocol.

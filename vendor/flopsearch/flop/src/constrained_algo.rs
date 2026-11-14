@@ -353,7 +353,7 @@ fn run_trek_dominance(
     static_config.search_version = NoTreksVersion::TrekDominance;
     static_config.forbidden_edges = forbidden;
     // The static dominance mask is the constraint in this method.  Passing I
-    // through the legacy signature constraint would impose a second,
+    // through the original signature constraint would impose a second,
     // different parent rule and can eliminate valid dominance arrows.
     let mut result = run_notreks_constrained(data, &[], static_config)?;
     result.diagnostics.number_of_supplied_constraints = pairs.len();
@@ -709,7 +709,7 @@ pub fn run_global_greedy_binary_penalty(
 }
 
 /// Optimize a graph for one fixed order using the same edge-toggle greedy
-/// inner loop as the Benchpress global-greedy comparator.  The caller owns the
+/// inner loop as the global-greedy comparator.  The caller owns the
 /// FLOP-style order/reinsertion loop; this function only performs the
 /// order-respecting, hard-NOTREKS-feasible inner optimization.
 fn global_greedy_inner_state(
