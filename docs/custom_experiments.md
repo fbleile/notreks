@@ -28,13 +28,13 @@ Inspect a plan before running it:
 
 ```bash
 notreks-inspect plans/my_experiment.json --json
-notreks-preflight --backend direct --methods flop_notreks
+notreks-preflight --methods flop_notreks
 ```
 
 Run locally for a small slice:
 
 ```bash
-notreks run plans/my_experiment.json --backend direct --output-root results/my_experiment
+notreks run plans/my_experiment.json results/my_experiment
 notreks-aggregate results/my_experiment
 ```
 

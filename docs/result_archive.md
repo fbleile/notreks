@@ -25,7 +25,7 @@ is empty. Every analysis output must retain the input table, the command or
 script version, and the repository commit recorded in provenance. Every figure
 must be generated from an aggregate table, not directly from ad hoc raw rows.
 
-For legacy Benchpress reproduction, retain the Benchpress checkout path and
-the solver audit JSON alongside the archive. This is necessary because the
-production DAGMA continuation remains the parity reference until the direct
-continuation has passed the documented comparison checks.
+Record the repository commit, environment manifest, command or script used for
+each analysis, and the solver diagnostics needed to interpret the run. The
+archive must remain usable from the standalone repository and must not depend
+on an untracked development checkout.

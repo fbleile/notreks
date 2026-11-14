@@ -2,8 +2,8 @@
 
 ## First login and setup
 
-The repository contains the small site-specific setup layer that the old
-Benchpress checkout used to provide. It loads LRZ's Slurm and JobFarm modules,
+The repository contains the small site-specific setup layer for LRZ. It loads
+LRZ's Slurm and JobFarm modules,
 activates the configured micromamba environment when available, sets the
 thread limits, and exports the repository's `src/` directory. It does not submit
 jobs and contains no experiment logic.
@@ -16,15 +16,15 @@ source cluster/lrz_session_setup.sh
 python -m pip install -e ".[analysis,solvers]"
 python -m pip install maturin
 scripts/install_flopsearch.sh
-notreks-preflight --backend direct --methods flop flop_notreks
+notreks-preflight --methods flop flop_notreks
 ```
 
 If the cluster environment is created at a different path, set
 `NOTREKS_ENVIRONMENT=/absolute/path/to/environment` before sourcing the setup
-file. The setup is intentionally generic: no user name, email address, or
-Benchpress path is embedded in it.
+file. The setup is intentionally generic: no user name or email address is
+embedded in it.
 
-The cluster uses the same plan and CLI as local runs. Generate a plan once, inspect it, then let JobFarm execute disjoint index ranges. `PROJECT_DIR`, `PLAN`, and `OUTPUT_ROOT` must be absolute paths. Use `--backend direct` for the standalone FLOP/DAGMA backends; the optional Benchpress backend is retained only for historical parity. Solver budgets are written into every generated command, so smoke jobs cannot silently inherit production iteration counts.
+The cluster uses the same plan and CLI as local runs. Generate a plan once, inspect it, then let JobFarm execute disjoint index ranges. `PROJECT_DIR`, `PLAN`, and `OUTPUT_ROOT` must be absolute paths. Solver budgets are written into every generated command, so smoke jobs cannot silently inherit production iteration counts.
 
 The final JobFarm command file is generated from the registered protocol rather than maintained as a second hand-written experiment definition.
 
@@ -32,16 +32,12 @@ For the production CoolMUC-4 allocation, use the repository wrapper
 `cluster/lrz_jobfarm.sh`. It requests four `cm4_std` nodes, 448 one-core
 tasks, and 24 hours, and records the command-file checksum, repository commit,
 environment, and per-task success markers. It deliberately preflights
-`python -m notreks --help`; it does not call the old Benchpress protocol
-scripts. The wrapper accepts `PROJECT_DIR`, `CMD_FILE`, and optionally
+`python -m notreks --help`. The wrapper accepts `PROJECT_DIR`, `CMD_FILE`, and optionally
 `NOTREKS_ENVIRONMENT`.
 
 The wrapper is a submission template, not a replacement for the site's current
 queue policy. If the queue limits change, update the SBATCH directives and the
 documented allocation together, then rerun the smoke job before production.
-
-For a legacy Benchpress backend, add `--benchpress-root /absolute/path/to/benchpress`
-to the command-generator invocation. Direct mode does not require that checkout.
 
 ## Constructing a new experiment
 
@@ -64,7 +60,7 @@ The standard workflow is:
 notreks plan custom_protocol.json plans/custom.json
 python -m json.tool plans/custom.json | head -40
 notreks jobfarm plans/custom.json cluster/custom.cmd results/custom \
-  "$NOTREKS_ENVIRONMENT/bin/python" "$PROJECT_DIR" --backend direct
+  "$NOTREKS_ENVIRONMENT/bin/python" "$PROJECT_DIR"
 ```
 
 The absolute-pair-count and target-K choices are stored in every run manifest,

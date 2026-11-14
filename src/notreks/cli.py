@@ -10,14 +10,13 @@ from .aggregate import collect, write_tables
 from .catalog import CATALOG
 from .catalog_planning import (CatalogSelection, expand_all_catalog, expand_catalog,
                                write_catalog_plan, write_combined_catalog_plan)
-from .integrations import register_benchpress, register_direct
+from .integrations import register_direct
 from .inspect import inspect_output
 from .figures import (load_rows, plot_graph_clustered_trend, plot_mean_sd,
                       canonical_data_label)
 from .jobfarm import write_commands
 from .manifest import write_manifest
 from .provenance import write as write_provenance
-from .solver_audit import write as write_solver_audit
 from .planning import PlanSelection, expand_protocol, external_plan, write_plan
 from .preflight import check as preflight_check
 from .protocol import ProtocolSpec, RunSpec
@@ -41,16 +40,12 @@ def main(argv: list[str] | None = None) -> int:
     solve_parser = commands.add_parser("solve", help="run registered solvers for planned runs")
     solve_parser.add_argument("plan", type=Path)
     solve_parser.add_argument("output_root", type=Path)
-    solve_parser.add_argument("--benchpress-root", type=Path)
-    solve_parser.add_argument("--backend", choices=("benchpress", "direct"), default="benchpress")
     solve_parser.add_argument("--attempts", type=int)
     _solver_arguments(solve_parser)
     _slice_arguments(solve_parser)
     run_parser = commands.add_parser("run", help="prepare and solve planned runs")
     run_parser.add_argument("plan", type=Path)
     run_parser.add_argument("output_root", type=Path)
-    run_parser.add_argument("--benchpress-root", type=Path)
-    run_parser.add_argument("--backend", choices=("benchpress", "direct"), default="benchpress")
     run_parser.add_argument("--attempts", type=int)
     _solver_arguments(run_parser)
     _slice_arguments(run_parser)
@@ -64,11 +59,9 @@ def main(argv: list[str] | None = None) -> int:
     jobfarm_parser.add_argument("output_root", type=Path)
     jobfarm_parser.add_argument("python", type=Path)
     jobfarm_parser.add_argument("project_root", type=Path)
-    jobfarm_parser.add_argument("--benchpress-root", type=Path)
     jobfarm_parser.add_argument("--attempts", type=int, default=1)
     jobfarm_parser.add_argument("--start", type=int, default=0)
     jobfarm_parser.add_argument("--limit", type=int)
-    jobfarm_parser.add_argument("--backend", choices=("benchpress", "direct"), default="benchpress")
     jobfarm_parser.add_argument("--flop-sweeps", type=int, default=16)
     jobfarm_parser.add_argument("--dagma-stages", type=int, default=5)
     jobfarm_parser.add_argument("--dagma-warm-iter", type=int, default=30_000)
@@ -104,9 +97,6 @@ def main(argv: list[str] | None = None) -> int:
     catalog_parser.add_argument("--master-seed", type=int, default=20260917)
     catalog_parser.add_argument("--graph-start", type=int, default=0)
     catalog_parser.add_argument("--graph-limit", type=int)
-    audit_parser = commands.add_parser("solver-audit", help="hash the external solver closure")
-    audit_parser.add_argument("repository", type=Path)
-    audit_parser.add_argument("output", type=Path)
     external_plan_parser = commands.add_parser("external-plan", help="plan runs for a manifest-backed dataset")
     external_plan_parser.add_argument("manifest", type=Path)
     external_plan_parser.add_argument("output", type=Path)
@@ -123,9 +113,7 @@ def main(argv: list[str] | None = None) -> int:
     catalog_list_parser = commands.add_parser("catalog", help="list registered experiment arms")
     catalog_list_parser.add_argument("--json", action="store_true", dest="as_json")
     preflight_parser = commands.add_parser("preflight", help="check an execution environment")
-    preflight_parser.add_argument("--backend", choices=("direct", "benchpress"), default="direct")
     preflight_parser.add_argument("--methods", nargs="+", default=["flop_notreks"])
-    preflight_parser.add_argument("--benchpress-root", type=Path)
     commands.add_parser("smoke", help="run the dependency-light local smoke")
     args = parser.parse_args(argv)
     if args.command == "plan":
@@ -145,10 +133,10 @@ def main(argv: list[str] | None = None) -> int:
         return 0
     if args.command == "jobfarm":
         count = write_commands(args.plan, args.output, args.output_root,
-                               args.benchpress_root, args.python,
+                               args.python,
                                args.project_root,
                                attempts=args.attempts, start=args.start,
-                               limit=args.limit, backend=args.backend,
+                               limit=args.limit,
                                flop_sweeps=args.flop_sweeps,
                                dagma_stages=args.dagma_stages,
                                dagma_warm_iter=args.dagma_warm_iter,
@@ -193,10 +181,6 @@ def main(argv: list[str] | None = None) -> int:
             write_catalog_plan(args.output, definition, runs, master_seed=args.master_seed)
             print(f"planned {len(runs)} runs -> {args.output}")
         return 0
-    if args.command == "solver-audit":
-        write_solver_audit(args.output, args.repository)
-        print(f"wrote {args.output}")
-        return 0
     if args.command == "external-plan":
         attempts = {}
         for specification in args.attempts:
@@ -237,8 +221,7 @@ def main(argv: list[str] | None = None) -> int:
                 print(f"{name}: arm={definition['arm']} cells={cells} methods={','.join(definition['methods'])}")
         return 0
     if args.command == "preflight":
-        report = preflight_check(backend=args.backend, methods=tuple(args.methods),
-                                 benchpress_root=args.benchpress_root)
+        report = preflight_check(methods=tuple(args.methods))
         print(json.dumps(report, indent=2, sort_keys=True))
         return 0 if report["ok"] else 2
     _smoke()
@@ -261,12 +244,7 @@ def _execute(args: argparse.Namespace, *, solve: bool) -> int:
     selected = runs[args.start: args.start + args.limit if args.limit is not None else None]
     registry = SolverRegistry()
     if solve:
-        if args.backend == "benchpress":
-            if args.benchpress_root is None:
-                raise SystemExit("--benchpress-root is required with --backend benchpress")
-            register_benchpress(registry, args.benchpress_root)
-        else:
-            register_direct(registry, {run.method for run in selected})
+        register_direct(registry, {run.method for run in selected})
     plan_attempts = payload.get("attempts_by_method", {})
     for run in selected:
         artifacts = prepare_run(run, args.output_root)

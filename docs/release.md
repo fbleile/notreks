@@ -52,17 +52,15 @@ the resulting plans are inspected and then passed to the local or JobFarm
 runner. The expected output layout is specified in `docs/result_archive.md`.
 
 The publication gate is documented in `docs/release_checklist.md`. A passing
-release check validates the standalone source and bundled inputs. It does not
-promise pixel-identical figures or historical optimizer traces; those are
-separate parity-audit questions.
+release check validates the source, bundled inputs, and standalone solver
+paths. It does not promise pixel-identical figures or optimizer traces.
 
-Run a selected local slice with the direct backend or submit the generated
+Run a selected local slice with the installed backend or submit the generated
 plan through `cluster/lrz_jobfarm.sh`. Full production execution is expected
 to run on LRZ and is not part of the fast CI job.
 
 ## Release claims
 
-The direct FLOP adapter and standalone DAGMA path are included. The legacy
-Benchpress continuation remains an optional reference for production parity in
-the parts documented in `docs/solver_porting.md`; do not claim historical
-byte-level parity unless the corresponding audit has been run.
+The direct FLOP, FLOP+NOTREKS, DAGMA, and auxiliary solver paths used by the
+protocol are included. Do not claim results for methods or settings that are
+not represented by a checked-in protocol and run artifact.

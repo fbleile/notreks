@@ -53,7 +53,7 @@ def test_pstrek_rejects_duplicate_unordered_pairs():
         raise AssertionError("duplicate pairs must be rejected")
 
 
-def test_resolvent_adjoint_matches_legacy_kernel():
+def test_resolvent_adjoint_matches_reference_kernel():
     rng = np.random.default_rng(13)
     adjacency = rng.normal(scale=0.02, size=(4, 4))
     resolvent = np.linalg.inv(np.eye(4) - adjacency)

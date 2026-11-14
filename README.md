@@ -20,10 +20,9 @@ The checked-in reference versions are in `requirements/lock.txt`; production
 outputs should additionally include `notreks provenance`.
 
 The protocol, artifact lifecycle, evaluation, figure, cluster, FLOP, and
-vanilla DAGMA layers are available without a Benchpress checkout. The direct
-DAGMA+PSTrek path is available as a standalone backend. The legacy continuation
-is retained only as an optional reference for numerical parity checks; it is
-not required for the documented standalone workflows.
+vanilla DAGMA layers are all implemented in this repository. The DAGMA+PSTrek
+path and the FLOP+NOTREKS backend are standalone and use the active Python
+environment.
 
 For FLOP+NOTREKS, omitting ``--ancestry-depth`` selects the paper's full
 ancestry constraint. ``--ancestry-depth 1`` selects the genuine in-search
@@ -73,25 +72,10 @@ The report counts run and stage states and lists every preserved traceback.
 Before a long run, check the environment explicitly:
 
 ```bash
-notreks-preflight --backend direct --methods flop_notreks dagma_notreks
+notreks-preflight --methods flop_notreks dagma_notreks
 ```
 
-When the legacy Benchpress checkout is available, run the fixed-input parity
-comparison before treating the direct backend as a replacement:
-
-```bash
-notreks-parity --benchpress-root /path/to/benchpress \
-  --method flop_notreks --output parity/flop_notreks.json
-```
-
-The current Benchpress repository can still be used as a reference archive for
-parity checks. See `docs/solver_porting.md` for the exact boundary; parity is
-an audit of historical numerical behavior, not a runtime dependency of this
-repository.
-
-Before publication, use `docs/release_checklist.md` as the acceptance gate. It
-distinguishes a reproducible protocol and data release from exact historical
-solver parity, which still requires the archived Benchpress closure.
+Before publication, use `docs/release_checklist.md` as the acceptance gate.
 
 For new studies, copy `examples/custom_protocol.json` and follow
 `docs/custom_experiments.md`. Plans are the hand-off between local runs and
@@ -137,22 +121,18 @@ notreks-external-pack /cluster/path/manifest.json data/external/causalman-small
 ## Direct solver smoke tests
 
 ```bash
-python examples/benchpress_adapter_smoke.py /path/to/benchpress --method flop
+python examples/smoke.py
 python -m notreks.dagma_backend
 ```
 
-Planned runs can use the direct backends without a Benchpress checkout:
+Planned runs use the installed direct backends:
 
 ```bash
-notreks run plan.json results --backend direct --start 0 --limit 1
+notreks run plan.json results --start 0 --limit 1
 ```
 
-JobFarm command generation accepts the same `--backend direct` choice.
-
 The second command exercises the standalone profile-Gaussian DAGMA+PSTrek
-path on a small generated data set. It is a smoke test, not a claim of parity;
-the parity boundary and remaining work are recorded in
-`docs/solver_porting.md`.
+path on a small generated data set.
 
 For chromatic summaries, use `notreks trend-figure` rather than plotting raw
 rows directly. It first averages within graph and K, then displays the mean

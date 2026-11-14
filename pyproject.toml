@@ -28,11 +28,9 @@ notreks-jobfarm = "notreks.jobfarm:main"
 notreks-jobfarm-retry = "notreks.jobfarm:retry_main"
 notreks-figure = "notreks.figures:main"
 notreks-manifest = "notreks.manifest:main"
-notreks-solver-audit = "notreks.solver_audit:main"
 notreks-release-audit = "notreks.release:main"
 notreks-constraint-check = "notreks.constraint_diagnostics:main"
 notreks-paper-outputs = "notreks.paper_outputs:main"
-notreks-parity = "notreks.parity:main"
 
 [project.optional-dependencies]
 test = ["pytest>=8"]

@@ -1,8 +1,6 @@
 # Publication release checklist
 
-This checklist verifies the standalone repository from a clean checkout. The
-archived Benchpress solver closure is optional and is used only for historical
-parity audits.
+This checklist verifies the repository from a clean checkout.
 
 ## Clean local checkout
 
@@ -17,10 +15,10 @@ The release audit must report no missing files, no invalid external manifests, n
 
 ## Solver boundary
 
-The standalone package may be described as reproducing the protocol, analyses,
-and validated solver workflows. Pixel-identical figures and byte-identical
-optimizer traces are not release requirements. If historical numerical parity
-is claimed, retain the solver audit and archived Benchpress revision.
+The package reproduces the protocol, analyses, and solver workflows defined in
+this repository. Pixel-identical figures and byte-identical optimizer traces
+are not release requirements; the recorded protocol and run artifacts are the
+reproducibility contract.
 
 The default FLOP+NOTREKS mode is full ancestry. Direct-edge mode is available as `--ancestry-depth 1`. Larger bounded ancestry depths require a backend that implements the proposal-level contract in `docs/bounded_ancestry_backend.md`; the adapter must fail explicitly otherwise.
 
@@ -37,7 +35,7 @@ source cluster/lrz_session_setup.sh
 python -m pip install --no-deps -e .
 python -m pip install maturin
 scripts/install_flopsearch.sh
-notreks-preflight --backend direct --methods flop flop_notreks
+notreks-preflight --methods flop flop_notreks
 export PROJECT_DIR=$PWD
 export CMD_FILE=$PROJECT_DIR/cluster/notreks_cluster_smoke.cmd
 sbatch --parsable --chdir="$PROJECT_DIR" \
@@ -49,4 +47,7 @@ Record the Slurm job ID, commit, environment manifest, task markers, and the res
 
 ## Paper archive
 
-The separate result archive must contain the final plans, aggregate tables, analysis scripts or commands, figures, tables, environment provenance, solver audit, release audit, and the exact repository commit. The source repository does not silently claim that an absent result archive has been regenerated.
+The separate result archive must contain the final plans, aggregate tables,
+analysis scripts or commands, figures, tables, environment provenance, release
+audit, and the exact repository commit. The source repository does not silently
+claim that an absent result archive has been regenerated.

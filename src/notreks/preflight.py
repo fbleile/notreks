@@ -5,29 +5,27 @@ from __future__ import annotations
 import argparse
 import importlib.metadata
 import json
-from pathlib import Path
 import platform
 import shutil
 import sys
 from typing import Any
 
-from .integrations import BENCHPRESS_METHODS, DIRECT_METHODS
+from .integrations import DIRECT_METHODS
 
 
-def check(*, backend: str, methods: tuple[str, ...], benchpress_root: Path | None = None) -> dict[str, Any]:
+def check(*, methods: tuple[str, ...]) -> dict[str, Any]:
     """Return explicit checks without importing or running a solver."""
     checks: dict[str, Any] = {
         "python": sys.executable,
         "python_version": platform.python_version(),
         "platform": platform.platform(),
-        "backend": backend,
+        "backend": "direct",
         "methods": list(methods),
         "packages": {},
         "executables": {},
         "errors": [],
     }
-    supported = DIRECT_METHODS if backend == "direct" else BENCHPRESS_METHODS
-    missing_methods = set(methods) - supported
+    missing_methods = set(methods) - DIRECT_METHODS
     if missing_methods:
         checks["errors"].append(
             "backend adapters not implemented for: " + ", ".join(sorted(missing_methods)))
@@ -43,7 +41,7 @@ def check(*, backend: str, methods: tuple[str, ...], benchpress_root: Path | Non
         except importlib.metadata.PackageNotFoundError:
             checks["packages"][label] = None
             checks["errors"].append(f"missing package: {package}")
-    if backend == "direct" and any(method.startswith("flop") for method in methods):
+    if any(method.startswith("flop") for method in methods):
         try:
             import flopsearch
         except ImportError:
@@ -58,11 +56,6 @@ def check(*, backend: str, methods: tuple[str, ...], benchpress_root: Path | Non
                     "installed flopsearch lacks flop_notreks; install the source-built "
                     "NOTREKS backend (vanilla FLOP is not a substitute)"
                 )
-    if backend == "benchpress":
-        if benchpress_root is None or not (benchpress_root / "workflow").is_dir():
-            checks["errors"].append("Benchpress backend requires a checkout containing workflow/")
-        else:
-            checks["benchpress_root"] = str(benchpress_root.resolve())
     checks["executables"]["python"] = shutil.which("python") or sys.executable
     checks["executables"]["Rscript"] = shutil.which("Rscript")
     checks["ok"] = not checks["errors"]
@@ -71,13 +64,10 @@ def check(*, backend: str, methods: tuple[str, ...], benchpress_root: Path | Non
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="notreks-preflight")
-    parser.add_argument("--backend", choices=("direct", "benchpress"), default="direct")
     parser.add_argument("--methods", nargs="+", default=["flop_notreks"])
-    parser.add_argument("--benchpress-root", type=Path)
     parser.add_argument("--output", type=Path)
     args = parser.parse_args(argv)
-    report = check(backend=args.backend, methods=tuple(args.methods),
-                   benchpress_root=args.benchpress_root)
+    report = check(methods=tuple(args.methods))
     rendered = json.dumps(report, indent=2, sort_keys=True) + "\n"
     if args.output:
         args.output.parent.mkdir(parents=True, exist_ok=True)

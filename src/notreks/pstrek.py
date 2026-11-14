@@ -84,7 +84,7 @@ def value_and_grad(
     """Return the normalized PSTrek penalty and gradient with respect to ``W``.
 
     ``function='inv'`` is the form used alongside DAGMA's inverse resolvent;
-    ``exp``, ``log``, and ``binom`` retain the legacy kernel choices for
+    ``exp``, ``log``, and ``binom`` retain the reference kernel choices for
     isolated numerical checks and later optimizer integration.
     """
     W = np.asarray(W, dtype=float)

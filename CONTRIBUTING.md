@@ -36,7 +36,7 @@ Use a disposable output directory and a small plan:
 
 ```bash
 notreks catalog-plan prior-structure-chrom /tmp/chrom-plan.json --graph-limit 1
-notreks run /tmp/chrom-plan.json /tmp/chrom-results --backend direct --limit 1
+notreks run /tmp/chrom-plan.json /tmp/chrom-results --limit 1
 notreks aggregate /tmp/chrom-results
 ```
 
@@ -46,9 +46,8 @@ stage status files, and `error.txt` are the first debugging objects to inspect.
 ## Reviewer reproduction
 
 Use a tagged commit, `scripts/reproduce_paper.sh`, the release checklist, and
-the separately archived production results. Do not require a reviewer to find
-an old Benchpress checkout unless the release documentation explicitly marks a
-solver parity boundary.
+the separately archived production results. A reviewer should need only this
+repository, its declared environment, and the documented external data.
 
 ## Adding a figure
 

@@ -11,7 +11,7 @@ def test_jobfarm_commands_are_one_per_run(tmp_path: Path):
                                           {"run_key": "c", "method": "flop"}],
                               "attempts_by_method": {"flop": 20, "dagma": 2}}))
     commands = tmp_path / "commands.cmd"
-    count = write_commands(plan, commands, tmp_path / "results", tmp_path / "benchpress",
+    count = write_commands(plan, commands, tmp_path / "results",
                            tmp_path / "python", tmp_path / "project", start=1, limit=2)
     assert count == 2
     lines = commands.read_text().splitlines()
@@ -22,16 +22,15 @@ def test_jobfarm_commands_are_one_per_run(tmp_path: Path):
     assert "--dagma-max-iter 60000" in lines[0]
 
 
-def test_jobfarm_direct_commands_do_not_require_benchpress(tmp_path: Path):
+def test_jobfarm_commands_use_the_direct_backend(tmp_path: Path):
     plan = tmp_path / "plan.json"
     plan.write_text(json.dumps({"runs": [{"run_key": "a", "method": "dagma"}],
                                 "attempts_by_method": {"dagma": 2}}))
     commands = tmp_path / "direct.cmd"
-    write_commands(plan, commands, tmp_path / "results", tmp_path / "unused",
-                   tmp_path / "python", tmp_path / "project", backend="direct")
+    write_commands(plan, commands, tmp_path / "results",
+                   tmp_path / "python", tmp_path / "project")
     line = commands.read_text()
-    assert "--backend direct" in line
-    assert "--benchpress-root" not in line
+    assert "--backend" not in line
     assert "--dagma-warm-iter 30000" in line
 
 
@@ -43,8 +42,8 @@ def test_jobfarm_inherits_protocol_ancestry_depth(tmp_path: Path):
         "attempts_by_method": {"flop_notreks": 1},
     }))
     commands = tmp_path / "depth.cmd"
-    write_commands(plan, commands, tmp_path / "results", tmp_path / "unused",
-                   tmp_path / "python", tmp_path / "project", backend="direct")
+    write_commands(plan, commands, tmp_path / "results",
+                   tmp_path / "python", tmp_path / "project")
     assert "--ancestry-depth 2" in commands.read_text()
 
 

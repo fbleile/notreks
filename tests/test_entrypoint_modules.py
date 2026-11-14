@@ -3,7 +3,6 @@ def test_focused_entrypoint_modules_expose_main():
     from notreks.figures import main as figure
     from notreks.jobfarm import main as jobfarm
     from notreks.manifest import main as manifest
-    from notreks.solver_audit import main as solver_audit
 
     assert all(callable(function) for function in
-               (catalog_plan, figure, jobfarm, manifest, solver_audit))
+               (catalog_plan, figure, jobfarm, manifest))

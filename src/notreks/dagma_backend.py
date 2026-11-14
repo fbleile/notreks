@@ -16,7 +16,7 @@ from .scores import is_dag
 
 
 def deterministic_initial_weights(dimension: int, seed: int, scale: float = 0.05, s0: float = 1.0) -> np.ndarray:
-    """Create the legacy-compatible conservative restart initialization."""
+    """Create the reference-compatible conservative restart initialization."""
     rng = np.random.default_rng(int(seed))
     weights = rng.normal(scale=scale, size=(dimension, dimension))
     np.fill_diagonal(weights, 0.0)

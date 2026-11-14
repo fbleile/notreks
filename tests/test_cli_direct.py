@@ -14,7 +14,7 @@ def test_direct_cli_run_and_aggregate(tmp_path: Path):
     )
     write_plan(plan, spec, expand_protocol(spec), master_seed=8)
     assert main([
-        "run", str(plan), str(output), "--backend", "direct",
+        "run", str(plan), str(output),
         "--dagma-stages", "1", "--dagma-warm-iter", "1", "--dagma-max-iter", "1",
     ]) == 0
     assert main(["aggregate", str(output)]) == 0
