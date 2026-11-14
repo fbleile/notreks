@@ -12,7 +12,11 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
+      - uses: dtolnay/rust-toolchain@stable
       - run: python -m pip install --upgrade pip
       - run: python -m pip install -e ".[test,analysis,solvers]"
+      - run: python -m pip install maturin
+      - run: scripts/install_flopsearch.sh
+      - run: notreks-preflight --methods flop flop_notreks dagma dagma_notreks
       - run: make release-check
       - run: make package-check
