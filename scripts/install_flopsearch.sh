@@ -37,7 +37,9 @@ trap 'rm -rf "$wheel_dir"' EXIT
 
 "$MATURIN_BIN" build --manifest-path "$SOURCE_DIR/Cargo.toml" \
   --interpreter "$PYTHON_BIN" --release --out "$wheel_dir"
-"$PYTHON_BIN" -m pip install --no-deps "$wheel_dir"/*.whl
+# The public wheel has the same distribution version. Force replacement so a
+# previously installed vanilla wheel cannot shadow the checked-in extension.
+"$PYTHON_BIN" -m pip install --force-reinstall --no-deps "$wheel_dir"/*.whl
 
 "$PYTHON_BIN" - <<'PY'
 import flopsearch
