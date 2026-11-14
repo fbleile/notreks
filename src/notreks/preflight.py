@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import importlib.metadata
 import json
+from pathlib import Path
 import platform
 import shutil
 import sys
