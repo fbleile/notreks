@@ -23,8 +23,12 @@ else
     r-base rust
 fi
 
-mkdir -p "$ENV_DIR/lib/R/library"
-R_LIBS_USER="$ENV_DIR/lib/R/library" "$ENV_DIR/bin/Rscript" -e \
+R_TMPDIR="${NOTREKS_R_TMPDIR:-/tmp/notreks-r-${USER:-user}}"
+mkdir -p "$R_TMPDIR" "$ENV_DIR/lib/R/library"
+chmod 700 "$R_TMPDIR"
+TMPDIR="$R_TMPDIR" TMP="$R_TMPDIR" TEMP="$R_TMPDIR" \
+  LC_ALL=C LANG=C R_LIBS_USER="$ENV_DIR/lib/R/library" \
+  "$ENV_DIR/bin/Rscript" -e \
   'if (!requireNamespace("pcalg", quietly = TRUE)) install.packages("pcalg", lib=.libPaths()[1], repos="https://cloud.r-project.org")'
 "$ENV_DIR/bin/python" -m pip install -e "$ROOT_DIR[analysis,solvers]" maturin
 PYTHON_BIN="$ENV_DIR/bin/python" "$ROOT_DIR/scripts/install_flopsearch.sh"
@@ -32,6 +36,7 @@ PYTHON_BIN="$ENV_DIR/bin/python" "$ROOT_DIR/scripts/install_flopsearch.sh"
 "$ENV_DIR/bin/python" -m notreks.preflight \
   --methods flop flop_notreks dagma dagma_notreks \
   --require-ancestor-aid
-"$ENV_DIR/bin/Rscript" -e 'library(pcalg); cat("pcalg available\n")'
+TMPDIR="$R_TMPDIR" TMP="$R_TMPDIR" TEMP="$R_TMPDIR" LC_ALL=C LANG=C \
+  "$ENV_DIR/bin/Rscript" -e 'library(pcalg); cat("pcalg available\n")'
 
 echo "NOTREKS LRZ environment ready: $ENV_DIR"
