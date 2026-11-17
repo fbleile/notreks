@@ -36,6 +36,8 @@ def build_manifest() -> dict[str, Any]:
             "shared_data": "shared/<data_id>/data.npy",
             "knowledge": "shared/<data_id>/knowledge/*.json",
             "solver_output": "runs/<run_key>/solve/adjacency.npy",
+            "returned_dag": "runs/<run_key>/solve/adjacency.npy (one final DAG per method/run)",
+            "restart_details": "runs/<run_key>/solve/result.json (diagnostics; intermediate DAGs are not retained)",
             "aggregate_results": "aggregate_results.csv",
             "aggregate_issues": "aggregate_issues.csv",
         },

@@ -1,13 +1,14 @@
 #!/usr/bin/env bash
 # A deliberately small node-level LRZ check before submitting a production farm.
-# It exercises the checkout, environment, JobFarm, one worker, and one solver.
+# It exercises the checkout, environment, JobFarm, concurrent workers, both
+# solver families, and the persisted aggregation path.
 #SBATCH --job-name=notreks-smoke
 #SBATCH --get-user-env
 #SBATCH --clusters=cm4
 #SBATCH --partition=cm4_tiny
 #SBATCH --qos=cm4_tiny
 #SBATCH --nodes=1
-# cm4_tiny enforces a minimum CPU allocation; JobFarm may use only the four
+# cm4_tiny enforces a minimum CPU allocation; JobFarm may use only the eight
 # command lines below, while the remaining workers stay idle.
 #SBATCH --ntasks=17
 #SBATCH --cpus-per-task=1
@@ -52,7 +53,7 @@ test -r "$CMD_FILE"
 command -v jobfarm >/dev/null 2>&1
 python -m notreks --help > "$manifest.notreks_help" 2>&1
 if ! "$NOTREKS_ENVIRONMENT/bin/python" -m notreks.preflight \
-    --methods flop flop_notreks > "$manifest.preflight" 2>&1; then
+    --methods flop flop_notreks dagma dagma_notreks > "$manifest.preflight" 2>&1; then
   echo "NOTREKS solver preflight failed; inspect $manifest.preflight" >&2
   cat "$manifest.preflight" >&2
   exit 1
@@ -65,8 +66,32 @@ jobfarm_rc=${PIPESTATUS[0]}
 set -e
 
 result_dir="${CMD_FILE}_res"
-if ! for task in 1 2 3 4; do grep -q 'STOP SUCCESS' "$result_dir/$task" || exit 1; done; then
-  echo "Smoke tasks failed; inspect $result_dir/1 through $result_dir/4 and $log" >&2
+if ! for task in $(seq 1 8); do grep -q 'STOP SUCCESS' "$result_dir/$task" || exit 1; done; then
+  echo "Smoke tasks failed; inspect $result_dir/1 through $result_dir/8 and $log" >&2
+  exit 1
+fi
+
+if ! "$NOTREKS_ENVIRONMENT/bin/python" -m notreks.cli aggregate \
+    "$PROJECT_DIR/results/cluster_smoke" > "$manifest.aggregate" 2>&1; then
+  echo "Smoke aggregation failed; inspect $manifest.aggregate" >&2
+  cat "$manifest.aggregate" >&2
+  exit 1
+fi
+if ! "$NOTREKS_ENVIRONMENT/bin/python" -c '
+import csv
+from pathlib import Path
+root = Path("results/cluster_smoke")
+with (root / "aggregate_results.csv").open(newline="") as handle:
+    rows = list(csv.DictReader(handle))
+methods = {row.get("method") for row in rows}
+expected = {"flop", "flop_notreks", "dagma", "dagma_notreks"}
+if len(rows) != 8 or methods != expected:
+    raise SystemExit(f"unexpected smoke aggregate: rows={len(rows)} methods={sorted(methods)}")
+adjacencies = list(root.glob("runs/*/solve/adjacency.npy"))
+if len(adjacencies) != 8:
+    raise SystemExit(f"expected 8 persisted DAGs, found {len(adjacencies)}")
+'; then
+  echo "Smoke artifact contract failed; inspect $manifest.aggregate" >&2
   exit 1
 fi
 exit "$jobfarm_rc"

@@ -16,9 +16,10 @@ protocol JSON → plan JSON → graph/data/knowledge artifacts → direct solver
 
 It has been tested for a tiny synthetic FLOP run, a bundled CausalMan manifest,
 and a 20-run direct ablation smoke covering FLOP, DAGMA, edge masking,
-post-selection, and both SortnRegress baselines. The LRZ smoke exercises the
-same plan-based path under JobFarm. These are execution tests, not scientific
-benchmark results.
+post-selection, and both SortnRegress baselines. The LRZ smoke exercises
+vanilla FLOP, FLOP+NOTREKS, vanilla DAGMA, and DAGMA+PSTrek through JobFarm,
+then aggregates the results and checks one persisted DAG per method. These are
+execution tests, not scientific benchmark results.
 
 FLOP+NOTREKS uses full ancestry by default. The optional ``--ancestry-depth``
 setting is an in-search constraint, not a post-processing mask: depth one

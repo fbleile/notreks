@@ -71,7 +71,7 @@ edit to a command file.
 ## Cluster smoke and timeout recovery
 
 Run the small node-level smoke before submitting a production farm. It checks the
-checkout, environment, JobFarm, one worker, and one direct FLOP run:
+checkout, environment, JobFarm, both solver families, and persisted aggregation:
 
 ```bash
 export PROJECT_DIR=$PWD
@@ -91,7 +91,8 @@ The wrapper expands `examples/smoke_protocol.json` into a fresh plan inside
 execution path as production rather than passing a protocol where a plan is
 required.
 
-The smoke runs one tiny vanilla FLOP task and one tiny FLOP+NOTREKS task. It
+The smoke runs tiny vanilla FLOP, FLOP+NOTREKS, vanilla DAGMA, and
+DAGMA+PSTrek tasks. It
 writes its Slurm manifest, JobFarm log, and per-task result under
 `cluster/slurm_logs/` and `${CMD_FILE}_res/`. Inspect those files with `sacct`,
 `cat slurm-<jobid>.out`, and `cat ${CMD_FILE}_res/1` before starting a large job.
