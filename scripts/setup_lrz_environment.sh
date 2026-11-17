@@ -15,11 +15,11 @@ MICROMAMBA_BIN="${MICROMAMBA_BIN:-$(command -v micromamba || true)}"
 eval "$($MICROMAMBA_BIN shell hook --shell bash)"
 if [[ ! -x "$ENV_DIR/bin/python" ]]; then
   "$MICROMAMBA_BIN" create -y -p "$ENV_DIR" -c conda-forge \
-    python=3.11 numpy='>=1.26' scipy='>=1.11' pip \
+    python=3.11 numpy scipy pip \
     r-base r-pcalg rust
 else
   "$MICROMAMBA_BIN" install -y -p "$ENV_DIR" -c conda-forge \
-    python=3.11 numpy='>=1.26' scipy='>=1.11' pip \
+    python=3.11 numpy scipy pip \
     r-base r-pcalg rust
 fi
 
