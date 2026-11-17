@@ -13,9 +13,7 @@ ssh -Y <cluster-host> -l <cluster-user>
 git clone <repository-url> notreks        # use git pull --ff-only thereafter
 cd notreks
 source cluster/lrz_session_setup.sh
-python -m pip install -e ".[analysis,solvers]"
-python -m pip install maturin
-scripts/install_flopsearch.sh
+scripts/setup_lrz_environment.sh
 notreks-preflight --methods flop flop_notreks --require-ancestor-aid
 ```
 
@@ -23,6 +21,11 @@ If the cluster environment is created at a different path, set
 `NOTREKS_ENVIRONMENT=/absolute/path/to/environment` before sourcing the setup
 file. The setup is intentionally generic: no user name or email address is
 embedded in it.
+
+The installation script is idempotent. It installs Python, `gadjid`, R,
+`pcalg`, Rust, maturin, and the vendored FLOP+NOTREKS extension. The session
+setup itself only activates an existing environment and is safe to source in
+interactive sessions and batch jobs.
 
 The cluster uses the same plan and CLI as local runs. Generate a plan once, inspect it, then let JobFarm execute disjoint index ranges. `PROJECT_DIR`, `PLAN`, and `OUTPUT_ROOT` must be absolute paths. Solver budgets are written into every generated command, so smoke jobs cannot silently inherit production iteration counts.
 

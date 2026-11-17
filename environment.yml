@@ -5,6 +5,9 @@ dependencies:
   - python=3.11
   - numpy>=1.26
   - scipy>=1.11
+  - r-base
+  - r-pcalg
+  - rust
   - pip
   - pip:
       - -e .[analysis,solvers]
