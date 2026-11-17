@@ -23,13 +23,21 @@ else
     r-base rust
 fi
 
+if [[ -n "${NOTREKS_R_MODULE:-}" ]] && command -v module >/dev/null 2>&1; then
+  module load "$NOTREKS_R_MODULE"
+fi
+R_BIN="${NOTREKS_RSCRIPT:-$(command -v Rscript || true)}"
+[[ -n "$R_BIN" ]] || {
+  echo "Rscript is unavailable after environment setup" >&2
+  exit 2
+}
 R_TMPDIR="${NOTREKS_R_TMPDIR:-/tmp/notreks-r-${USER:-user}}"
 mkdir -p "$R_TMPDIR" "$ENV_DIR/lib/R/library"
 chmod 700 "$R_TMPDIR"
 TMPDIR="$R_TMPDIR" TMP="$R_TMPDIR" TEMP="$R_TMPDIR" \
   LC_ALL=C LANG=C R_LIBS_USER="$ENV_DIR/lib/R/library" \
-  "$ENV_DIR/bin/Rscript" -e \
-  'if (!requireNamespace("pcalg", quietly = TRUE)) install.packages("pcalg", lib=.libPaths()[1], repos="https://cloud.r-project.org")'
+  "$R_BIN" -e \
+  'lib <- Sys.getenv("R_LIBS_USER"); dir.create(lib, recursive=TRUE, showWarnings=FALSE); if (!requireNamespace("BiocManager", quietly=TRUE)) install.packages("BiocManager", lib=lib, repos="https://cloud.r-project.org"); if (!requireNamespace("graph", quietly=TRUE) || !requireNamespace("RBGL", quietly=TRUE)) BiocManager::install(c("graph", "RBGL"), lib=lib, ask=FALSE, update=FALSE); if (!requireNamespace("pcalg", quietly=TRUE)) install.packages("pcalg", lib=lib, repos="https://cloud.r-project.org", dependencies=TRUE)'
 "$ENV_DIR/bin/python" -m pip install -e "$ROOT_DIR[analysis,solvers]" maturin
 PYTHON_BIN="$ENV_DIR/bin/python" "$ROOT_DIR/scripts/install_flopsearch.sh"
 
@@ -37,6 +45,6 @@ PYTHON_BIN="$ENV_DIR/bin/python" "$ROOT_DIR/scripts/install_flopsearch.sh"
   --methods flop flop_notreks dagma dagma_notreks \
   --require-ancestor-aid
 TMPDIR="$R_TMPDIR" TMP="$R_TMPDIR" TEMP="$R_TMPDIR" LC_ALL=C LANG=C \
-  "$ENV_DIR/bin/Rscript" -e 'library(pcalg); cat("pcalg available\n")'
+  "$R_BIN" -e 'library(pcalg); cat("pcalg available\n")'
 
 echo "NOTREKS LRZ environment ready: $ENV_DIR"
