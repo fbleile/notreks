@@ -53,7 +53,8 @@ test -r "$CMD_FILE"
 command -v jobfarm >/dev/null 2>&1
 python -m notreks --help > "$manifest.notreks_help" 2>&1
 if ! "$NOTREKS_ENVIRONMENT/bin/python" -m notreks.preflight \
-    --methods flop flop_notreks dagma dagma_notreks > "$manifest.preflight" 2>&1; then
+    --methods flop flop_notreks dagma dagma_notreks --require-ancestor-aid \
+    > "$manifest.preflight" 2>&1; then
   echo "NOTREKS solver preflight failed; inspect $manifest.preflight" >&2
   cat "$manifest.preflight" >&2
   exit 1

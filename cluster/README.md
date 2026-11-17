@@ -16,7 +16,7 @@ source cluster/lrz_session_setup.sh
 python -m pip install -e ".[analysis,solvers]"
 python -m pip install maturin
 scripts/install_flopsearch.sh
-notreks-preflight --methods flop flop_notreks
+notreks-preflight --methods flop flop_notreks --require-ancestor-aid
 ```
 
 If the cluster environment is created at a different path, set

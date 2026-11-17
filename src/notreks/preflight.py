@@ -14,7 +14,7 @@ from typing import Any
 from .integrations import DIRECT_METHODS
 
 
-def check(*, methods: tuple[str, ...]) -> dict[str, Any]:
+def check(*, methods: tuple[str, ...], require_ancestor_aid: bool = False) -> dict[str, Any]:
     """Return explicit checks without importing or running a solver."""
     checks: dict[str, Any] = {
         "python": sys.executable,
@@ -31,6 +31,8 @@ def check(*, methods: tuple[str, ...]) -> dict[str, Any]:
         checks["errors"].append(
             "backend adapters not implemented for: " + ", ".join(sorted(missing_methods)))
     packages = {"numpy": "numpy", "scipy": "scipy"}
+    if require_ancestor_aid:
+        packages["gadjid"] = "gadjid"
     if any(method.startswith("flop") for method in methods):
         packages["flopsearch"] = "flopsearch"
     if any(method.startswith("dagma") for method in methods):
@@ -66,9 +68,12 @@ def check(*, methods: tuple[str, ...]) -> dict[str, Any]:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="notreks-preflight")
     parser.add_argument("--methods", nargs="+", default=["flop_notreks"])
+    parser.add_argument("--require-ancestor-aid", action="store_true",
+                        help="require the CPDAG Ancestor-AID evaluation package")
     parser.add_argument("--output", type=Path)
     args = parser.parse_args(argv)
-    report = check(methods=tuple(args.methods))
+    report = check(methods=tuple(args.methods),
+                   require_ancestor_aid=args.require_ancestor_aid)
     rendered = json.dumps(report, indent=2, sort_keys=True) + "\n"
     if args.output:
         args.output.parent.mkdir(parents=True, exist_ok=True)

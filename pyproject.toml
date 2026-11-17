@@ -34,7 +34,7 @@ notreks-paper-outputs = "notreks.paper_outputs:main"
 
 [project.optional-dependencies]
 test = ["pytest>=8"]
-analysis = ["numpy", "pandas", "scipy", "matplotlib"]
+analysis = ["numpy", "pandas", "scipy", "matplotlib", "gadjid>=0.1"]
 solvers = ["flopsearch>=0.3", "dagma>=1.1"]
 
 [tool.pytest.ini_options]

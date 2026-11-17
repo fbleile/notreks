@@ -46,7 +46,8 @@ fractions are 0, .25, and 1; an intermediate fraction is represented by five
 independent knowledge rounds. DAGMA is omitted from d=100 production cells
 for the runtime budget documented in the generated manifest.
 
-The primary metrics are CPDAG SHD and CPDAG Ancestor-AID. All method outputs,
+The primary metrics are CPDAG SHD and CPDAG Ancestor-AID. The latter requires
+the optional ``gadjid`` package and is a production preflight requirement. All method outputs,
 including order-based outputs, are evaluated against the same ground-truth
 target. The reported solver labels and attempt budgets come from the catalog;
 the numerical score and continuation settings are recorded in each solve
