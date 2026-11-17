@@ -23,8 +23,15 @@ else
     r-base rust
 fi
 
-if [[ -n "${NOTREKS_R_MODULE:-}" ]] && command -v module >/dev/null 2>&1; then
-  module load "$NOTREKS_R_MODULE"
+if command -v module >/dev/null 2>&1; then
+  r_module="${NOTREKS_R_MODULE:-auto}"
+  if [[ "$r_module" == "auto" ]]; then
+    r_module="$(module -t avail 'r/*' 2>&1 | sed -n 's/^\(r\/[^[:space:]]*\).*$/\1/p' | head -1)"
+  fi
+  if [[ -n "$r_module" && "$r_module" != "none" ]]; then
+    module load "$r_module"
+    echo "Using R module: $r_module"
+  fi
 fi
 R_BIN="${NOTREKS_RSCRIPT:-$(command -v Rscript || true)}"
 [[ -n "$R_BIN" ]] || {

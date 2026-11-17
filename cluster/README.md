@@ -25,9 +25,10 @@ embedded in it.
 The installation script is idempotent. It installs Python, `gadjid`, R,
 `pcalg` from CRAN, Rust, maturin, and the vendored FLOP+NOTREKS extension. The session
 setup itself only activates an existing environment and is safe to source in
-interactive sessions and batch jobs. If LRZ provides a site R module, set
-`NOTREKS_R_MODULE=<module-name>` before running the installer; otherwise the
-environment-local `Rscript` is used.
+interactive sessions and batch jobs. The installer automatically uses the
+first available LRZ `r/*` module; set `NOTREKS_R_MODULE=<module-name>` to
+override detection, or set `NOTREKS_R_MODULE=none` to force environment-local
+R.
 
 The cluster uses the same plan and CLI as local runs. Generate a plan once, inspect it, then let JobFarm execute disjoint index ranges. `PROJECT_DIR`, `PLAN`, and `OUTPUT_ROOT` must be absolute paths. Solver budgets are written into every generated command, so smoke jobs cannot silently inherit production iteration counts.
 
