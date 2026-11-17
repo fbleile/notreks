@@ -41,7 +41,7 @@ chmod 700 "$R_TMPDIR"
 TMPDIR="$R_TMPDIR" TMP="$R_TMPDIR" TEMP="$R_TMPDIR" \
   LC_ALL=C LANG=C R_LIBS_USER="$ENV_DIR/lib/R/library" \
   "$R_BIN" -e \
-  'lib <- Sys.getenv("R_LIBS_USER"); dir.create(lib, recursive=TRUE, showWarnings=FALSE); if (!requireNamespace("BiocManager", quietly=TRUE)) install.packages("BiocManager", lib=lib, repos="https://cloud.r-project.org"); if (!requireNamespace("graph", quietly=TRUE) || !requireNamespace("RBGL", quietly=TRUE)) BiocManager::install(c("graph", "RBGL"), lib=lib, ask=FALSE, update=FALSE); if (!requireNamespace("pcalg", quietly=TRUE)) install.packages("pcalg", lib=lib, repos="https://cloud.r-project.org", dependencies=TRUE)'
+  'lib <- Sys.getenv("R_LIBS_USER"); dir.create(lib, recursive=TRUE, showWarnings=FALSE); if (!requireNamespace("BiocManager", quietly=TRUE)) install.packages("BiocManager", lib=lib, repos="https://cloud.r-project.org"); BiocManager::install("pcalg", lib=lib, ask=FALSE, update=FALSE); if (!requireNamespace("pcalg", quietly=TRUE)) stop("pcalg installation did not produce an importable package")'
 "$ENV_DIR/bin/python" -m pip install -e "$ROOT_DIR[analysis,solvers]" maturin
 PYTHON_BIN="$ENV_DIR/bin/python" "$ROOT_DIR/scripts/install_flopsearch.sh"
 
