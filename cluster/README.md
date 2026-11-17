@@ -22,13 +22,13 @@ If the cluster environment is created at a different path, set
 file. The setup is intentionally generic: no user name or email address is
 embedded in it.
 
-The installation script is idempotent. It installs Python, `gadjid`, R,
-`pcalg` from CRAN, Rust, maturin, and the vendored FLOP+NOTREKS extension. The session
+The installation script is idempotent. It installs Python, `gadjid`, pinned
+environment-local R 4.3.3, binary Bioconductor dependencies, `pcalg` from
+CRAN, Rust, maturin, and the vendored FLOP+NOTREKS extension. The session
 setup itself only activates an existing environment and is safe to source in
-interactive sessions and batch jobs. On LRZ, the installer uses the pinned
-module `r/4.3.3-gcc13-mkl` by default. Set `NOTREKS_R_MODULE=<module-name>`
-only to override this deliberate choice, or set `NOTREKS_R_MODULE=none` to
-force environment-local R on another system.
+interactive sessions and batch jobs. An LRZ R module can be selected with
+`NOTREKS_R_MODULE=<module-name>`, but the default is the reproducible
+environment-local R installation.
 
 The cluster uses the same plan and CLI as local runs. Generate a plan once, inspect it, then let JobFarm execute disjoint index ranges. `PROJECT_DIR`, `PLAN`, and `OUTPUT_ROOT` must be absolute paths. Solver budgets are written into every generated command, so smoke jobs cannot silently inherit production iteration counts.
 

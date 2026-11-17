@@ -14,17 +14,17 @@ MICROMAMBA_BIN="${MICROMAMBA_BIN:-$(command -v micromamba || true)}"
 
 eval "$($MICROMAMBA_BIN shell hook --shell bash)"
 if [[ ! -x "$ENV_DIR/bin/python" ]]; then
-  "$MICROMAMBA_BIN" create -y -p "$ENV_DIR" -c conda-forge \
+  "$MICROMAMBA_BIN" create -y -p "$ENV_DIR" -c conda-forge -c bioconda \
     python=3.11 numpy scipy pip \
-    r-base rust
+    r-base=4.3.3 bioconductor-graph bioconductor-rbgl r-igraph r-ggm rust
 else
-  "$MICROMAMBA_BIN" install -y -p "$ENV_DIR" -c conda-forge \
+  "$MICROMAMBA_BIN" install -y -p "$ENV_DIR" -c conda-forge -c bioconda \
     python=3.11 numpy scipy pip \
-    r-base rust
+    r-base=4.3.3 bioconductor-graph bioconductor-rbgl r-igraph r-ggm rust
 fi
 
 if command -v module >/dev/null 2>&1; then
-  r_module="${NOTREKS_R_MODULE:-r/4.3.3-gcc13-mkl}"
+  r_module="${NOTREKS_R_MODULE:-none}"
   if [[ "$r_module" != "none" ]]; then
     module load "$r_module"
     echo "Using R module: $r_module"
