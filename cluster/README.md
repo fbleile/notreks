@@ -23,7 +23,7 @@ file. The setup is intentionally generic: no user name or email address is
 embedded in it.
 
 The installation script is idempotent. It installs Python, `gadjid`, R,
-`pcalg`, Rust, maturin, and the vendored FLOP+NOTREKS extension. The session
+`pcalg` from CRAN, Rust, maturin, and the vendored FLOP+NOTREKS extension. The session
 setup itself only activates an existing environment and is safe to source in
 interactive sessions and batch jobs.
 

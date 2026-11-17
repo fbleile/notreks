@@ -16,13 +16,16 @@ eval "$($MICROMAMBA_BIN shell hook --shell bash)"
 if [[ ! -x "$ENV_DIR/bin/python" ]]; then
   "$MICROMAMBA_BIN" create -y -p "$ENV_DIR" -c conda-forge \
     python=3.11 numpy scipy pip \
-    r-base r-pcalg rust
+    r-base rust
 else
   "$MICROMAMBA_BIN" install -y -p "$ENV_DIR" -c conda-forge \
     python=3.11 numpy scipy pip \
-    r-base r-pcalg rust
+    r-base rust
 fi
 
+mkdir -p "$ENV_DIR/lib/R/library"
+R_LIBS_USER="$ENV_DIR/lib/R/library" "$ENV_DIR/bin/Rscript" -e \
+  'if (!requireNamespace("pcalg", quietly = TRUE)) install.packages("pcalg", lib=.libPaths()[1], repos="https://cloud.r-project.org")'
 "$ENV_DIR/bin/python" -m pip install -e "$ROOT_DIR[analysis,solvers]" maturin
 PYTHON_BIN="$ENV_DIR/bin/python" "$ROOT_DIR/scripts/install_flopsearch.sh"
 
