@@ -129,3 +129,30 @@ git checkout <release-tag-or-commit>
 conda env create -f environment.yml
 conda run -n notreks python -m pip install -e ".[analysis,solvers]"
 ```
+# Protocol-wide smoke
+
+After the environment has been prepared with `cluster/lrz_session_setup.sh`,
+submit the reduced end-to-end check with:
+
+```bash
+export PROJECT_DIR=/dss/dsshome1/0C/$USER/notreks
+export NOTREKS_ENVIRONMENT="$PROJECT_DIR/.venv-lrz"
+JOB=$(sbatch --parsable --chdir="$PROJECT_DIR" \
+  --export=ALL,PROJECT_DIR="$PROJECT_DIR",NOTREKS_ENVIRONMENT="$NOTREKS_ENVIRONMENT" \
+  cluster/lrz_jobfarm_protocol_smoke.sh)
+echo "$JOB"
+```
+
+This smoke covers the three synthetic arms, the chromatic prior-structure
+arm, the PSTrek/TCC comparison, bundled CausalMan small and medium data,
+CausalAssembly, and all three exact motivational entry points. It uses one
+graph or dataset representative, dimension six for generated graphs, one
+partial round, one solver attempt, two FLOP sweeps, and short DAGMA budgets.
+It writes the generated subplans, command file, per-task JobFarm results, and
+aggregated outputs under `cluster/slurm_logs/protocol-smoke.<jobid>`.
+
+The identical command file can be run locally with:
+
+```bash
+scripts/run_protocol_smoke_local.sh results/protocol_smoke_local
+```
