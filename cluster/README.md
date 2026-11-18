@@ -135,7 +135,7 @@ After the environment has been prepared with `cluster/lrz_session_setup.sh`,
 submit the reduced end-to-end check with:
 
 ```bash
-export PROJECT_DIR=/dss/dsshome1/0C/$USER/notreks
+export PROJECT_DIR="$PWD"
 export NOTREKS_ENVIRONMENT="$PROJECT_DIR/.venv-lrz"
 JOB=$(sbatch --parsable --chdir="$PROJECT_DIR" \
   --export=ALL,PROJECT_DIR="$PROJECT_DIR",NOTREKS_ENVIRONMENT="$NOTREKS_ENVIRONMENT" \
