@@ -115,6 +115,12 @@ def main(argv: list[str] | None = None) -> int:
     preflight_parser = commands.add_parser("preflight", help="check an execution environment")
     preflight_parser.add_argument("--methods", nargs="+", default=["flop_notreks"])
     commands.add_parser("smoke", help="run the dependency-light local smoke")
+    protocol_smoke_parser = commands.add_parser(
+        "protocol-smoke-plan", help="build a reduced smoke covering every protocol arm")
+    protocol_smoke_parser.add_argument("output", type=Path)
+    protocol_smoke_parser.add_argument("--project-root", type=Path, default=Path.cwd())
+    protocol_smoke_parser.add_argument("--python", type=Path)
+    protocol_smoke_parser.add_argument("--master-seed", type=int, default=20260917)
     args = parser.parse_args(argv)
     if args.command == "plan":
         return _plan(args)
@@ -224,6 +230,15 @@ def main(argv: list[str] | None = None) -> int:
         report = preflight_check(methods=tuple(args.methods))
         print(json.dumps(report, indent=2, sort_keys=True))
         return 0 if report["ok"] else 2
+    if args.command == "protocol-smoke-plan":
+        from .protocol_smoke import build_protocol_smoke
+        import sys
+        manifest = build_protocol_smoke(
+            args.output, project_root=args.project_root,
+            python=args.python or Path(sys.executable), master_seed=args.master_seed)
+        print(f"planned {manifest['command_count']} protocol-smoke commands -> "
+              f"{manifest['command_file']}")
+        return 0
     _smoke()
     return 0
 
