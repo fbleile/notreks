@@ -47,6 +47,20 @@ def test_jobfarm_inherits_protocol_ancestry_depth(tmp_path: Path):
     assert "--ancestry-depth 2" in commands.read_text()
 
 
+def test_jobfarm_accepts_external_plan_protocol_name(tmp_path: Path):
+    """External bundled plans use a string protocol name, not a mapping."""
+    plan = tmp_path / "external.json"
+    plan.write_text(json.dumps({
+        "protocol": "causalassembly-small",
+        "runs": [{"run_key": "a", "method": "flop"}],
+        "attempts_by_method": {"flop": 1},
+    }))
+    commands = tmp_path / "external.cmd"
+    assert write_commands(plan, commands, tmp_path / "results",
+                          tmp_path / "python", tmp_path / "project") == 1
+    assert "--ancestry-depth" not in commands.read_text()
+
+
 def test_retry_keeps_only_non_successful_tasks(tmp_path: Path):
     commands = tmp_path / "commands.cmd"
     commands.write_text("env first\nenv second\nenv third\n")
@@ -57,3 +71,4 @@ def test_retry_keeps_only_non_successful_tasks(tmp_path: Path):
     retry = tmp_path / "retry.cmd"
     assert retry_failed_commands(commands, results, retry) == 2
     assert retry.read_text().splitlines() == ["env second", "env third"]
+
