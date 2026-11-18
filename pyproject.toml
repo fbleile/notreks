@@ -31,6 +31,7 @@ notreks-manifest = "notreks.manifest:main"
 notreks-release-audit = "notreks.release:main"
 notreks-constraint-check = "notreks.constraint_diagnostics:main"
 notreks-paper-outputs = "notreks.paper_outputs:main"
+notreks-protocol-smoke = "notreks.protocol_smoke:main"
 
 [project.optional-dependencies]
 test = ["pytest>=8"]
