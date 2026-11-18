@@ -6,11 +6,7 @@ dependencies:
   - python=3.11
   - numpy>=1.26
   - scipy>=1.11
-  - r-base=4.3.3
-  - bioconductor-graph
-  - bioconductor-rbgl
-  - r-igraph
-  - r-ggm
+  - r-pcalg
   - rust
   - pip
   - pip:

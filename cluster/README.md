@@ -22,9 +22,9 @@ If the cluster environment is created at a different path, set
 file. The setup is intentionally generic: no user name or email address is
 embedded in it.
 
-The installation script is idempotent. It installs Python, `gadjid`, pinned
-environment-local R 4.3.3, binary Bioconductor dependencies, `pcalg` from
-CRAN, Rust, maturin, and the vendored FLOP+NOTREKS extension. The session
+The installation script is idempotent. It installs Python, `gadjid`, the
+environment-local R/Bioconda `r-pcalg` package, Rust, maturin, and the
+vendored FLOP+NOTREKS extension. The session
 setup itself only activates an existing environment and is safe to source in
 interactive sessions and batch jobs. An LRZ R module can be selected with
 `NOTREKS_R_MODULE=<module-name>`, but the default is the reproducible
