@@ -269,12 +269,9 @@ def _execute(args: argparse.Namespace, *, solve: bool) -> int:
             continue
         if solve:
             attempts = getattr(args, "attempts", None) or plan_attempts.get(run.method, 1)
-            protocol_payload = payload.get("protocol", {})
-            plan_ancestry_depth = (protocol_payload.get("ancestry_depth")
-                                   if isinstance(protocol_payload, dict) else None)
             solve_prepared(artifacts, run, registry,
                            _solver_config(args, attempts,
-                                          plan_ancestry_depth))
+                                          _plan_ancestry_depth(payload)))
         print(f"completed {run.key()} method={run.method}", flush=True)
     return 0
 
@@ -313,6 +310,13 @@ def _solver_config(args: argparse.Namespace, attempts: int,
         ancestry_depth=(args.ancestry_depth
                         if args.ancestry_depth is not None else plan_ancestry_depth),
     )
+
+
+def _plan_ancestry_depth(payload: dict) -> int | None:
+    """Read ancestry depth from synthetic plans and external-plan payloads."""
+    protocol_payload = payload.get("protocol", {})
+    return (protocol_payload.get("ancestry_depth")
+            if isinstance(protocol_payload, dict) else None)
 
 
 def _smoke() -> None:
