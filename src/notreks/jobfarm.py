@@ -38,7 +38,9 @@ def write_commands(plan: Path, output: Path, output_root: Path,
     payload = json.loads(plan.read_text())
     total = len(payload["runs"])
     plan_attempts = payload.get("attempts_by_method", {})
-    plan_ancestry_depth = payload.get("protocol", {}).get("ancestry_depth")
+    protocol_payload = payload.get("protocol", {})
+    plan_ancestry_depth = (protocol_payload.get("ancestry_depth")
+                           if isinstance(protocol_payload, dict) else None)
     effective_ancestry_depth = (ancestry_depth if ancestry_depth is not None
                                 else plan_ancestry_depth)
     stop = total if limit is None else min(total, start + limit)
@@ -115,3 +117,4 @@ def retry_main(argv: list[str] | None = None) -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
+
