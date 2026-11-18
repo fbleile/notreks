@@ -2,7 +2,11 @@
 # Run the same reduced protocol-wide smoke sequentially on a local machine.
 set -euo pipefail
 PROJECT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
-PYTHON="${PYTHON:-$PROJECT_DIR/.venv-local-smoke/bin/python}"
+PYTHON="${PYTHON:-$(command -v python || true)}"
+if [ -z "$PYTHON" ] || [ ! -x "$PYTHON" ]; then
+  echo "No usable Python interpreter found; set PYTHON=/absolute/path/to/python" >&2
+  exit 2
+fi
 OUTPUT="${1:-$PROJECT_DIR/results/protocol_smoke_local}"
 export PYTHONPATH="$PROJECT_DIR/src${PYTHONPATH:+:$PYTHONPATH}"
 "$PYTHON" -m notreks.cli protocol-smoke-plan "$OUTPUT" \
