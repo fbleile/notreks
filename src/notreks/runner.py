@@ -9,6 +9,7 @@ import os
 from pathlib import Path
 import shutil
 import sys
+import tempfile
 import traceback
 from typing import Iterator
 
@@ -118,7 +119,19 @@ def _prepare_data(run: RunSpec, shared: Path, *, rscript: str | None) -> tuple[P
     if manifest_path.exists() and graph_path.exists() and data_path.exists() and weights_path.exists():
         if json.loads(manifest_path.read_text()) != expected:
             raise RuntimeError(f"shared data manifest mismatch: {manifest_path}")
-        return graph_path, data_path, weights_path
+        try:
+            graph_array = np.load(graph_path)
+            data_array = np.load(data_path)
+            weights_array = np.load(weights_path)
+            if (graph_array.shape == (run.dimension, run.dimension)
+                    and data_array.shape == (run.sample_size, run.dimension)
+                    and weights_array.shape == (run.dimension,)):
+                return graph_path, data_path, weights_path
+        except (OSError, ValueError):
+            # A previous worker may have been interrupted during an older,
+            # non-atomic write. Regenerate all shared arrays below.
+            pass
+        manifest_path.unlink(missing_ok=True)
     shared.mkdir(parents=True, exist_ok=True)
     if run.data_model.endswith("_observational"):
         if not run.external_manifest:
@@ -144,11 +157,28 @@ def _prepare_data(run: RunSpec, shared: Path, *, rscript: str | None) -> tuple[P
         graph = generate(run.graph_family, run.dimension, run.density, run.graph_seed, rscript=rscript)
         simulated = simulate_sem(graph, run.sample_size, run.graph_seed, run.data_seed, run.data_model)
         observations, weights = simulated.observations, simulated.weights
-    np.save(graph_path, graph)
-    np.save(data_path, observations)
-    np.save(weights_path, weights)
+    _atomic_save_npy(graph_path, graph)
+    _atomic_save_npy(data_path, observations)
+    _atomic_save_npy(weights_path, weights)
     atomic_json(manifest_path, expected)
     return graph_path, data_path, weights_path
+
+
+def _atomic_save_npy(path: Path, array: np.ndarray) -> None:
+    """Publish a NumPy artifact atomically for concurrent JobFarm workers."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = tempfile.NamedTemporaryFile(
+        mode="wb", suffix=".npy.tmp", prefix=f".{path.name}.",
+        dir=path.parent, delete=False)
+    temporary_path = Path(temporary.name)
+    try:
+        with temporary:
+            np.save(temporary, array)
+            temporary.flush()
+            os.fsync(temporary.fileno())
+        os.replace(temporary_path, path)
+    finally:
+        temporary_path.unlink(missing_ok=True)
 
 
 def _prepare_knowledge(run: RunSpec, shared: Path) -> Path:
