@@ -19,3 +19,15 @@ def test_cli_catalog_lists_registered_experiments(capsys):
     output = capsys.readouterr().out
     assert "main:" in output
     assert "prior-structure-chrom:" in output
+
+
+def test_protocol_smoke_covers_all_protocol_families(tmp_path: Path):
+    from notreks.protocol_smoke import build_protocol_smoke
+
+    manifest = build_protocol_smoke(
+        tmp_path / "suite", project_root=Path.cwd(), python=Path("python"))
+    assert manifest["command_count"] == 172
+    assert {entry["kind"] for entry in manifest["entries"]} == {
+        "synthetic", "chromatic", "constraint-comparison", "external"
+    }
+    assert len(manifest["exact_entries"]) == 3
