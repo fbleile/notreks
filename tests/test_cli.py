@@ -31,3 +31,9 @@ def test_protocol_smoke_covers_all_protocol_families(tmp_path: Path):
         "synthetic", "chromatic", "constraint-comparison", "external"
     }
     assert len(manifest["exact_entries"]) == 3
+
+
+def test_external_plan_protocol_string_has_no_ancestry_depth():
+    from notreks.cli import _plan_ancestry_depth
+
+    assert _plan_ancestry_depth({"protocol": "causalman-small"}) is None
