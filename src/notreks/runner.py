@@ -6,6 +6,7 @@ from contextlib import contextmanager
 from dataclasses import dataclass
 import json
 from pathlib import Path
+import shutil
 import traceback
 from typing import Iterator
 
@@ -57,6 +58,10 @@ def prepare_run(run: RunSpec, output_root: Path, *, rscript: str | None = None) 
     method-specific runs do not regenerate identical inputs.  Existing files
     are reused only when their provenance manifest matches the requested run.
     """
+    # WS generation is implemented through the installed R/pcalg path.  Let
+    # ordinary local and cluster environments provide it through PATH unless
+    # a caller explicitly supplies another executable.
+    rscript = rscript or shutil.which("Rscript")
     run_dir = RunDirectory(output_root / "runs" / run.key())
     shared = output_root / "shared" / run.data_id
     with RunRecorder(run_dir, run, command=["prepare", run.key()]):
