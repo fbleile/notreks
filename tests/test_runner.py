@@ -1,4 +1,5 @@
 import json
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 import numpy as np
@@ -21,6 +22,18 @@ def test_prepare_run_reuses_shared_inputs(tmp_path: Path):
     assert first.knowledge_path == second.knowledge_path
     assert len(list((tmp_path / "runs").glob("*/status.json"))) == 2
     assert json.loads(first.knowledge_path.read_text())["selected_pairs"] >= 1
+
+
+def test_prepare_run_publishes_shared_arrays_atomically(tmp_path: Path):
+    spec = ProtocolSpec("concurrent", (6,), (32,), ("er",), (2,),
+                        ("flop", "flop_notreks"), knowledge_fractions=(0.25,),
+                        partial_rounds=1, graph_replicates=1)
+    runs = expand_protocol(spec)
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        prepared = list(pool.map(lambda run: prepare_run(run, tmp_path), runs))
+    for artifacts in prepared:
+        assert np.load(artifacts.data_path).shape == (32, 6)
+        assert np.load(artifacts.graph_path).shape == (6, 6)
 
 
 def test_solve_stage_persists_adjacency_and_diagnostics(tmp_path: Path):
