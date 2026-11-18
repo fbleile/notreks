@@ -1,0 +1,13 @@
+{
+  "name": "cluster-regression-ws",
+  "dimensions": [6],
+  "sample_sizes": [32],
+  "graph_families": ["ws"],
+  "densities": [2],
+  "methods": ["flop", "flop_notreks"],
+  "knowledge_fractions": [0.25],
+  "knowledge_strategies": ["random"],
+  "partial_rounds": 1,
+  "graph_replicates": 1,
+  "method_attempts": {"flop": 1, "flop_notreks": 1}
+}
