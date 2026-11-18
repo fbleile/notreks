@@ -5,8 +5,10 @@ from __future__ import annotations
 from contextlib import contextmanager
 from dataclasses import dataclass
 import json
+import os
 from pathlib import Path
 import shutil
+import sys
 import traceback
 from typing import Iterator
 
@@ -61,7 +63,17 @@ def prepare_run(run: RunSpec, output_root: Path, *, rscript: str | None = None) 
     # WS generation is implemented through the installed R/pcalg path.  Let
     # ordinary local and cluster environments provide it through PATH unless
     # a caller explicitly supplies another executable.
-    rscript = rscript or shutil.which("Rscript")
+    if rscript is None:
+        candidates = []
+        configured = os.environ.get("NOTREKS_RSCRIPT")
+        if configured:
+            candidates.append(configured)
+        candidates.append(str(Path(sys.executable).with_name("Rscript")))
+        found = shutil.which("Rscript")
+        if found:
+            candidates.append(found)
+        rscript = next((candidate for candidate in candidates
+                        if Path(candidate).is_file() and os.access(candidate, os.X_OK)), None)
     run_dir = RunDirectory(output_root / "runs" / run.key())
     shared = output_root / "shared" / run.data_id
     with RunRecorder(run_dir, run, command=["prepare", run.key()]):
@@ -166,80 +178,3 @@ def _prepare_knowledge(run: RunSpec, shared: Path) -> Path:
             atomic_json(path, {
                 "status": "infeasible", "reason": str(error),
                 "data_id": run.data_id, "knowledge_strategy": run.knowledge_strategy,
-                "target_chromatic_number": target,
-                "requested_pair_count": run.knowledge_pair_count,
-                "available_pairs": len(all_pairs),
-            })
-            return path
-        target_k = target
-    elif run.knowledge_strategy == "source-ancestor":
-        pairs = source_ancestor_pairs(
-            all_pairs, graph, run.knowledge_fraction, run.knowledge_seed)
-        if run.knowledge_pair_count is not None:
-            if run.knowledge_pair_count > len(pairs):
-                raise ValueError(
-                    f"requested {run.knowledge_pair_count} source-ancestor pairs, "
-                    f"but only {len(pairs)} were selected")
-            pairs = pairs[:run.knowledge_pair_count]
-        target_k = None
-    else:
-        pairs = (random_pairs_count(all_pairs, run.knowledge_pair_count, run.knowledge_seed)
-                 if run.knowledge_pair_count is not None
-                 else select_pairs(all_pairs, run.knowledge_fraction, run.knowledge_seed))
-        target_k = None
-    safe_strategy = run.knowledge_strategy.replace("/", "_")
-    count_tag = "" if run.knowledge_pair_count is None else f"_a{run.knowledge_pair_count}"
-    path = shared / "knowledge" / (
-        f"{safe_strategy}_q{run.knowledge_fraction:g}{count_tag}_r{run.knowledge_round}.json")
-    expected = {
-        "data_id": run.data_id, "knowledge_seed": run.knowledge_seed,
-        "knowledge_fraction": run.knowledge_fraction,
-        "knowledge_round": run.knowledge_round,
-        "knowledge_strategy": run.knowledge_strategy,
-        "requested_pair_count": run.knowledge_pair_count,
-        "target_chromatic_number": target_k,
-        "available_pairs": len(all_pairs), "selected_pairs": len(pairs),
-        "pair_set_hash": canonical_pair_set_hash(pairs),
-        "pairs": [list(pair) for pair in pairs],
-    }
-    if run.knowledge_strategy.startswith("target-k-"):
-        pair_hash = expected["pair_set_hash"]
-        for existing in path.parent.glob(f"{safe_strategy}_q{run.knowledge_fraction:g}*_r*.json"):
-            if existing == path:
-                continue
-            existing_payload = json.loads(existing.read_text())
-            if existing_payload.get("pair_set_hash") == pair_hash:
-                raise ValueError(
-                    f"duplicate target-K prior set for {run.data_id} and "
-                    f"{run.knowledge_strategy}: {existing.name} and {path.name}")
-    if path.exists() and json.loads(path.read_text()) != expected:
-        raise RuntimeError(f"shared knowledge manifest mismatch: {path}")
-    atomic_json(path, expected)
-    return path
-
-
-def _json_safe(value):
-    if isinstance(value, np.ndarray):
-        return value.tolist()
-    if isinstance(value, np.generic):
-        return value.item()
-    if isinstance(value, dict):
-        return {str(key): _json_safe(item) for key, item in value.items()}
-    if isinstance(value, (list, tuple)):
-        return [_json_safe(item) for item in value]
-    return value
-
-def main() -> None:
-    """Run a tiny preparation smoke test under a temporary-looking directory."""
-    from tempfile import TemporaryDirectory
-    from .planning import expand_protocol
-    from .protocol import ProtocolSpec
-
-    spec = ProtocolSpec("smoke", (6,), (32,), ("er",), (2,), ("flop",), graph_replicates=1)
-    with TemporaryDirectory() as temporary:
-        artifacts = prepare_run(expand_protocol(spec)[0], Path(temporary))
-        print(artifacts.data_path.exists(), artifacts.knowledge_path.exists())
-
-
-if __name__ == "__main__":
-    main()
