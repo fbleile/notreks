@@ -269,9 +269,12 @@ def _execute(args: argparse.Namespace, *, solve: bool) -> int:
             continue
         if solve:
             attempts = getattr(args, "attempts", None) or plan_attempts.get(run.method, 1)
+            protocol_payload = payload.get("protocol", {})
+            plan_ancestry_depth = (protocol_payload.get("ancestry_depth")
+                                   if isinstance(protocol_payload, dict) else None)
             solve_prepared(artifacts, run, registry,
                            _solver_config(args, attempts,
-                                          payload.get("protocol", {}).get("ancestry_depth")))
+                                          plan_ancestry_depth))
         print(f"completed {run.key()} method={run.method}", flush=True)
     return 0
 
