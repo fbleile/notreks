@@ -97,6 +97,20 @@ The wrapper expands `examples/smoke_protocol.json` into a fresh plan inside
 execution path as production rather than passing a protocol where a plan is
 required.
 
+For a timeout or failed task set, use the encoded CoolMUC-4 retry wrapper. It
+selects only failed or incomplete commands and carries the required cluster
+and partition directives:
+
+```bash
+export PROJECT_DIR="$PWD"
+export NOTREKS_ENVIRONMENT="$PROJECT_DIR/.venv-lrz"
+export CMD_FILE="$PROJECT_DIR/cluster/slurm_logs/protocol-smoke.<jobid>/protocol_smoke.cmd"
+export RESULT_DIR="$PROJECT_DIR/cluster/slurm_logs/protocol-smoke.<jobid>/protocol_smoke.cmd_res"
+sbatch --parsable --chdir="$PROJECT_DIR" \
+  --export=ALL,PROJECT_DIR="$PROJECT_DIR",NOTREKS_ENVIRONMENT="$NOTREKS_ENVIRONMENT",CMD_FILE="$CMD_FILE",RESULT_DIR="$RESULT_DIR" \
+  cluster/lrz_jobfarm_retry.sh
+```
+
 The smoke runs tiny vanilla FLOP, FLOP+NOTREKS, vanilla DAGMA, and
 DAGMA+PSTrek tasks. It
 writes its Slurm manifest, JobFarm log, and per-task result under
